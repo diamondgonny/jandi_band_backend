@@ -7,6 +7,10 @@ plugins {
 group = 'com.jandi'
 version = '0.0.1-SNAPSHOT'
 
+bootJar {
+    archiveFileName = 'band_backend-0.0.1-SNAPSHOT.jar'
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
@@ -33,6 +37,9 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'
+
+    implementation 'org.springframework.boot:spring-boot-starter-logging'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

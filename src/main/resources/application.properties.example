@@ -1,0 +1,16 @@
+spring.application.name=jandi_band_backend
+
+# Database configuration
+spring.datasource.url=jdbc:mysql://{DB_HOST}:{DB_PORT}/{DB_NAME}
+spring.datasource.username={DB_USERNAME}
+spring.datasource.password={DB_PASSWORD}
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# JPA configuration
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+# Add any additional configuration below
+# spring.security.oauth2.client.registration...
+# etc. 

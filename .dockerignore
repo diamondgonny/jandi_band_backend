@@ -1,0 +1,10 @@
+.git
+.gitignore
+.idea
+.gradle
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+**/out/
+README.md
+HELP.md
+.DS_Store 

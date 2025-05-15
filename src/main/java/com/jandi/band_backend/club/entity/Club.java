@@ -1,6 +1,5 @@
 package com.jandi.band_backend.club.entity;
 
-import com.jandi.band_backend.image.entity.ClubPhoto;
 import com.jandi.band_backend.poll.entity.Poll;
 import com.jandi.band_backend.promo.entity.Promo;
 import com.jandi.band_backend.team.entity.Team;

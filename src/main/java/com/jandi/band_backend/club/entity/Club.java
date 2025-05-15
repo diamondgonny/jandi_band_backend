@@ -33,9 +33,9 @@ public class Club {
     
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
-    
-    @Column(name = "club_member_count", nullable = false)
-    private Integer clubMemberCount = 0;
+
+    @Column(name = "instagram_id", length = 50)
+    private String instagramId;
     
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -38,9 +38,6 @@ public class Team {
     @JoinColumn(name = "creator_user_id", nullable = false)
     private Users creator;
     
-    @Column(name = "team_member_count", nullable = false)
-    private Integer teamMemberCount = 0;
-    
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     

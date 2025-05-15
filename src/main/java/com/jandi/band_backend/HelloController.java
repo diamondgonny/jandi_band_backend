@@ -8,6 +8,6 @@ public class HelloController {
 
     @GetMapping("/")
     public String hello() {
-        return "2024-05-11T04:23 마지막 수정";
+        return "2024-05-15T21:15 마지막 수정";
     }
 }

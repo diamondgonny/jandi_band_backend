@@ -44,7 +44,7 @@ public class ClubPhoto {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
-
+    
     @PrePersist
     protected void onCreate() {
         updatedAt = LocalDateTime.now();

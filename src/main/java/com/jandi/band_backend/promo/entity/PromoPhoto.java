@@ -1,6 +1,6 @@
-package com.jandi.band_backend.image.entity;
+package com.jandi.band_backend.promo.entity;
 
-import com.jandi.band_backend.promo.entity.Promo;
+import com.jandi.band_backend.image.entity.Photo;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

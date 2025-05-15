@@ -16,17 +16,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests()  // authorizeRequests()는 deprecated 됨
-                .requestMatchers("/")  // "/" URL을 예외로 처리
-                .permitAll()  // "/" URL은 인증 없이 접근 가능
-                .anyRequest().authenticated()  // 그 외의 요청은 인증을 요구
-                .and()
-                .formLogin()  // 기본 로그인 페이지 사용
-                .loginPage("/login")  // 로그인 페이지 설정 (선택사항)
-                .permitAll()
-                .and()
-                .logout()  // 로그아웃 처리
-                .permitAll();
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/").permitAll()  // "/" URL은 permitAll
+                        .anyRequest().authenticated()  // 그 외의 요청은 인증을 요구
+                )
+                .formLogin(form -> form
+                        .loginPage("/login")  // 로그인 페이지 설정 (선택사항)
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .permitAll()
+                );
         return http.build();
     }
 

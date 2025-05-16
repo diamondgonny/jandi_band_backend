@@ -45,7 +45,7 @@ public class AuthService {
         );
     }
 
-    // 정식 회원가입
+    /// 정식 회원가입
     public UserInfoDTO signup(String kakaoOauthId, SignUpReqDTO reqDTO) {
         log.info("정식 회원가입");
 
@@ -75,5 +75,18 @@ public class AuthService {
         newUser.setProfilePhoto(null); // 카카오 프로필 사진을 넣어야 하는데 DB 수정될 거라 일단 보류
 
         usersRepository.save(newUser);
+    }
+
+    /// 리프레시 토큰 생성
+    public AuthRespDTO refresh(String refreshToken) {
+        if(!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new RuntimeException("유효하지 않은 토큰입니다");
+        }
+
+        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(refreshToken);
+        return new AuthRespDTO(
+                jwtTokenProvider.generateAccessToken(kakaoOauthId),
+                jwtTokenProvider.generateRefreshToken(kakaoOauthId)
+        );
     }
 }

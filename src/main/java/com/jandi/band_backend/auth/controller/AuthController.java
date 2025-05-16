@@ -1,6 +1,8 @@
 package com.jandi.band_backend.auth.controller;
 
 import com.jandi.band_backend.auth.dto.AuthRespDTO;
+import com.jandi.band_backend.auth.dto.SignUpReqDTO;
+import com.jandi.band_backend.auth.dto.UserInfoDTO;
 import com.jandi.band_backend.auth.service.AuthService;
 import com.jandi.band_backend.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -20,5 +22,14 @@ public class AuthController {
             @RequestParam String code
     ){
         return authService.login(code);
+    }
+
+    @PostMapping("/signup")
+    public UserInfoDTO signUp(
+            @RequestHeader("Authorization") String token,
+            @RequestBody SignUpReqDTO signUpReqDTO
+    ){
+        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(token.replace("Bearer ", ""));
+        return authService.signup(kakaoOauthId, signUpReqDTO);
     }
 }

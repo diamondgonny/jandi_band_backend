@@ -25,6 +25,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -126,17 +127,20 @@ public class Users {
     
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        position = Position.NON;
+        university = null;
+
+        createdAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+        updatedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
     
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
     
     public enum Position {
-        VOCAL, GUITAR, KEYBOARD, BASS, DRUM, OTHER
+        VOCAL, GUITAR, KEYBOARD, BASS, DRUM, OTHER, NON
     }
     
     public enum AdminRole {

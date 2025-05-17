@@ -5,9 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Table(name = "region")
 @Getter
@@ -25,7 +22,4 @@ public class Region {
     
     @Column(name = "name", nullable = false, length = 50)
     private String name;
-    
-    @OneToMany(mappedBy = "region")
-    private List<University> universities = new ArrayList<>();
 } 

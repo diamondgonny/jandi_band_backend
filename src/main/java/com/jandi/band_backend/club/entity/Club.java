@@ -58,6 +58,9 @@ public class Club {
     private List<ClubPhoto> clubPhotos = new ArrayList<>();
 
     @OneToMany(mappedBy = "club")
+    private List<ClubGalPhoto> clubGalPhotos = new ArrayList<>();
+
+    @OneToMany(mappedBy = "club")
     private List<Team> teams = new ArrayList<>();
 
     @OneToMany(mappedBy = "club")

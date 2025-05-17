@@ -27,7 +27,7 @@ public class UserTimetable {
     private String name;
     
     @Column(name = "user_timetable_data", nullable = false, columnDefinition = "json")
-    private String userTimetableData;
+    private String timetableData;
     
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

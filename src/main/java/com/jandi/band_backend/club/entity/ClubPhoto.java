@@ -1,6 +1,5 @@
 package com.jandi.band_backend.club.entity;
 
-import com.jandi.band_backend.image.entity.Photo;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,49 +8,32 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "club_photo", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"club_id", "photo_id"})
-})
+@Table(name = "club_photo")
 @Getter
 @Setter
 @NoArgsConstructor
 public class ClubPhoto {
 
     @Id
-    @Column(name = "photo_id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "club_photo_id")
     private Integer id;
-
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "photo_id")
-    private Photo photo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "club_id", nullable = false)
     private Club club;
 
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
+    @Column(name = "image_url", nullable = false, length = 512)
+    private String imageUrl;
 
-    @Column(name = "is_pinned", nullable = false)
-    private Boolean isPinned = false;
-
-    @Column(name = "is_public", nullable = false)
-    private Boolean isPublic = true;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    @Column(name = "uploaded_at", nullable = false, updatable = false)
+    private LocalDateTime uploadedAt;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
-    
+
     @PrePersist
     protected void onCreate() {
-        updatedAt = LocalDateTime.now();
+        uploadedAt = LocalDateTime.now();
     }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-}
+} 

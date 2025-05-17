@@ -1,6 +1,5 @@
-package com.jandi.band_backend.promo.entity;
+package com.jandi.band_backend.user.entity;
 
-import com.jandi.band_backend.user.entity.Users;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,24 +8,20 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "promo_photo")
+@Table(name = "user_photo")
 @Getter
 @Setter
 @NoArgsConstructor
-public class PromoPhoto {
+public class UserPhoto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "promo_photo_id")
+    @Column(name = "user_photo_id")
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "promo_id", nullable = false)
-    private Promo promo;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "uploader_user_id", nullable = false)
-    private Users uploader;
+    @JoinColumn(name = "user_id", nullable = false)
+    private Users user;
 
     @Column(name = "image_url", nullable = false, length = 512)
     private String imageUrl;

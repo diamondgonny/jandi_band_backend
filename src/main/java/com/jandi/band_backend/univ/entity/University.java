@@ -22,7 +22,7 @@ public class University {
     @Column(name = "university_id")
     private Integer id;
     
-    @Column(name = "university_code", nullable = false, unique = true, length = 7)
+    @Column(name = "university_code", nullable = false, unique = true, columnDefinition = "char(7)")
     private String universityCode;
     
     @Column(name = "name", nullable = false, length = 100)

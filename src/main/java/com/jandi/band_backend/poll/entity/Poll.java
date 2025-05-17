@@ -55,7 +55,7 @@ public class Poll {
     private LocalDateTime deletedAt;
     
     @OneToMany(mappedBy = "poll")
-    private List<PollSong> pollSongs = new ArrayList<>();
+    private List<PollSong> songs = new ArrayList<>();
     
     @PrePersist
     protected void onCreate() {

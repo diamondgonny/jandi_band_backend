@@ -9,7 +9,9 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "promo_comment_like")
+@Table(name = "promo_comment_like", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"promo_comment_id", "user_id"})
+})
 @Getter
 @Setter
 @NoArgsConstructor

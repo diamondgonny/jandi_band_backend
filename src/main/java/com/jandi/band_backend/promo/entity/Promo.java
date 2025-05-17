@@ -73,16 +73,16 @@ public class Promo {
     private LocalDateTime deletedAt;
     
     @OneToMany(mappedBy = "promo")
-    private List<PromoLike> promoLikes = new ArrayList<>();
+    private List<PromoPhoto> photos = new ArrayList<>();
     
     @OneToMany(mappedBy = "promo")
-    private List<PromoReport> promoReports = new ArrayList<>();
+    private List<PromoLike> likes = new ArrayList<>();
     
     @OneToMany(mappedBy = "promo")
-    private List<PromoComment> promoComments = new ArrayList<>();
+    private List<PromoReport> reports = new ArrayList<>();
     
     @OneToMany(mappedBy = "promo")
-    private List<PromoPhoto> promoPhotos = new ArrayList<>();
+    private List<PromoComment> comments = new ArrayList<>();
     
     @PrePersist
     protected void onCreate() {

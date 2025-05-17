@@ -1,10 +1,9 @@
-package com.jandi.band_backend.auth.dto;
+package com.jandi.band_backend.user.dto;
 
 import com.jandi.band_backend.user.entity.UserPhoto;
 import com.jandi.band_backend.user.entity.Users;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor

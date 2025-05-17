@@ -3,7 +3,7 @@ package com.jandi.band_backend.auth.controller;
 import com.jandi.band_backend.auth.dto.AuthRespDTO;
 import com.jandi.band_backend.auth.dto.RefreshReqDTO;
 import com.jandi.band_backend.auth.dto.SignUpReqDTO;
-import com.jandi.band_backend.auth.dto.UserInfoDTO;
+import com.jandi.band_backend.user.dto.UserInfoDTO;
 import com.jandi.band_backend.auth.service.AuthService;
 import com.jandi.band_backend.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;

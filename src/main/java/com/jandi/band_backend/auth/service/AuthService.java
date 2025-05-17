@@ -8,6 +8,7 @@ import com.jandi.band_backend.auth.service.kakao.KakaoUserService;
 import com.jandi.band_backend.security.jwt.JwtTokenProvider;
 import com.jandi.band_backend.univ.entity.University;
 import com.jandi.band_backend.univ.repository.UniversityRepository;
+import com.jandi.band_backend.user.dto.UserInfoDTO;
 import com.jandi.band_backend.user.entity.UserPhoto;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserPhotoRepository;

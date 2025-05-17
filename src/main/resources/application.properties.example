@@ -1,0 +1,25 @@
+spring.application.name=jandi_band_backend
+
+# Database configuration
+spring.datasource.url=
+spring.datasource.username=
+spring.datasource.password=
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# JPA configuration
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.jdbc.time_zone=UTC
+
+spring.jackson.time-zone=UTC
+
+#jwt
+jwt.secret=
+
+#Kakao OAuth Secret
+kakao.rest-api-key=
+kakao.redirect-url=https://rhythmeet-be.yeonjae.kr/api/auth/login
+kakao.logout-url=https://kauth.kakao.com/oauth/logout
+kakao.token-url=https://kauth.kakao.com/oauth/token
+kakao.user-info-url=https://kapi.kakao.com/v2/user/me

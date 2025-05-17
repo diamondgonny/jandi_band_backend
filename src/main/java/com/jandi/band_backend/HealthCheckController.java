@@ -2,7 +2,8 @@ package com.jandi.band_backend;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,16 +11,15 @@ import java.util.Map;
 @RestController
 public class HealthCheckController {
 
-    private final LocalDateTime startTime = LocalDateTime.now();
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private final Instant startTime = Instant.now();
+    private final DateTimeFormatter formatter = DateTimeFormatter.ISO_INSTANT;
 
     @GetMapping("/")
-    public Map<String, String> getServerStatus() {
+    public Map<String, String> healthCheck() {
         Map<String, String> response = new HashMap<>();
-        response.put("status", "running");
-        response.put("lastUpdateTime", startTime.format(formatter));
-        response.put("serverTime", LocalDateTime.now().format(formatter));
-
+        response.put("status", "UP");
+        response.put("uptime", Duration.between(startTime, Instant.now()).toString());
+        response.put("serverTime", formatter.format(Instant.now()));
         return response;
     }
 }

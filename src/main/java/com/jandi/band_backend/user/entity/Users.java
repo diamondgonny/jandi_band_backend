@@ -1,10 +1,9 @@
 package com.jandi.band_backend.user.entity;
 
-import com.jandi.band_backend.club.entity.ClubGalPhoto;
 import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.club.entity.ClubEventParticipant;
+import com.jandi.band_backend.club.entity.ClubGalPhoto;
 import com.jandi.band_backend.club.entity.ClubEvent;
-
 import com.jandi.band_backend.team.entity.TeamMember;
 import com.jandi.band_backend.team.entity.TeamEventParticipant;
 import com.jandi.band_backend.team.entity.TeamEvent;
@@ -24,7 +23,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,7 +41,7 @@ public class Users {
     
     @Column(name = "kakao_oauth_id", nullable = false, unique = true, length = 255)
     private String kakaoOauthId;
-
+    
     @Column(name = "nickname", nullable = false, length = 100)
     private String nickname;
     
@@ -59,13 +58,13 @@ public class Users {
     private AdminRole adminRole = AdminRole.USER;
     
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
     
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
     
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    private Instant deletedAt;
     
     @OneToMany(mappedBy = "user")
     private List<UserPhoto> photos = new ArrayList<>();
@@ -75,25 +74,25 @@ public class Users {
     
     @OneToMany(mappedBy = "user")
     private List<ClubMember> clubMemberships = new ArrayList<>();
-
+    
     @OneToMany(mappedBy = "user")
     private List<ClubEventParticipant> clubEventParticipations = new ArrayList<>();
     
     @OneToMany(mappedBy = "uploader")
     private List<ClubGalPhoto> uploadedClubGalPhotos = new ArrayList<>();
-
+    
     @OneToMany(mappedBy = "creator")
     private List<ClubEvent> createdClubEvents = new ArrayList<>();
     
     @OneToMany(mappedBy = "user")
     private List<TeamMember> teamMemberships = new ArrayList<>();
-
+    
     @OneToMany(mappedBy = "user")
     private List<TeamEventParticipant> teamEventParticipations = new ArrayList<>();
     
     @OneToMany(mappedBy = "creator")
     private List<TeamEvent> createdTeamEvents = new ArrayList<>();
-
+    
     @OneToMany(mappedBy = "creator")
     private List<Poll> createdPolls = new ArrayList<>();
     
@@ -108,7 +107,7 @@ public class Users {
     
     @OneToMany(mappedBy = "uploader")
     private List<PromoPhoto> uploadedPromoPhotos = new ArrayList<>();
-
+    
     @OneToMany(mappedBy = "user")
     private List<PromoLike> promoLikes = new ArrayList<>();
     
@@ -129,13 +128,13 @@ public class Users {
         position = null;
         university = null;
 
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
     }
     
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = Instant.now();
     }
     
     public enum Position {

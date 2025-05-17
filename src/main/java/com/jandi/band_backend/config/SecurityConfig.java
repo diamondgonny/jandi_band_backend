@@ -29,7 +29,7 @@ public class SecurityConfig {
                     return config;
                 }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/health").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(login -> login.disable())

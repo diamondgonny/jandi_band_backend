@@ -14,7 +14,7 @@ public class HealthCheckController {
     private final Instant startTime = Instant.now();
     private final DateTimeFormatter formatter = DateTimeFormatter.ISO_INSTANT;
 
-    @GetMapping("/")
+    @GetMapping("/health")
     public Map<String, String> healthCheck() {
         Map<String, String> response = new HashMap<>();
         response.put("status", "UP");

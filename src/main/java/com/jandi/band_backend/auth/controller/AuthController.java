@@ -7,11 +7,8 @@ import com.jandi.band_backend.auth.dto.UserInfoDTO;
 import com.jandi.band_backend.auth.service.AuthService;
 import com.jandi.band_backend.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -31,7 +28,8 @@ public class AuthController {
             @RequestHeader("Authorization") String token,
             @RequestBody SignUpReqDTO signUpReqDTO
     ){
-        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(token.replace("Bearer ", ""));
+        String accessToken = token.replace("Bearer ", "");
+        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
         return authService.signup(kakaoOauthId, signUpReqDTO);
     }
 

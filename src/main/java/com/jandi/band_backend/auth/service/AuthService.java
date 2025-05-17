@@ -32,29 +32,25 @@ public class AuthService {
 
     /// 로그인
     public AuthRespDTO login(String code){
+        // 카카오로부터 유저 정보 얻기
         KakaoTokenRespDTO kakaoToken = kaKaoTokenService.getKakaoToken(code);
         KakaoUserInfoDTO kakaoUserInfo = kakaoUserService.getKakaoUserInfo(kakaoToken.getAccessToken());
-        String kakaoOauthId = kakaoUserInfo.getKakaoOauthId();
 
-        // DB에서 유저 정보 찾기 -> 없다면 임시 회원 정보 생성
-        Optional<Users> user = usersRepository.findByKakaoOauthId(kakaoOauthId);
-        if(user.isEmpty())
-            signup(kakaoUserInfo);
+        // DB에서 유저를 찾되, 없다면 임시 회원 가입 진행
+        Users user = getOrCreateUser(kakaoUserInfo);
 
         // 자체 jwt 토큰 발급
         return new AuthRespDTO(
-            jwtTokenProvider.generateAccessToken(kakaoOauthId),
-            jwtTokenProvider.generateRefreshToken(kakaoOauthId)
+            jwtTokenProvider.generateAccessToken(user.getKakaoOauthId()),
+            jwtTokenProvider.generateRefreshToken(user.getKakaoOauthId())
         );
     }
 
     /// 정식 회원가입
     public UserInfoDTO signup(String kakaoOauthId, SignUpReqDTO reqDTO) {
-        log.info("정식 회원가입");
-
         // 유저 조회
         Users user = usersRepository.findByKakaoOauthId(kakaoOauthId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다."));
+                .orElseThrow(() ->  new RuntimeException("존재하지 않는 회원입니다."));
 
         // 기본 유저 정보 입력
         University university = universityRepository.findByName(reqDTO.getUniversity());
@@ -64,15 +60,39 @@ public class AuthService {
         user.setPosition(position);
         usersRepository.save(user);
 
-        // 유저 정보 반환
+        log.info("KakaoOauthId: {}에 대해 임시 회원 가입 완료", kakaoOauthId);
+
+        // 유저 정보 반환: 유저 기본 정보, 유저 프로필
         return new UserInfoDTO(
-                user, //유저 기본 정보
-                userPhotoRepository.findByUser(user) // 유저 프로필
+                user, userPhotoRepository.findByUser(user)
         );
     }
 
+    /// 리프레시 토큰 생성
+    public AuthRespDTO refresh(String refreshToken) {
+        // 리프레시 토큰 검증
+        if(!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new RuntimeException("유효하지 않은 토큰입니다");
+        }
+
+        // 토큰 재발급
+        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(refreshToken);
+        return new AuthRespDTO(
+                jwtTokenProvider.generateAccessToken(kakaoOauthId),
+                jwtTokenProvider.generateRefreshToken(kakaoOauthId)
+        );
+    }
+
+    /// 내부 메서드
+    // DB에서 유저를 찾되, 없다면 임시 회원 가입 진행
+    private Users getOrCreateUser(KakaoUserInfoDTO kakaoUserInfo) {
+        String kakaoOauthId = kakaoUserInfo.getKakaoOauthId();
+        return usersRepository.findByKakaoOauthId(kakaoOauthId)
+                .orElseGet(() -> createTemporaryUser(kakaoUserInfo));
+    }
+
     // 임시 회원 가입
-    private void signup(KakaoUserInfoDTO kakaoUserInfo){
+    private Users createTemporaryUser(KakaoUserInfoDTO kakaoUserInfo){
         // 유저 생성
         Users newUser = new Users();
         newUser.setKakaoOauthId(kakaoUserInfo.getKakaoOauthId());
@@ -84,18 +104,7 @@ public class AuthService {
         profile.setUser(newUser);
         profile.setImageUrl(kakaoUserInfo.getProfilePhoto());
         userPhotoRepository.save(profile);
-    }
 
-    /// 리프레시 토큰 생성
-    public AuthRespDTO refresh(String refreshToken) {
-        if(!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new RuntimeException("유효하지 않은 토큰입니다");
-        }
-
-        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(refreshToken);
-        return new AuthRespDTO(
-                jwtTokenProvider.generateAccessToken(kakaoOauthId),
-                jwtTokenProvider.generateRefreshToken(kakaoOauthId)
-        );
+        return newUser;
     }
 }

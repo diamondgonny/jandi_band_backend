@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "club_member", uniqueConstraints = {
@@ -35,20 +35,20 @@ public class ClubMember {
     private MemberRole role = MemberRole.MEMBER;
 
     @Column(name = "joined_at", nullable = false, updatable = false)
-    private LocalDateTime joinedAt;
+    private Instant joinedAt;
 
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        joinedAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        joinedAt = Instant.now();
+        updatedAt = Instant.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = Instant.now();
     }
 
     public enum MemberRole {

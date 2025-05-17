@@ -4,7 +4,6 @@ import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.club.entity.ClubEventParticipant;
 import com.jandi.band_backend.club.entity.ClubGalPhoto;
 import com.jandi.band_backend.club.entity.ClubEvent;
-import com.jandi.band_backend.team.entity.Team;
 import com.jandi.band_backend.team.entity.TeamMember;
 import com.jandi.band_backend.team.entity.TeamEventParticipant;
 import com.jandi.band_backend.team.entity.TeamEvent;
@@ -24,7 +23,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,13 +58,13 @@ public class Users {
     private AdminRole adminRole = AdminRole.USER;
     
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
     
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
     
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    private Instant deletedAt;
     
     @OneToMany(mappedBy = "user")
     private List<UserPhoto> photos = new ArrayList<>();
@@ -126,13 +125,13 @@ public class Users {
     
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
     }
     
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = Instant.now();
     }
     
     public enum Position {

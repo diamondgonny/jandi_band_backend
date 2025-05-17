@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +39,7 @@ public class Promo {
     private BigDecimal admissionFee;
     
     @Column(name = "event_datetime")
-    private LocalDateTime eventDatetime;
+    private Instant eventDatetime;
     
     @Column(name = "location", length = 255)
     private String location;
@@ -64,13 +64,13 @@ public class Promo {
     private Integer likeCount = 0;
     
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
     
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
     
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    private Instant deletedAt;
     
     @OneToMany(mappedBy = "promo")
     private List<PromoPhoto> photos = new ArrayList<>();
@@ -86,13 +86,13 @@ public class Promo {
     
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
     }
     
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = Instant.now();
     }
     
     public enum PromoStatus {

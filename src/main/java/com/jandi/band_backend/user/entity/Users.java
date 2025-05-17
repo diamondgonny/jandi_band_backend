@@ -125,6 +125,9 @@ public class Users {
     
     @PrePersist
     protected void onCreate() {
+        position = null;
+        university = null;
+
         createdAt = Instant.now();
         updatedAt = Instant.now();
     }

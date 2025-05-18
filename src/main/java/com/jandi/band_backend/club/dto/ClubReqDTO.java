@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import java.util.List;
 
 public class ClubReqDTO {
 
@@ -20,8 +19,8 @@ public class ClubReqDTO {
         @Size(max = 100, message = "동아리 이름은 100자 이내여야 합니다")
         private String name;
 
-        @NotBlank(message = "대학은 필수입니다")
-        private List<Integer> universityIds;
+        // universityId가 null이면 연합동아리, 아니면 특정 대학 소속 동아리
+        private Integer universityId;
 
         @Size(max = 255, message = "카카오톡 채팅방 링크는 255자 이내여야 합니다")
         private String chatroomUrl;
@@ -42,7 +41,8 @@ public class ClubReqDTO {
         @Size(max = 100, message = "동아리 이름은 100자 이내여야 합니다")
         private String name;
 
-        private List<Integer> universityIds;
+        // universityId가 null이면 연합동아리, 아니면 특정 대학 소속 동아리
+        private Integer universityId;
 
         @Size(max = 255, message = "카카오톡 채팅방 링크는 255자 이내여야 합니다")
         private String chatroomUrl;

@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public class ClubRespDTO {
 
@@ -18,7 +17,8 @@ public class ClubRespDTO {
     public static class Response {
         private Integer id;
         private String name;
-        private List<UniversityRespDTO.SimpleResponse> universities;
+        private UniversityRespDTO.SimpleResponse university;
+        private Boolean isUnionClub;
         private String chatroomUrl;
         private String description;
         private String instagramId;
@@ -35,7 +35,8 @@ public class ClubRespDTO {
     public static class SimpleResponse {
         private Integer id;
         private String name;
-        private List<String> universityNames;
+        private String universityName;
+        private Boolean isUnionClub;
         private String photoUrl;
         private Integer memberCount;
     }

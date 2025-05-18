@@ -1,12 +1,11 @@
-package com.jandi.band_backend.club.dto;
+package com.jandi.band_backend.univ.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-public class UniversityDto {
+public class UniversityRespDTO {
 
     @Getter
     @Builder

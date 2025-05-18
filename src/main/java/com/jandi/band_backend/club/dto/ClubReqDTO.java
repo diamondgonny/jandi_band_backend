@@ -3,15 +3,13 @@ package com.jandi.band_backend.club.dto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import java.time.LocalDateTime;
 import java.util.List;
 
-public class ClubDto {
+public class ClubReqDTO {
 
     @Data
     @Builder
@@ -34,35 +32,6 @@ public class ClubDto {
         private String instagramId;
 
         private String photoUrl;
-    }
-
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Response {
-        private Integer id;
-        private String name;
-        private List<UniversityDto.SimpleResponse> universities;
-        private String chatroomUrl;
-        private String description;
-        private String instagramId;
-        private String photoUrl;
-        private Integer memberCount;
-        private LocalDateTime createdAt;
-        private LocalDateTime updatedAt;
-    }
-
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class SimpleResponse {
-        private Integer id;
-        private String name;
-        private List<String> universityNames;
-        private String photoUrl;
-        private Integer memberCount;
     }
 
     @Data

@@ -1,7 +1,8 @@
 package com.jandi.band_backend.club.controller;
 
-import com.jandi.band_backend.club.dto.ClubDto;
-import com.jandi.band_backend.club.dto.PageResponseDto;
+import com.jandi.band_backend.club.dto.ClubReqDTO;
+import com.jandi.band_backend.club.dto.ClubRespDTO;
+import com.jandi.band_backend.club.dto.PageRespDTO;
 import com.jandi.band_backend.club.service.ClubService;
 import com.jandi.band_backend.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -26,11 +27,11 @@ public class ClubController {
      * 사용자가 새로운 동아리를 생성합니다.
      */
     @PostMapping
-    public ResponseEntity<ClubDto.Response> createClub(
-            @Valid @RequestBody ClubDto.Request request,
+    public ResponseEntity<ClubRespDTO.Response> createClub(
+            @Valid @RequestBody ClubReqDTO.Request request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
-        ClubDto.Response response = clubService.createClub(request, userId);
+        ClubRespDTO.Response response = clubService.createClub(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -39,9 +40,9 @@ public class ClubController {
      * 페이지네이션을 지원하는 동아리 목록을 반환합니다.
      */
     @GetMapping
-    public ResponseEntity<PageResponseDto<ClubDto.SimpleResponse>> getClubList(
+    public ResponseEntity<PageRespDTO<ClubRespDTO.SimpleResponse>> getClubList(
             @PageableDefault(size = 5) Pageable pageable) {
-        PageResponseDto<ClubDto.SimpleResponse> response = clubService.getClubList(pageable);
+        PageRespDTO<ClubRespDTO.SimpleResponse> response = clubService.getClubList(pageable);
         return ResponseEntity.ok(response);
     }
 
@@ -50,9 +51,9 @@ public class ClubController {
      * 특정 동아리의 상세 정보를 조회합니다.
      */
     @GetMapping("/{clubId}")
-    public ResponseEntity<ClubDto.Response> getClubDetail(
+    public ResponseEntity<ClubRespDTO.Response> getClubDetail(
             @PathVariable Integer clubId) {
-        ClubDto.Response response = clubService.getClubDetail(clubId);
+        ClubRespDTO.Response response = clubService.getClubDetail(clubId);
         return ResponseEntity.ok(response);
     }
 
@@ -61,12 +62,12 @@ public class ClubController {
      * 대표자가 동아리 정보를 수정합니다.
      */
     @PatchMapping("/{clubId}")
-    public ResponseEntity<ClubDto.Response> updateClub(
+    public ResponseEntity<ClubRespDTO.Response> updateClub(
             @PathVariable Integer clubId,
-            @Valid @RequestBody ClubDto.UpdateRequest request,
+            @Valid @RequestBody ClubReqDTO.UpdateRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
-        ClubDto.Response response = clubService.updateClub(clubId, request, userId);
+        ClubRespDTO.Response response = clubService.updateClub(clubId, request, userId);
         return ResponseEntity.ok(response);
     }
 

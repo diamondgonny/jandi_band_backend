@@ -147,8 +147,9 @@ public class ClubService {
         // 동아리 대표 사진 업데이트 (제공된 경우)
         if (request.getPhotoUrl() != null && !request.getPhotoUrl().isEmpty()) {
             // 기존 사진이 있으면 소프트 삭제 처리
-            clubPhotoRepository.findByClubIdAndDeletedAtIsNull(clubId)
+            clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
                     .ifPresent(photo -> {
+                        photo.setIsCurrent(false);
                         photo.setDeletedAt(Instant.now());
                         clubPhotoRepository.save(photo);
                     });
@@ -192,8 +193,9 @@ public class ClubService {
                 .orElseThrow(() -> new IllegalArgumentException("동아리 삭제 권한이 없습니다."));
 
         // 동아리 대표 사진 소프트 삭제
-        clubPhotoRepository.findByClubIdAndDeletedAtIsNull(clubId)
+        clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
                 .ifPresent(photo -> {
+                    photo.setIsCurrent(false);
                     photo.setDeletedAt(Instant.now());
                     clubPhotoRepository.save(photo);
                 });
@@ -213,7 +215,7 @@ public class ClubService {
     // 동아리 응답 객체 생성 헬퍼 메서드 (회원 수 제공)
     private ClubRespDTO.Response buildClubResponse(Club club, int memberCount) {
         // 동아리 대표 사진 URL 조회
-        String photoUrl = clubPhotoRepository.findByClubIdAndDeletedAtIsNull(club.getId())
+        String photoUrl = clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(club.getId())
                 .map(ClubPhoto::getImageUrl)
                 .orElse(null);
 
@@ -244,7 +246,7 @@ public class ClubService {
     // 동아리 간단 응답 객체 생성 헬퍼 메서드
     private ClubRespDTO.SimpleResponse buildClubSimpleResponse(Club club) {
         // 동아리 대표 사진 URL 조회
-        String photoUrl = clubPhotoRepository.findByClubIdAndDeletedAtIsNull(club.getId())
+        String photoUrl = clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(club.getId())
                 .map(ClubPhoto::getImageUrl)
                 .orElse(null);
 
@@ -274,6 +276,7 @@ public class ClubService {
         ClubPhoto photo = new ClubPhoto();
         photo.setClub(club);
         photo.setImageUrl(imageUrl);
+        photo.setIsCurrent(true);
         clubPhotoRepository.save(photo);
     }
 }

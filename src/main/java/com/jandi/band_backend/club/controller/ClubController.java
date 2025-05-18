@@ -35,7 +35,7 @@ public class ClubController {
         Integer userId = userDetails.getUserId();
         ClubRespDTO.Response response = clubService.createClub(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(HttpStatus.CREATED, "동아리가 성공적으로 생성되었습니다", response));
+                .body(ApiResponse.success("동아리가 성공적으로 생성되었습니다", response));
     }
 
     /**
@@ -47,7 +47,7 @@ public class ClubController {
     public ResponseEntity<ApiResponse<PageRespDTO<ClubRespDTO.SimpleResponse>>> getClubList(
             @PageableDefault(size = 5) Pageable pageable) {
         PageRespDTO<ClubRespDTO.SimpleResponse> response = clubService.getClubList(pageable);
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "동아리 목록 조회 성공", response));
+        return ResponseEntity.ok(ApiResponse.success("동아리 목록 조회 성공", response));
     }
 
     /**
@@ -59,7 +59,7 @@ public class ClubController {
     public ResponseEntity<ApiResponse<ClubRespDTO.Response>> getClubDetail(
             @PathVariable Integer clubId) {
         ClubRespDTO.Response response = clubService.getClubDetail(clubId);
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "동아리 상세 정보 조회 성공", response));
+        return ResponseEntity.ok(ApiResponse.success("동아리 상세 정보 조회 성공", response));
     }
 
     /**
@@ -74,7 +74,7 @@ public class ClubController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         ClubRespDTO.Response response = clubService.updateClub(clubId, request, userId);
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "동아리 정보가 성공적으로 수정되었습니다", response));
+        return ResponseEntity.ok(ApiResponse.success("동아리 정보가 성공적으로 수정되었습니다", response));
     }
 
     /**
@@ -87,6 +87,6 @@ public class ClubController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         clubService.deleteClub(clubId, userId);
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "동아리가 성공적으로 삭제되었습니다"));
+        return ResponseEntity.ok(ApiResponse.success("동아리가 성공적으로 삭제되었습니다"));
     }
 }

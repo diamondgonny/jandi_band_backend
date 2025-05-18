@@ -42,13 +42,13 @@ public class PollService {
         Poll poll = new Poll();
         poll.setClub(club);
         poll.setTitle(requestDto.getTitle());
-        poll.setStartDatetime(Instant.now());
-        poll.setEndDatetime(requestDto.getEndDatetime());
+        poll.setStartDatetime(Instant.now()); // UTC로 현재 시간 저장
+        poll.setEndDatetime(requestDto.getEndDatetime()); // 클라이언트에서 전달한 UTC 시간 그대로 저장
         poll.setCreator(creator);
 
         Poll savedPoll = pollRepository.save(poll);
 
-        return PollRespDTO.fromEntity(savedPoll);
+        return PollRespDTO.fromEntity(savedPoll); // fromEntity 내에서 KST로 변환됨
     }
 
     @Transactional(readOnly = true)
@@ -60,7 +60,7 @@ public class PollService {
         // 동아리에 해당하는 투표 조회
         Page<Poll> polls = pollRepository.findAllByClubAndDeletedAtIsNullOrderByCreatedAtDesc(club, pageable);
 
-        return polls.map(PollRespDTO::fromEntity);
+        return polls.map(PollRespDTO::fromEntity); // fromEntity 내에서 KST로 변환됨
     }
 
     @Transactional(readOnly = true)
@@ -74,10 +74,10 @@ public class PollService {
 
         // PollSongResponseDto로 변환
         List<PollSongRespDTO> songResponseDtos = pollSongs.stream()
-                .map(PollSongRespDTO::fromEntity)
+                .map(PollSongRespDTO::fromEntity) // fromEntity 내에서 KST로 변환됨
                 .collect(Collectors.toList());
 
-        return PollDetailRespDTO.fromEntity(poll, songResponseDtos);
+        return PollDetailRespDTO.fromEntity(poll, songResponseDtos); // fromEntity 내에서 KST로 변환됨
     }
 
     @Transactional
@@ -101,6 +101,6 @@ public class PollService {
 
         PollSong savedPollSong = pollSongRepository.save(pollSong);
 
-        return PollSongRespDTO.fromEntity(savedPollSong);
+        return PollSongRespDTO.fromEntity(savedPollSong); // fromEntity 내에서 KST로 변환됨
     }
 }

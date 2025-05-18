@@ -1,12 +1,13 @@
 package com.jandi.band_backend.poll.dto;
 
+import com.jandi.band_backend.global.util.TimeUtil;
 import com.jandi.band_backend.poll.entity.PollSong;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Getter
 @NoArgsConstructor
@@ -21,7 +22,7 @@ public class PollSongRespDTO {
     private String description;
     private Integer suggesterId;
     private String suggesterName;
-    private Instant createdAt;
+    private ZonedDateTime createdAt;
     private Integer likeCount;
     private Integer dislikeCount;
     private Integer cantCount;
@@ -37,7 +38,7 @@ public class PollSongRespDTO {
                 .description(pollSong.getDescription())
                 .suggesterId(pollSong.getSuggester() != null ? pollSong.getSuggester().getId() : null)
                 .suggesterName(pollSong.getSuggester() != null ? pollSong.getSuggester().getNickname() : null)
-                .createdAt(pollSong.getCreatedAt())
+                .createdAt(TimeUtil.toKST(pollSong.getCreatedAt()))
                 .likeCount(calculateVoteCount(pollSong, "LIKE"))
                 .dislikeCount(calculateVoteCount(pollSong, "DISLIKE"))
                 .cantCount(calculateVoteCount(pollSong, "CANT"))

@@ -1,12 +1,13 @@
 package com.jandi.band_backend.poll.dto;
 
+import com.jandi.band_backend.global.util.TimeUtil;
 import com.jandi.band_backend.poll.entity.Poll;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Getter
 @NoArgsConstructor
@@ -17,11 +18,11 @@ public class PollRespDTO {
     private String title;
     private Integer clubId;
     private String clubName;
-    private Instant startDatetime;
-    private Instant endDatetime;
+    private ZonedDateTime startDatetime;
+    private ZonedDateTime endDatetime;
     private Integer creatorId;
     private String creatorName;
-    private Instant createdAt;
+    private ZonedDateTime createdAt;
 
     public static PollRespDTO fromEntity(Poll poll) {
         return PollRespDTO.builder()
@@ -29,11 +30,11 @@ public class PollRespDTO {
                 .title(poll.getTitle())
                 .clubId(poll.getClub() != null ? poll.getClub().getId() : null)
                 .clubName(poll.getClub() != null ? poll.getClub().getName() : null)
-                .startDatetime(poll.getStartDatetime())
-                .endDatetime(poll.getEndDatetime())
+                .startDatetime(TimeUtil.toKST(poll.getStartDatetime()))
+                .endDatetime(TimeUtil.toKST(poll.getEndDatetime()))
                 .creatorId(poll.getCreator() != null ? poll.getCreator().getId() : null)
                 .creatorName(poll.getCreator() != null ? poll.getCreator().getNickname() : null)
-                .createdAt(poll.getCreatedAt())
+                .createdAt(TimeUtil.toKST(poll.getCreatedAt()))
                 .build();
     }
 }

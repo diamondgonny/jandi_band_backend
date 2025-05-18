@@ -1,12 +1,12 @@
 spring.application.name=jandi_band_backend
 
-# Database configuration
+#Database configuration
 spring.datasource.url=
 spring.datasource.username=
 spring.datasource.password=
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
-# JPA configuration
+#JPA configuration
 spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
@@ -19,7 +19,19 @@ jwt.secret=
 
 #Kakao OAuth Secret
 kakao.rest-api-key=
-kakao.redirect-url=https://rhythmeet-be.yeonjae.kr/api/auth/login
+kakao.redirect-url=
 kakao.logout-url=https://kauth.kakao.com/oauth/logout
 kakao.token-url=https://kauth.kakao.com/oauth/token
 kakao.user-info-url=https://kapi.kakao.com/v2/user/me
+
+# AWS S3 Configuration
+cloud.aws.credentials.access-key=
+cloud.aws.credentials.secret-key=
+cloud.aws.region.static=
+cloud.aws.stack.auto=false
+cloud.aws.s3.bucket=
+cloud.aws.s3.url=
+
+# Multipart File Configuration
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB

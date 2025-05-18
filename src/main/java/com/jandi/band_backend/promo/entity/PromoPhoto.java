@@ -9,7 +9,8 @@ import lombok.Setter;
 import java.time.Instant;
 
 @Entity
-@Table(name = "promo_photo")
+@Table(name = "promo_photo", 
+       uniqueConstraints = @UniqueConstraint(columnNames = {"promo_id", "is_current"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -30,6 +31,9 @@ public class PromoPhoto {
 
     @Column(name = "image_url", nullable = false, length = 512)
     private String imageUrl;
+    
+    @Column(name = "is_current", nullable = false)
+    private Boolean isCurrent = true;
 
     @Column(name = "uploaded_at", nullable = false, updatable = false)
     private Instant uploadedAt;

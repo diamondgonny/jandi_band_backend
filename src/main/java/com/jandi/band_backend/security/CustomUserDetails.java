@@ -25,11 +25,11 @@ public class CustomUserDetails implements UserDetails {
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getAdminRole().name()));
     }
 
-     @Override
-     public String getPassword() {
-         // 카카오 OAuth 인증이므로 암호가 없을 수 있음
-         return "";
-     }
+    @Override
+    public String getPassword() {
+        // 카카오 OAuth 인증이므로 암호가 없을 수 있음
+        return "";
+    }
 
     @Override
     public String getUsername() {

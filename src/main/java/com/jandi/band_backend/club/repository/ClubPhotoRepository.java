@@ -10,5 +10,5 @@ import java.util.Optional;
 @Repository
 public interface ClubPhotoRepository extends JpaRepository<ClubPhoto, Integer> {
     List<ClubPhoto> findByClubId(Integer clubId);
-    Optional<ClubPhoto> findByClubIdAndDeletedAtIsNull(Integer clubId);
+    Optional<ClubPhoto> findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(Integer clubId);
 }

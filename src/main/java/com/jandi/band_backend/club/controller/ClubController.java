@@ -25,6 +25,7 @@ public class ClubController {
     /**
      * 동아리 추가 API
      * 사용자가 새로운 동아리를 생성합니다.
+     * universityId가 null이면 연합 동아리로, 값이 있으면 특정 대학 소속 동아리로 생성됩니다.
      */
     @PostMapping
     public ResponseEntity<ClubRespDTO.Response> createClub(
@@ -38,6 +39,7 @@ public class ClubController {
     /**
      * 동아리 목록 조회 API
      * 페이지네이션을 지원하는 동아리 목록을 반환합니다.
+     * 응답에는 각 동아리가 연합 동아리인지 여부(isUnionClub)와 소속 대학(있는 경우)이 포함됩니다.
      */
     @GetMapping
     public ResponseEntity<PageRespDTO<ClubRespDTO.SimpleResponse>> getClubList(
@@ -49,6 +51,7 @@ public class ClubController {
     /**
      * 동아리 상세 조회 API
      * 특정 동아리의 상세 정보를 조회합니다.
+     * 연합 동아리인 경우 university 필드는 null이고 isUnionClub은 true입니다.
      */
     @GetMapping("/{clubId}")
     public ResponseEntity<ClubRespDTO.Response> getClubDetail(
@@ -60,6 +63,7 @@ public class ClubController {
     /**
      * 동아리 정보 수정 API
      * 대표자가 동아리 정보를 수정합니다.
+     * universityId를 변경하여 소속 대학을 변경하거나, null로 설정하여 연합 동아리로 변경할 수 있습니다.
      */
     @PatchMapping("/{clubId}")
     public ResponseEntity<ClubRespDTO.Response> updateClub(

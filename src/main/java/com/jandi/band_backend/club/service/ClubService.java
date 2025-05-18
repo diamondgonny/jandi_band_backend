@@ -7,12 +7,10 @@ import com.jandi.band_backend.univ.dto.UniversityRespDTO;
 import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.club.entity.ClubPhoto;
-import com.jandi.band_backend.club.entity.ClubUniversity;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.club.repository.ClubPhotoRepository;
 import com.jandi.band_backend.club.repository.ClubRepository;
-import com.jandi.band_backend.club.repository.ClubUniversityRepository;
 import com.jandi.band_backend.user.repository.UserRepository;
 import com.jandi.band_backend.univ.entity.University;
 import com.jandi.band_backend.univ.repository.UniversityRepository;
@@ -26,8 +24,6 @@ import java.time.LocalDateTime;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,7 +34,6 @@ public class ClubService {
 
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
-    private final ClubUniversityRepository clubUniversityRepository;
     private final ClubPhotoRepository clubPhotoRepository;
     private final UserRepository userRepository;
     private final UniversityRepository universityRepository;
@@ -58,25 +53,19 @@ public class ClubService {
         club.setCreatedAt(Instant.now());
         club.setUpdatedAt(Instant.now());
 
+        // 대학 정보 설정 (연합 동아리인 경우 null)
+        if (request.getUniversityId() != null) {
+            University university = universityRepository.findById(request.getUniversityId())
+                    .orElseThrow(() -> new IllegalArgumentException("대학을 찾을 수 없습니다. ID: " + request.getUniversityId()));
+            club.setUniversity(university);
+        }
+
         Club savedClub = clubRepository.save(club);
 
         // 동아리 대표 사진 저장 (제공된 경우)
         if (request.getPhotoUrl() != null && !request.getPhotoUrl().isEmpty()) {
             saveClubPhoto(savedClub, request.getPhotoUrl());
         }
-
-        // 동아리-대학 연결 정보 저장
-        List<ClubUniversity> clubUniversities = request.getUniversityIds().stream()
-                .map(universityId -> {
-                    University university = universityRepository.findById(universityId)
-                            .orElseThrow(() -> new IllegalArgumentException("대학을 찾을 수 없습니다. ID: " + universityId));
-                    ClubUniversity clubUniversity = new ClubUniversity();
-                    clubUniversity.setClub(savedClub);
-                    clubUniversity.setUniversity(university);
-                    return clubUniversity;
-                }).collect(Collectors.toList());
-
-        clubUniversityRepository.saveAll(clubUniversities);
 
         // 동아리 멤버 추가 (생성자를 대표자로 설정)
         ClubMember clubMember = new ClubMember();
@@ -142,13 +131,25 @@ public class ClubService {
         if (request.getInstagramId() != null) {
             club.setInstagramId(request.getInstagramId());
         }
+
+        // 대학 정보 업데이트
+        if (request.getUniversityId() != null) {
+            University university = universityRepository.findById(request.getUniversityId())
+                    .orElseThrow(() -> new IllegalArgumentException("대학을 찾을 수 없습니다. ID: " + request.getUniversityId()));
+            club.setUniversity(university);
+        } else {
+            // universityId가 null로 들어온 경우 연합 동아리로 설정
+            club.setUniversity(null);
+        }
+
         club.setUpdatedAt(Instant.now());
 
         // 동아리 대표 사진 업데이트 (제공된 경우)
         if (request.getPhotoUrl() != null && !request.getPhotoUrl().isEmpty()) {
             // 기존 사진이 있으면 소프트 삭제 처리
-            clubPhotoRepository.findByClubIdAndDeletedAtIsNull(clubId)
+            clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
                     .ifPresent(photo -> {
+                        photo.setIsCurrent(false);
                         photo.setDeletedAt(Instant.now());
                         clubPhotoRepository.save(photo);
                     });
@@ -158,24 +159,6 @@ public class ClubService {
         }
 
         Club updatedClub = clubRepository.save(club);
-
-        // 대학 정보 업데이트 (기존 대학 연결 삭제 후 새로 추가)
-        if (request.getUniversityIds() != null && !request.getUniversityIds().isEmpty()) {
-            clubUniversityRepository.deleteByClubId(clubId);
-
-            List<ClubUniversity> newClubUniversities = request.getUniversityIds().stream()
-                    .map(universityId -> {
-                        University university = universityRepository.findById(universityId)
-                                .orElseThrow(() -> new IllegalArgumentException("대학을 찾을 수 없습니다. ID: " + universityId));
-                        ClubUniversity clubUniversity = new ClubUniversity();
-                        clubUniversity.setClub(updatedClub);
-                        clubUniversity.setUniversity(university);
-                        return clubUniversity;
-                    }).collect(Collectors.toList());
-
-            clubUniversityRepository.saveAll(newClubUniversities);
-        }
-
         int memberCount = clubMemberRepository.countByClubId(clubId);
 
         return buildClubResponse(updatedClub, memberCount);
@@ -192,8 +175,9 @@ public class ClubService {
                 .orElseThrow(() -> new IllegalArgumentException("동아리 삭제 권한이 없습니다."));
 
         // 동아리 대표 사진 소프트 삭제
-        clubPhotoRepository.findByClubIdAndDeletedAtIsNull(clubId)
+        clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
                 .ifPresent(photo -> {
+                    photo.setIsCurrent(false);
                     photo.setDeletedAt(Instant.now());
                     clubPhotoRepository.save(photo);
                 });
@@ -213,7 +197,7 @@ public class ClubService {
     // 동아리 응답 객체 생성 헬퍼 메서드 (회원 수 제공)
     private ClubRespDTO.Response buildClubResponse(Club club, int memberCount) {
         // 동아리 대표 사진 URL 조회
-        String photoUrl = clubPhotoRepository.findByClubIdAndDeletedAtIsNull(club.getId())
+        String photoUrl = clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(club.getId())
                 .map(ClubPhoto::getImageUrl)
                 .orElse(null);
 
@@ -227,10 +211,22 @@ public class ClubService {
             updatedAt = LocalDateTime.ofInstant(club.getUpdatedAt(), KST_ZONE_ID);
         }
 
+        // 대학 정보와 연합 동아리 여부 설정
+        UniversityRespDTO.SimpleResponse universityResp = null;
+        boolean isUnionClub = (club.getUniversity() == null);
+
+        if (!isUnionClub) {
+            universityResp = UniversityRespDTO.SimpleResponse.builder()
+                    .id(club.getUniversity().getId())
+                    .name(club.getUniversity().getName())
+                    .build();
+        }
+
         return ClubRespDTO.Response.builder()
                 .id(club.getId())
                 .name(club.getName())
-                .universities(getUniversities(club))
+                .university(universityResp)
+                .isUnionClub(isUnionClub)
                 .chatroomUrl(club.getChatroomUrl())
                 .description(club.getDescription())
                 .instagramId(club.getInstagramId())
@@ -244,29 +240,26 @@ public class ClubService {
     // 동아리 간단 응답 객체 생성 헬퍼 메서드
     private ClubRespDTO.SimpleResponse buildClubSimpleResponse(Club club) {
         // 동아리 대표 사진 URL 조회
-        String photoUrl = clubPhotoRepository.findByClubIdAndDeletedAtIsNull(club.getId())
+        String photoUrl = clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(club.getId())
                 .map(ClubPhoto::getImageUrl)
                 .orElse(null);
+
+        // 대학 정보와 연합 동아리 여부 설정
+        String universityName = null;
+        boolean isUnionClub = (club.getUniversity() == null);
+
+        if (!isUnionClub) {
+            universityName = club.getUniversity().getName();
+        }
 
         return ClubRespDTO.SimpleResponse.builder()
                 .id(club.getId())
                 .name(club.getName())
-                .universityNames(club.getClubUniversities().stream()
-                        .map(cu -> cu.getUniversity().getName())
-                        .collect(Collectors.toList()))
+                .universityName(universityName)
+                .isUnionClub(isUnionClub)
                 .photoUrl(photoUrl)
                 .memberCount(club.getClubMembers().size())
                 .build();
-    }
-
-    // 동아리에 연결된 대학 정보 조회
-    private List<UniversityRespDTO.SimpleResponse> getUniversities(Club club) {
-        return club.getClubUniversities().stream()
-                .map(cu -> UniversityRespDTO.SimpleResponse.builder()
-                        .id(cu.getUniversity().getId())
-                        .name(cu.getUniversity().getName())
-                        .build())
-                .collect(Collectors.toList());
     }
 
     // 동아리 대표 사진 저장 헬퍼 메서드
@@ -274,6 +267,7 @@ public class ClubService {
         ClubPhoto photo = new ClubPhoto();
         photo.setClub(club);
         photo.setImageUrl(imageUrl);
+        photo.setIsCurrent(true);
         clubPhotoRepository.save(photo);
     }
 }

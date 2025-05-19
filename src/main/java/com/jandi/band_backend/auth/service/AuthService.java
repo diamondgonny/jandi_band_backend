@@ -5,6 +5,8 @@ import com.jandi.band_backend.auth.dto.kakao.KakaoTokenRespDTO;
 import com.jandi.band_backend.auth.dto.kakao.KakaoUserInfoDTO;
 import com.jandi.band_backend.auth.service.kakao.KaKaoTokenService;
 import com.jandi.band_backend.auth.service.kakao.KakaoUserService;
+import com.jandi.band_backend.global.exception.InvalidTokenException;
+import com.jandi.band_backend.global.exception.UserNotFoundException;
 import com.jandi.band_backend.security.jwt.JwtTokenProvider;
 import com.jandi.band_backend.univ.entity.University;
 import com.jandi.band_backend.univ.repository.UniversityRepository;
@@ -48,7 +50,7 @@ public class AuthService {
     public UserInfoDTO signup(String kakaoOauthId, SignUpReqDTO reqDTO) {
         // 유저 조회
         Users user = usersRepository.findByKakaoOauthId(kakaoOauthId)
-                .orElseThrow(() ->  new RuntimeException("존재하지 않는 회원입니다."));
+                .orElseThrow(() ->  new UserNotFoundException("존재하지 않는 사용자입니다."));
 
         // 기본 유저 정보 입력
         University university = universityRepository.findByName(reqDTO.getUniversity());
@@ -70,7 +72,7 @@ public class AuthService {
     public AuthRespDTO refresh(String refreshToken) {
         // 리프레시 토큰 검증
         if(!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new RuntimeException("유효하지 않은 토큰입니다");
+            throw new InvalidTokenException("유효하지 않은 토큰입니다");
         }
 
         // 토큰 재발급

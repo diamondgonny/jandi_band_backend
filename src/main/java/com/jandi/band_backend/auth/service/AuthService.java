@@ -14,7 +14,7 @@ import com.jandi.band_backend.user.dto.UserInfoDTO;
 import com.jandi.band_backend.user.entity.UserPhoto;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserPhotoRepository;
-import com.jandi.band_backend.user.repository.UsersRepository;
+import com.jandi.band_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
 public class AuthService {
     private final KaKaoTokenService kaKaoTokenService;
     private final KakaoUserService kakaoUserService;
-    private final UsersRepository usersRepository;
+    private final UserRepository userRepository;
     private final UserPhotoRepository userPhotoRepository;
     private final UniversityRepository universityRepository;
     private final JwtTokenProvider jwtTokenProvider;
@@ -49,7 +49,7 @@ public class AuthService {
     /// 정식 회원가입
     public UserInfoDTO signup(String kakaoOauthId, SignUpReqDTO reqDTO) {
         // 유저 조회
-        Users user = usersRepository.findByKakaoOauthId(kakaoOauthId)
+        Users user = userRepository.findByKakaoOauthId(kakaoOauthId)
                 .orElseThrow(() ->  new UserNotFoundException("존재하지 않는 사용자입니다."));
 
         // 기본 유저 정보 입력
@@ -58,7 +58,7 @@ public class AuthService {
 
         user.setUniversity(university);
         user.setPosition(position);
-        usersRepository.save(user);
+        userRepository.save(user);
 
         log.info("KakaoOauthId: {}에 대해 임시 회원 가입 완료", kakaoOauthId);
 
@@ -87,7 +87,7 @@ public class AuthService {
     // DB에서 유저를 찾되, 없다면 임시 회원 가입 진행
     private Users getOrCreateUser(KakaoUserInfoDTO kakaoUserInfo) {
         String kakaoOauthId = kakaoUserInfo.getKakaoOauthId();
-        return usersRepository.findByKakaoOauthId(kakaoOauthId)
+        return userRepository.findByKakaoOauthId(kakaoOauthId)
                 .orElseGet(() -> createTemporaryUser(kakaoUserInfo));
     }
 
@@ -97,7 +97,7 @@ public class AuthService {
         Users newUser = new Users();
         newUser.setKakaoOauthId(kakaoUserInfo.getKakaoOauthId());
         newUser.setNickname(kakaoUserInfo.getNickname());
-        usersRepository.save(newUser);
+        userRepository.save(newUser);
 
         // 유저 프로필 사진 생성
         UserPhoto profile = new UserPhoto();

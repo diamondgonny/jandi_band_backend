@@ -1,7 +1,7 @@
 package com.jandi.band_backend.security.jwt;
 
 import com.jandi.band_backend.user.entity.Users;
-import com.jandi.band_backend.user.repository.UsersRepository;
+import com.jandi.band_backend.user.repository.UserRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -22,20 +22,20 @@ public class JwtTokenProvider {
 
     // 리프레시 토큰 유효기간 (7일)
     private final long refreshValidityInMilliseconds = 7 * 24 * 60 * 60 * 1000;
-    private final UsersRepository usersRepository;
+    private final UserRepository userRepository;
 
     public JwtTokenProvider(
             @Value("${jwt.secret}") String jwtSecret,
-            UsersRepository usersRepository
+            UserRepository userRepository
     ) {
         this.secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-        this.usersRepository = usersRepository;
+        this.userRepository = userRepository;
     }
 
     public String generateAccessToken(String kakaoOauthId) {
         log.info("카카오 계정 '{}' 에 대해 액세스 JWT 토큰 생성 시작", kakaoOauthId);
 
-        Users user = usersRepository.findByKakaoOauthId(kakaoOauthId)
+        Users user = userRepository.findByKakaoOauthId(kakaoOauthId)
                 .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 사용자입니다"));
 
         Date now = new Date();

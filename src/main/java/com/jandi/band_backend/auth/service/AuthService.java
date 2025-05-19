@@ -50,7 +50,7 @@ public class AuthService {
     public UserInfoDTO signup(String kakaoOauthId, SignUpReqDTO reqDTO) {
         // 유저 조회
         Users user = userRepository.findByKakaoOauthId(kakaoOauthId)
-                .orElseThrow(() ->  new UserNotFoundException("존재하지 않는 사용자입니다."));
+                .orElseThrow(UserNotFoundException::new);
 
         // 기본 유저 정보 입력
         University university = universityRepository.findByName(reqDTO.getUniversity());
@@ -72,7 +72,7 @@ public class AuthService {
     public AuthRespDTO refresh(String refreshToken) {
         // 리프레시 토큰 검증
         if(!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new InvalidTokenException("유효하지 않은 토큰입니다");
+            throw new InvalidTokenException();
         }
 
         // 토큰 재발급

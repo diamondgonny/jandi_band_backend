@@ -32,9 +32,10 @@ public class SecurityConfig {
                 }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                            "/api/auth/**",
-                            "/health",
-                            "/api/v1/images/**"  // 이미지 업로드 엔드포인트 수정
+                                "/api/auth/**",
+                                "/health",
+                                "/api/clubs/**",    //동아리 관련 api 로컬 요청 관련 추가
+                                "/api/v1/images/**"  // 이미지 업로드 엔드포인트 수정
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

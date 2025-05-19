@@ -2,6 +2,8 @@ package com.jandi.band_backend.club.service;
 
 import com.jandi.band_backend.club.dto.ClubReqDTO;
 import com.jandi.band_backend.club.dto.ClubRespDTO;
+import com.jandi.band_backend.club.dto.ClubSimpleRespDTO;
+import com.jandi.band_backend.club.dto.ClubUpdateReqDTO;
 import com.jandi.band_backend.club.dto.PageRespDTO;
 import com.jandi.band_backend.univ.dto.UniversityRespDTO;
 import com.jandi.band_backend.club.entity.Club;
@@ -39,7 +41,7 @@ public class ClubService {
     private final UniversityRepository universityRepository;
 
     @Transactional
-    public ClubRespDTO.Response createClub(ClubReqDTO.Request request, Integer userId) {
+    public ClubRespDTO createClub(ClubReqDTO request, Integer userId) {
         // 사용자 확인
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
@@ -81,14 +83,14 @@ public class ClubService {
     }
 
     @Transactional(readOnly = true)
-    public PageRespDTO<ClubRespDTO.SimpleResponse> getClubList(Pageable pageable) {
+    public PageRespDTO<ClubSimpleRespDTO> getClubList(Pageable pageable) {
         Page<Club> clubPage = clubRepository.findAll(pageable);
 
-        List<ClubRespDTO.SimpleResponse> content = clubPage.getContent().stream()
+        List<ClubSimpleRespDTO> content = clubPage.getContent().stream()
                 .map(this::buildClubSimpleResponse)
                 .collect(Collectors.toList());
 
-        return PageRespDTO.<ClubRespDTO.SimpleResponse>builder()
+        return PageRespDTO.<ClubSimpleRespDTO>builder()
                 .content(content)
                 .page(pageable.getPageNumber())
                 .size(pageable.getPageSize())
@@ -99,7 +101,7 @@ public class ClubService {
     }
 
     @Transactional(readOnly = true)
-    public ClubRespDTO.Response getClubDetail(Integer clubId) {
+    public ClubRespDTO getClubDetail(Integer clubId) {
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(() -> new IllegalArgumentException("동아리를 찾을 수 없습니다."));
 
@@ -109,7 +111,7 @@ public class ClubService {
     }
 
     @Transactional
-    public ClubRespDTO.Response updateClub(Integer clubId, ClubReqDTO.UpdateRequest request, Integer userId) {
+    public ClubRespDTO updateClub(Integer clubId, ClubUpdateReqDTO request, Integer userId) {
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(() -> new IllegalArgumentException("동아리를 찾을 수 없습니다."));
 
@@ -188,14 +190,14 @@ public class ClubService {
     }
 
     // 동아리 응답 객체 생성 헬퍼 메서드
-    private ClubRespDTO.Response buildClubResponse(Club club) {
+    private ClubRespDTO buildClubResponse(Club club) {
         // 회원 수 별도 조회
         int memberCount = clubMemberRepository.countByClubId(club.getId());
         return buildClubResponse(club, memberCount);
     }
 
     // 동아리 응답 객체 생성 헬퍼 메서드 (회원 수 제공)
-    private ClubRespDTO.Response buildClubResponse(Club club, int memberCount) {
+    private ClubRespDTO buildClubResponse(Club club, int memberCount) {
         // 동아리 대표 사진 URL 조회
         String photoUrl = clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(club.getId())
                 .map(ClubPhoto::getImageUrl)
@@ -222,7 +224,7 @@ public class ClubService {
                     .build();
         }
 
-        return ClubRespDTO.Response.builder()
+        return ClubRespDTO.builder()
                 .id(club.getId())
                 .name(club.getName())
                 .university(universityResp)
@@ -238,7 +240,7 @@ public class ClubService {
     }
 
     // 동아리 간단 응답 객체 생성 헬퍼 메서드
-    private ClubRespDTO.SimpleResponse buildClubSimpleResponse(Club club) {
+    private ClubSimpleRespDTO buildClubSimpleResponse(Club club) {
         // 동아리 대표 사진 URL 조회
         String photoUrl = clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(club.getId())
                 .map(ClubPhoto::getImageUrl)
@@ -252,7 +254,7 @@ public class ClubService {
             universityName = club.getUniversity().getName();
         }
 
-        return ClubRespDTO.SimpleResponse.builder()
+        return ClubSimpleRespDTO.builder()
                 .id(club.getId())
                 .name(club.getName())
                 .universityName(universityName)

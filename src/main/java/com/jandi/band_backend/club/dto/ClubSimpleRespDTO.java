@@ -1,27 +1,19 @@
 package com.jandi.band_backend.club.dto;
 
-import com.jandi.band_backend.univ.dto.UniversityRespDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClubRespDTO {
+public class ClubSimpleRespDTO {
     private Integer id;
     private String name;
-    private UniversityRespDTO.SimpleResponse university;
+    private String universityName;
     private Boolean isUnionClub;
-    private String chatroomUrl;
-    private String description;
-    private String instagramId;
     private String photoUrl;
     private Integer memberCount;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }

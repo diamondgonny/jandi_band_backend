@@ -1,11 +1,17 @@
 package com.jandi.band_backend.security.jwt;
 
+import com.jandi.band_backend.global.exception.InvalidTokenException;
+import com.jandi.band_backend.security.CustomUserDetails;
+import com.jandi.band_backend.security.CustomUserDetailsService;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -16,20 +22,23 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
     private final Key secretKey;
+    private final UserRepository userRepository;
+    private final CustomUserDetailsService userDetailsService;
 
     // 액세스 토큰 유효기간 (15분)
     private final long validityInMilliseconds = 15 * 60 * 1000;
 
     // 리프레시 토큰 유효기간 (7일)
     private final long refreshValidityInMilliseconds = 7 * 24 * 60 * 60 * 1000;
-    private final UserRepository userRepository;
 
     public JwtTokenProvider(
             @Value("${jwt.secret}") String jwtSecret,
-            UserRepository userRepository
+            UserRepository userRepository,
+            CustomUserDetailsService userDetailsService
     ) {
         this.secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         this.userRepository = userRepository;
+        this.userDetailsService = userDetailsService;
     }
 
     public String generateAccessToken(String kakaoOauthId) {
@@ -74,6 +83,9 @@ public class JwtTokenProvider {
 
     public String getKakaoOauthId(String token) {
         try {
+            if(!validateToken(token))
+                throw new InvalidTokenException();
+
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(secretKey)
                     .build()
@@ -96,17 +108,20 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token);
             log.debug("JWT 토큰 유효함");
             return true;
-        } catch (ExpiredJwtException e) {
-            log.error("JWT 토큰 유효성 검사 실패: 토큰 만료");
-        } catch (SecurityException e) {
-            log.error("JWT 토큰 유효성 검사 실패: 유효하지 않은 서명");
-        } catch (MalformedJwtException e) {
-            log.error("JWT 토큰 유효성 검사 실패: 잘못된 형식의 토큰");
-        } catch (UnsupportedJwtException e) {
-            log.error("JWT 토큰 유효성 검사 실패: 지원되지 않는 토큰");
-        } catch (IllegalArgumentException e) {
-            log.error("JWT 토큰 유효성 검사 실패: 빈 토큰 또는 잘못된 토큰");
+        } catch (Exception e) {
+            log.error("JWT 토큰 유효성 검사 실패: {}", e.getMessage());
         }
         return false;
+    }
+
+    public Authentication getAuthentication(String token) {
+        // 예외를 그대로 전파하여 필터에서 처리할 수 있도록 함
+        String kakaoOauthId = getKakaoOauthId(token);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(kakaoOauthId);
+        return new UsernamePasswordAuthenticationToken(
+                userDetails,
+                "",
+                userDetails.getAuthorities()
+        );
     }
 }

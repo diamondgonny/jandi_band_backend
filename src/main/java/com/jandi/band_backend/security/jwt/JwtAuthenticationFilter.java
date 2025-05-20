@@ -29,9 +29,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String header = request.getHeader("Authorization");
 
         try {
-            // 형식이 올바르지 않다면 InvalidTokenException 예외 던짐
-            if (header == null || !header.startsWith("Bearer "))
-                throw new InvalidTokenException();
+            // Authorization 헤더가 없으면 JWT 인증 생략하고 다음 필터로 진행
+            if (header == null || !header.startsWith("Bearer ")){
+                filterChain.doFilter(request, response);
+                return;
+            }
 
             // 토큰이 유효하지 않다면 InvalidTokenException 예외 던짐
             String token = header.replace("Bearer ", "");

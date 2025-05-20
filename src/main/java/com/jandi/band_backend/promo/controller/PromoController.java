@@ -3,20 +3,23 @@ package com.jandi.band_backend.promo.controller;
 import com.jandi.band_backend.global.ApiResponse;
 import com.jandi.band_backend.promo.dto.PromoRequest;
 import com.jandi.band_backend.promo.dto.PromoResponse;
+import com.jandi.band_backend.promo.entity.Promo;
 import com.jandi.band_backend.promo.service.PromoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Instant;
 
 @RestController
-@RequestMapping("/api/v1/promos")
+@RequestMapping("/api/promos")
 @RequiredArgsConstructor
 public class PromoController {
 
@@ -90,5 +93,26 @@ public class PromoController {
             @RequestAttribute("userId") Integer userId) {
         promoService.deletePromoImage(promoId, imageUrl, userId);
         return ResponseEntity.ok(ApiResponse.success("공연 홍보 이미지 삭제 성공"));
+    }
+
+    // 공연 홍보 검색
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<Page<PromoResponse>>> searchPromos(
+            @RequestParam String keyword,
+            Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success("공연 홍보 검색 성공", 
+                promoService.searchPromos(keyword, pageable)));
+    }
+
+    // 공연 홍보 필터링
+    @GetMapping("/filter")
+    public ResponseEntity<ApiResponse<Page<PromoResponse>>> filterPromos(
+            @RequestParam(required = false) Promo.PromoStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant endDate,
+            @RequestParam(required = false) Integer clubId,
+            Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success("공연 홍보 필터링 성공", 
+                promoService.filterPromos(status, startDate, endDate, clubId, pageable)));
     }
 } 

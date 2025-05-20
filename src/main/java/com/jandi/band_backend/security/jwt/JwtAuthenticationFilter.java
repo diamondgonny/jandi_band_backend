@@ -3,6 +3,7 @@ package com.jandi.band_backend.security.jwt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jandi.band_backend.global.ApiResponse;
 import com.jandi.band_backend.global.exception.InvalidTokenException;
+import com.jandi.band_backend.security.CustomUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,6 +45,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 유효한 토큰에 대해서만 다음 필터로 요청을 넘김
             Authentication auth = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(auth);
+            
+            // userId를 요청 속성에 설정
+            if (auth.getPrincipal() instanceof CustomUserDetails) {
+                CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+                request.setAttribute("userId", userDetails.getUserId());
+                log.debug("Set userId in request attributes: {}", userDetails.getUserId());
+            }
+            
             filterChain.doFilter(request, response);
         } catch (InvalidTokenException e) {
             // 형식이 올바르지 않거나 미인가된 토큰일 시 SecurityContext 삭제
@@ -55,6 +64,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             response.setContentType("application/json; charset=UTF-8");
             response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
         }
-
     }
 }

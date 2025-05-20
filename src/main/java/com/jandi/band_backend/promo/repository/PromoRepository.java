@@ -14,6 +14,9 @@ import java.util.List;
 @Repository
 public interface PromoRepository extends JpaRepository<Promo, Integer> {
     
+    @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL")
+    Page<Promo> findAllNotDeleted(Pageable pageable);
+    
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.club.id = :clubId")
     Page<Promo> findAllByClubId(@Param("clubId") Integer clubId, Pageable pageable);
     
@@ -25,4 +28,30 @@ public interface PromoRepository extends JpaRepository<Promo, Integer> {
     
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.id = :id")
     Promo findByIdAndNotDeleted(@Param("id") Integer id);
+
+    // 상태와 시간 기준으로 공연 조회
+    @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.status = :status AND p.eventDatetime <= :datetime")
+    List<Promo> findByStatusAndEventDatetimeBefore(
+        @Param("status") Promo.PromoStatus status,
+        @Param("datetime") Instant datetime);
+
+    // 키워드 검색
+    @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND " +
+           "(LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(p.location) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<Promo> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+    // 필터링
+    @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL " +
+           "AND (:status IS NULL OR p.status = :status) " +
+           "AND (:startDate IS NULL OR p.eventDatetime >= :startDate) " +
+           "AND (:endDate IS NULL OR p.eventDatetime <= :endDate) " +
+           "AND (:clubId IS NULL OR p.club.id = :clubId)")
+    Page<Promo> filterPromos(
+        @Param("status") Promo.PromoStatus status,
+        @Param("startDate") Instant startDate,
+        @Param("endDate") Instant endDate,
+        @Param("clubId") Integer clubId,
+        Pageable pageable);
 } 

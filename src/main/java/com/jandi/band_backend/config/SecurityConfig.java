@@ -41,7 +41,11 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/health",
                                 "/api/clubs/**",    //동아리 관련 api 로컬 요청 관련 추가
-                                "/api/v1/images/**"  // 이미지 업로드 엔드포인트 수정
+                                "/api/images/**",
+                                "/api/promos",           // 공연 홍보 목록 조회
+                                "/api/promos/{promoId}", // 공연 홍보 상세 조회
+                                "/api/promos/search",    // 공연 홍보 검색
+                                "/api/promos/filter"     // 공연 홍보 필터링
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

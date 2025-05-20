@@ -11,15 +11,19 @@ import com.jandi.band_backend.promo.entity.PromoPhoto;
 import com.jandi.band_backend.promo.repository.PromoRepository;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserRepository;
+import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,12 +33,13 @@ public class PromoService {
     private final PromoRepository promoRepository;
     private final ClubRepository clubRepository;
     private final UserRepository userRepository;
+    private final ClubMemberRepository clubMemberRepository;
     private final S3Service s3Service;
     private static final String PROMO_PHOTO_DIR = "promo-photo";
 
     // 공연 홍보 목록 조회
     public Page<PromoResponse> getPromos(Pageable pageable) {
-        return promoRepository.findAll(pageable)
+        return promoRepository.findAllNotDeleted(pageable)
                 .map(PromoResponse::from);
     }
 
@@ -65,6 +70,11 @@ public class PromoService {
         
         Users creator = userRepository.findById(creatorId)
                 .orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다."));
+
+        // 클럽 멤버십 검증 추가
+        if (!clubMemberRepository.existsByClubAndUser(club, creator)) {
+            throw new IllegalStateException("클럽 멤버만 공연 홍보를 생성할 수 있습니다.");
+        }
 
         Promo promo = new Promo();
         promo.setClub(club);
@@ -185,5 +195,43 @@ public class PromoService {
 
         // DB에서 이미지 정보 삭제 (소프트 삭제)
         photo.setDeletedAt(Instant.now());
+    }
+
+    // 공연 상태 자동 업데이트 (스케줄러로 주기적 실행)
+    @Scheduled(cron = "0 0 * * * *")  // 매시 정각에 실행
+    @Transactional
+    public void updatePromoStatuses() {
+        Instant now = Instant.now();
+        
+        // 진행 중인 공연 업데이트
+        List<Promo> ongoingPromos = promoRepository.findByStatusAndEventDatetimeBefore(
+            Promo.PromoStatus.UPCOMING, now);
+        for (Promo promo : ongoingPromos) {
+            promo.setStatus(Promo.PromoStatus.ONGOING);
+        }
+        
+        // 완료된 공연 업데이트 (공연 종료 후 3시간 경과)
+        List<Promo> completedPromos = promoRepository.findByStatusAndEventDatetimeBefore(
+            Promo.PromoStatus.ONGOING, now.minus(3, ChronoUnit.HOURS));
+        for (Promo promo : completedPromos) {
+            promo.setStatus(Promo.PromoStatus.COMPLETED);
+        }
+    }
+
+    // 공연 홍보 검색
+    public Page<PromoResponse> searchPromos(String keyword, Pageable pageable) {
+        return promoRepository.searchByKeyword(keyword, pageable)
+                .map(PromoResponse::from);
+    }
+
+    // 공연 홍보 필터링
+    public Page<PromoResponse> filterPromos(
+            Promo.PromoStatus status,
+            Instant startDate,
+            Instant endDate,
+            Integer clubId,
+            Pageable pageable) {
+        return promoRepository.filterPromos(status, startDate, endDate, clubId, pageable)
+                .map(PromoResponse::from);
     }
 } 

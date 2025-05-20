@@ -93,11 +93,7 @@ public class JwtTokenProvider {
             if(!validateToken(token))
                 throw new InvalidTokenException();
 
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(secretKey)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+            Claims claims = parseClaims(token);
 
             log.debug("토큰에서 추출한 카카오 계정: {}", claims.getSubject());
             return claims.getSubject();
@@ -111,10 +107,7 @@ public class JwtTokenProvider {
     // 토큰이 유효할 때 true를 반환함
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(secretKey)
-                    .build()
-                    .parseClaimsJws(token);
+            parseClaims(token);
             return true;
         } catch (Exception e) {
             log.error("JWT 토큰 유효성 검사 실패: {}", e.getMessage());
@@ -132,5 +125,14 @@ public class JwtTokenProvider {
                 "",
                 userDetails.getAuthorities()
         );
+    }
+
+    // token에서 claims 파싱
+    private Claims parseClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

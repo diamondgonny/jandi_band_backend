@@ -1,6 +1,7 @@
 package com.jandi.band_backend.security.jwt;
 
 import com.jandi.band_backend.global.exception.InvalidTokenException;
+import com.jandi.band_backend.global.exception.UserNotFoundException;
 import com.jandi.band_backend.security.CustomUserDetailsService;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserRepository;
@@ -21,11 +22,13 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
     private final Key secretKey;
-    private final long validityInMilliseconds; // 액세스 토큰 유효기간
-    private final long refreshValidityInMilliseconds; // 리프레시 토큰 유효기간
+    private final long validityInMilliseconds; // 액세스 토큰 유효 기간
+    private final long refreshValidityInMilliseconds; // 리프레시 토큰 유효 기간
     private final UserRepository userRepository;
     private final CustomUserDetailsService userDetailsService;
 
+    /// 생성자 주입
+    // jwt 시크릿 키, 토큰 만료 시간은 설정 파일에서 주입받도록 함
     public JwtTokenProvider(
             @Value("${jwt.secret}") String jwtSecret,
             @Value("${jwt.access-token-validity}") long validityInMilliseconds,
@@ -40,11 +43,11 @@ public class JwtTokenProvider {
         this.userDetailsService = userDetailsService;
     }
 
+    /// 액세스 토큰 생성
+    // 유저의 kakaoOauthId, role 포함함
     public String generateAccessToken(String kakaoOauthId) {
-        log.debug("카카오 계정 '{}' 에 대해 액세스 JWT 토큰 생성 시작", kakaoOauthId);
-
         Users user = userRepository.findByKakaoOauthId(kakaoOauthId)
-                .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 사용자입니다"));
+                .orElseThrow(UserNotFoundException::new);
 
         Date now = new Date();
         Date expiry = new Date(now.getTime() + validityInMilliseconds);
@@ -58,14 +61,13 @@ public class JwtTokenProvider {
                 .signWith(secretKey)
                 .compact();
 
-        log.debug("토큰 생성 - 사용자 카카오 계정: {}, 역할: {}", kakaoOauthId, role);
-        log.debug("액세스 토큰 생성 완료. 만료 시간: {}", expiry);
+        log.debug("액세스 토큰 생성 완료: 사용자 카카오 계정={}, 역할={}, 만료 시간={}", kakaoOauthId, role, expiry);
         return token;
     }
 
+    /// 리프레시 토큰 생성
+    // 유저의 kakaoOauthId 포함함
     public String generateRefreshToken(String kakaoOauthId) {
-        log.debug("카카오 계정 '{}' 에 대해 리프레시 JWT 토큰 생성 시작", kakaoOauthId);
-
         Date now = new Date();
         Date expiry = new Date(now.getTime() + refreshValidityInMilliseconds);
 
@@ -76,11 +78,17 @@ public class JwtTokenProvider {
                 .signWith(secretKey)
                 .compact();
 
-        log.debug("리프레시 토큰 생성 완료. 만료 시간: {}", expiry);
+        log.debug("리프레시 토큰 생성 완료: 사용자 카카오 계정={}, 만료 시간={}", kakaoOauthId, expiry);
         return token;
     }
 
+    /// 토큰에서 유저 정보 추출
+    // 토큰에서 유저의 kakaoOauthId를 추출함
     public String getKakaoOauthId(String token) {
+        // 토큰이 유효하지 않을 경우 InvalidTokenException 예외 던짐
+        if(!validateToken(token))
+            throw new InvalidTokenException();
+
         try {
             if(!validateToken(token))
                 throw new InvalidTokenException();
@@ -99,6 +107,8 @@ public class JwtTokenProvider {
         }
     }
 
+    /// 토큰 유효성 검사
+    // 토큰이 유효할 때 true를 반환함
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -112,6 +122,7 @@ public class JwtTokenProvider {
         return false;
     }
 
+    /// 인증된 사용자인지 확인
     public Authentication getAuthentication(String token) {
         // 예외를 그대로 전파하여 필터에서 처리할 수 있도록 함
         String kakaoOauthId = getKakaoOauthId(token);

@@ -3,6 +3,7 @@ package com.jandi.band_backend.poll.controller;
 import com.jandi.band_backend.global.ApiResponse;
 import com.jandi.band_backend.poll.dto.*;
 import com.jandi.band_backend.poll.service.PollService;
+import com.jandi.band_backend.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,8 +24,8 @@ public class PollController {
     @PostMapping
     public ResponseEntity<ApiResponse<PollRespDTO>> createPoll(
             @Valid @RequestBody PollCreateReqDTO requestDto,
-            @AuthenticationPrincipal Integer currentUserId) {
-        PollRespDTO responseDto = pollService.createPoll(requestDto, currentUserId);
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        PollRespDTO responseDto = pollService.createPoll(requestDto, userDetails.getUserId());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("투표가 성공적으로 생성되었습니다.", responseDto));
     }
@@ -48,8 +49,8 @@ public class PollController {
     public ResponseEntity<ApiResponse<PollSongRespDTO>> addSongToPoll(
             @PathVariable Integer pollId,
             @Valid @RequestBody PollSongCreateReqDTO requestDto,
-            @AuthenticationPrincipal Integer currentUserId) {
-        PollSongRespDTO responseDto = pollService.addSongToPoll(pollId, requestDto, currentUserId);
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        PollSongRespDTO responseDto = pollService.addSongToPoll(pollId, requestDto, userDetails.getUserId());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("곡이 성공적으로 투표에 추가되었습니다.", responseDto));
     }

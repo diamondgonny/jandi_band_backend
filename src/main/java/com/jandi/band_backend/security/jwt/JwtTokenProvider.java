@@ -1,7 +1,6 @@
 package com.jandi.band_backend.security.jwt;
 
 import com.jandi.band_backend.global.exception.InvalidTokenException;
-import com.jandi.band_backend.security.CustomUserDetails;
 import com.jandi.band_backend.security.CustomUserDetailsService;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserRepository;
@@ -22,21 +21,21 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
     private final Key secretKey;
+    private final long validityInMilliseconds; // 액세스 토큰 유효기간
+    private final long refreshValidityInMilliseconds; // 리프레시 토큰 유효기간
     private final UserRepository userRepository;
     private final CustomUserDetailsService userDetailsService;
 
-    // 액세스 토큰 유효기간 (15분)
-    private final long validityInMilliseconds = 15 * 60 * 1000;
-
-    // 리프레시 토큰 유효기간 (7일)
-    private final long refreshValidityInMilliseconds = 7 * 24 * 60 * 60 * 1000;
-
     public JwtTokenProvider(
             @Value("${jwt.secret}") String jwtSecret,
+            @Value("${jwt.access-token-validity}") long validityInMilliseconds,
+            @Value("${jwt.refresh-token-validity}") long refreshValidityInMilliseconds,
             UserRepository userRepository,
             CustomUserDetailsService userDetailsService
     ) {
         this.secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        this.validityInMilliseconds = validityInMilliseconds;
+        this.refreshValidityInMilliseconds = refreshValidityInMilliseconds;
         this.userRepository = userRepository;
         this.userDetailsService = userDetailsService;
     }

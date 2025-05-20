@@ -1,7 +1,7 @@
 package com.jandi.band_backend.user.service;
 
 import com.jandi.band_backend.global.exception.UserNotFoundException;
-import com.jandi.band_backend.image.service.S3Service;
+import com.jandi.band_backend.image.S3Service;
 import com.jandi.band_backend.user.entity.UserPhoto;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserPhotoRepository;

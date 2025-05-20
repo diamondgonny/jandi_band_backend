@@ -111,13 +111,31 @@ public class JwtTokenProvider {
             return true;
         } catch (Exception e) {
             log.error("JWT 토큰 유효성 검사 실패: {}", e.getMessage());
+            return false;
         }
-        return false;
+    }
+
+    /// 토큰 유효성 검사
+    // 액세스 토큰일 때 true를 반환함
+    public boolean isAccessToken(String token) {
+        try {
+            Claims claims = parseClaims(token);
+
+            // 액세스 토큰에만 role 정보가 포함되므로, role 정보 유무로 액세스 토큰인지 검사
+            return claims.get("role") != null;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /// 인증된 사용자인지 확인
     public Authentication getAuthentication(String token) {
-        // 예외를 그대로 전파하여 필터에서 처리할 수 있도록 함
+        // 액세스 토큰이 아닌 경우 유효하지 않은 토큰으로 간주
+        if (!isAccessToken(token)) {
+            throw new InvalidTokenException();
+        }
+
+        // 예외를 그대로 전파하여 필터에서 처리되도록 함
         String kakaoOauthId = getKakaoOauthId(token);
         UserDetails userDetails = userDetailsService.loadUserByUsername(kakaoOauthId);
         return new UsernamePasswordAuthenticationToken(

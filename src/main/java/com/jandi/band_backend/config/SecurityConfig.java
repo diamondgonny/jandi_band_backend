@@ -38,7 +38,7 @@ public class SecurityConfig {
                 }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-//                            "/api/auth/**",
+                            "/api/auth/**",
                             "/health",
                             "/api/v1/images/**"  // 이미지 업로드 엔드포인트 수정
                         ).permitAll()

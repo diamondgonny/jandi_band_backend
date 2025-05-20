@@ -3,6 +3,7 @@ package com.jandi.band_backend.club.entity;
 import com.jandi.band_backend.poll.entity.Poll;
 import com.jandi.band_backend.promo.entity.Promo;
 import com.jandi.band_backend.team.entity.Team;
+import com.jandi.band_backend.univ.entity.University;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,6 +37,10 @@ public class Club {
     @Column(name = "instagram_id", length = 50)
     private String instagramId;
 
+    @ManyToOne
+    @JoinColumn(name = "university_id", nullable = true)
+    private University university;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -44,9 +49,6 @@ public class Club {
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
-
-    @OneToMany(mappedBy = "club")
-    private List<ClubUniversity> clubUniversities = new ArrayList<>();
 
     @OneToMany(mappedBy = "club")
     private List<ClubMember> clubMembers = new ArrayList<>();

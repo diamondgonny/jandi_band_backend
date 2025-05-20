@@ -41,7 +41,7 @@ public class JwtTokenProvider {
     }
 
     public String generateAccessToken(String kakaoOauthId) {
-        log.info("카카오 계정 '{}' 에 대해 액세스 JWT 토큰 생성 시작", kakaoOauthId);
+        log.debug("카카오 계정 '{}' 에 대해 액세스 JWT 토큰 생성 시작", kakaoOauthId);
 
         Users user = userRepository.findByKakaoOauthId(kakaoOauthId)
                 .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 사용자입니다"));
@@ -58,13 +58,13 @@ public class JwtTokenProvider {
                 .signWith(secretKey)
                 .compact();
 
-        log.info("토큰 생성 - 사용자 카카오 계정: {}, 역할: {}", kakaoOauthId, role);
-        log.info("액세스 토큰 생성 완료. 만료 시간: {}", expiry);
+        log.debug("토큰 생성 - 사용자 카카오 계정: {}, 역할: {}", kakaoOauthId, role);
+        log.debug("액세스 토큰 생성 완료. 만료 시간: {}", expiry);
         return token;
     }
 
     public String generateRefreshToken(String kakaoOauthId) {
-        log.info("카카오 계정 '{}' 에 대해 액세스 JWT 토큰 생성 시작", kakaoOauthId);
+        log.debug("카카오 계정 '{}' 에 대해 리프레시 JWT 토큰 생성 시작", kakaoOauthId);
 
         Date now = new Date();
         Date expiry = new Date(now.getTime() + refreshValidityInMilliseconds);
@@ -76,7 +76,7 @@ public class JwtTokenProvider {
                 .signWith(secretKey)
                 .compact();
 
-        log.info("리프레시 토큰 생성 완료. 만료 시간: {}", expiry);
+        log.debug("리프레시 토큰 생성 완료. 만료 시간: {}", expiry);
         return token;
     }
 
@@ -105,7 +105,6 @@ public class JwtTokenProvider {
                     .setSigningKey(secretKey)
                     .build()
                     .parseClaimsJws(token);
-            log.debug("JWT 토큰 유효함");
             return true;
         } catch (Exception e) {
             log.error("JWT 토큰 유효성 검사 실패: {}", e.getMessage());

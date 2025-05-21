@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "vote")
@@ -32,12 +32,12 @@ public class Vote {
     @Column(name = "voted_mark", nullable = false)
     private VotedMark votedMark;
     
-    @Column(name = "voted_at", nullable = false, updatable = false)
-    private Instant votedAt;
+    @Column(name = "voted_at", nullable = false)
+    private LocalDateTime votedAt;
     
     @PrePersist
     protected void onCreate() {
-        votedAt = Instant.now();
+        votedAt = LocalDateTime.now();
     }
     
     public enum VotedMark {

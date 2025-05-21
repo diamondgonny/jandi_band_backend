@@ -19,7 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -46,7 +46,7 @@ public class PollService {
         Poll poll = new Poll();
         poll.setClub(club);
         poll.setTitle(requestDto.getTitle());
-        poll.setStartDatetime(Instant.now()); // UTC로 현재 시간 저장
+        poll.setStartDatetime(LocalDateTime.now()); // 현재 시간 저장
         poll.setEndDatetime(requestDto.getEndDatetime()); // 클라이언트에서 전달한 UTC 시간 그대로 저장
         poll.setCreator(creator);
 

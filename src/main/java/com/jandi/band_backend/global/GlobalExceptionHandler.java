@@ -48,6 +48,22 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage(), "CLUB_NOT_FOUND"));
     }
 
+    // 투표 미존재
+    @ExceptionHandler(PollNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handlePollNotFound(PollNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage(), "POLL_NOT_FOUND"));
+    }
+
+    // 투표 노래 미존재
+    @ExceptionHandler(PollSongNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handlePollSongNotFound(PollSongNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage(), "POLL_SONG_NOT_FOUND"));
+    }
+
     // 동아리 접근 권한 없음
     @ExceptionHandler(UnauthorizedClubAccessException.class)
     public ResponseEntity<ApiResponse<?>> handleUnauthorizedClubAccess(UnauthorizedClubAccessException ex) {

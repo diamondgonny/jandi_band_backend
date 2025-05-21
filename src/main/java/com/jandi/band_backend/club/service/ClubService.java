@@ -20,7 +20,6 @@ import com.jandi.band_backend.global.exception.ClubNotFoundException;
 import com.jandi.band_backend.global.exception.UnauthorizedClubAccessException;
 import com.jandi.band_backend.global.exception.UniversityNotFoundException;
 import com.jandi.band_backend.global.exception.UserNotFoundException;
-import com.jandi.band_backend.global.util.TimeUtil;
 import com.jandi.band_backend.image.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -265,8 +264,8 @@ public class ClubService {
                 .instagramId(club.getInstagramId())
                 .photoUrl(photoUrl)
                 .memberCount(memberCount)
-                .createdAt(TimeUtil.toKST(club.getCreatedAt()))
-                .updatedAt(TimeUtil.toKST(club.getUpdatedAt()))
+                .createdAt(club.getCreatedAt())
+                .updatedAt(club.getUpdatedAt())
                 .build();
     }
 

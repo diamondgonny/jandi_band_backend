@@ -5,7 +5,6 @@ import com.jandi.band_backend.club.repository.ClubRepository;
 import com.jandi.band_backend.global.exception.ClubNotFoundException;
 import com.jandi.band_backend.global.exception.PollNotFoundException;
 import com.jandi.band_backend.global.exception.UserNotFoundException;
-import com.jandi.band_backend.global.util.TimeUtil;
 import com.jandi.band_backend.poll.dto.*;
 import com.jandi.band_backend.poll.entity.Poll;
 import com.jandi.band_backend.poll.entity.PollSong;
@@ -47,7 +46,7 @@ public class PollService {
         poll.setClub(club);
         poll.setTitle(requestDto.getTitle());
         poll.setStartDatetime(LocalDateTime.now()); // 현재 시간 저장
-        poll.setEndDatetime(requestDto.getEndDatetime()); // 클라이언트에서 전달한 UTC 시간 그대로 저장
+        poll.setEndDatetime(requestDto.getEndDatetime()); // 클라이언트에서 전달한 시간 저장
         poll.setCreator(creator);
 
         Poll savedPoll = pollRepository.save(poll);
@@ -114,11 +113,11 @@ public class PollService {
                 .title(poll.getTitle())
                 .clubId(poll.getClub() != null ? poll.getClub().getId() : null)
                 .clubName(poll.getClub() != null ? poll.getClub().getName() : null)
-                .startDatetime(TimeUtil.toKST(poll.getStartDatetime()))
-                .endDatetime(TimeUtil.toKST(poll.getEndDatetime()))
+                .startDatetime(poll.getStartDatetime())
+                .endDatetime(poll.getEndDatetime())
                 .creatorId(poll.getCreator() != null ? poll.getCreator().getId() : null)
                 .creatorName(poll.getCreator() != null ? poll.getCreator().getNickname() : null)
-                .createdAt(TimeUtil.toKST(poll.getCreatedAt()))
+                .createdAt(poll.getCreatedAt())
                 .build();
     }
 
@@ -128,11 +127,11 @@ public class PollService {
                 .title(poll.getTitle())
                 .clubId(poll.getClub() != null ? poll.getClub().getId() : null)
                 .clubName(poll.getClub() != null ? poll.getClub().getName() : null)
-                .startDatetime(TimeUtil.toKST(poll.getStartDatetime()))
-                .endDatetime(TimeUtil.toKST(poll.getEndDatetime()))
+                .startDatetime(poll.getStartDatetime())
+                .endDatetime(poll.getEndDatetime())
                 .creatorId(poll.getCreator() != null ? poll.getCreator().getId() : null)
                 .creatorName(poll.getCreator() != null ? poll.getCreator().getNickname() : null)
-                .createdAt(TimeUtil.toKST(poll.getCreatedAt()))
+                .createdAt(poll.getCreatedAt())
                 .songs(songs)
                 .build();
     }
@@ -147,7 +146,7 @@ public class PollService {
                 .description(pollSong.getDescription())
                 .suggesterId(pollSong.getSuggester() != null ? pollSong.getSuggester().getId() : null)
                 .suggesterName(pollSong.getSuggester() != null ? pollSong.getSuggester().getNickname() : null)
-                .createdAt(TimeUtil.toKST(pollSong.getCreatedAt()))
+                .createdAt(pollSong.getCreatedAt())
                 .likeCount(calculateVoteCount(pollSong, "LIKE"))
                 .dislikeCount(calculateVoteCount(pollSong, "DISLIKE"))
                 .cantCount(calculateVoteCount(pollSong, "CANT"))

@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,7 +19,7 @@ public class PromoResponse {
     private String creatorName;
     private String title;
     private BigDecimal admissionFee;
-    private Instant eventDatetime;
+    private LocalDateTime eventDatetime;
     private String location;
     private String address;
     private String description;
@@ -27,8 +27,8 @@ public class PromoResponse {
     private Integer viewCount;
     private Integer commentCount;
     private Integer likeCount;
-    private Instant createdAt;
-    private Instant updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private List<String> photoUrls;
 
     public static PromoResponse from(Promo promo) {

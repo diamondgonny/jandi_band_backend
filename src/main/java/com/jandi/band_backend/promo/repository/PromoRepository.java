@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -21,7 +21,7 @@ public interface PromoRepository extends JpaRepository<Promo, Integer> {
     Page<Promo> findAllByClubId(@Param("clubId") Integer clubId, Pageable pageable);
     
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.eventDatetime >= :now ORDER BY p.eventDatetime ASC")
-    Page<Promo> findUpcomingPromos(@Param("now") Instant now, Pageable pageable);
+    Page<Promo> findUpcomingPromos(@Param("now") LocalDateTime now, Pageable pageable);
     
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.creator.id = :userId")
     Page<Promo> findAllByCreatorId(@Param("userId") Integer userId, Pageable pageable);
@@ -33,7 +33,7 @@ public interface PromoRepository extends JpaRepository<Promo, Integer> {
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.status = :status AND p.eventDatetime <= :datetime")
     List<Promo> findByStatusAndEventDatetimeBefore(
         @Param("status") Promo.PromoStatus status,
-        @Param("datetime") Instant datetime);
+        @Param("datetime") LocalDateTime datetime);
 
     // 키워드 검색
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND " +
@@ -50,8 +50,8 @@ public interface PromoRepository extends JpaRepository<Promo, Integer> {
            "AND (:clubId IS NULL OR p.club.id = :clubId)")
     Page<Promo> filterPromos(
         @Param("status") Promo.PromoStatus status,
-        @Param("startDate") Instant startDate,
-        @Param("endDate") Instant endDate,
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate,
         @Param("clubId") Integer clubId,
         Pageable pageable);
 } 

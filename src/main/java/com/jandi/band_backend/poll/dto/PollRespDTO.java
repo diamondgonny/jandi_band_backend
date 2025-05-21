@@ -1,13 +1,11 @@
 package com.jandi.band_backend.poll.dto;
 
-import com.jandi.band_backend.global.util.TimeUtil;
-import com.jandi.band_backend.poll.entity.Poll;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
@@ -18,9 +16,9 @@ public class PollRespDTO {
     private String title;
     private Integer clubId;
     private String clubName;
-    private ZonedDateTime startDatetime;
-    private ZonedDateTime endDatetime;
+    private LocalDateTime startDatetime;
+    private LocalDateTime endDatetime;
     private Integer creatorId;
     private String creatorName;
-    private ZonedDateTime createdAt;
+    private LocalDateTime createdAt;
 }

@@ -2,6 +2,7 @@ package com.jandi.band_backend.poll.service;
 
 import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.repository.ClubRepository;
+import com.jandi.band_backend.global.util.TimeUtil;
 import com.jandi.band_backend.poll.dto.*;
 import com.jandi.band_backend.poll.entity.Poll;
 import com.jandi.band_backend.poll.entity.PollSong;
@@ -48,7 +49,7 @@ public class PollService {
 
         Poll savedPoll = pollRepository.save(poll);
 
-        return PollRespDTO.fromEntity(savedPoll); // fromEntity 내에서 KST로 변환됨
+        return convertToPollRespDTO(savedPoll);
     }
 
     @Transactional(readOnly = true)
@@ -60,7 +61,7 @@ public class PollService {
         // 동아리에 해당하는 투표 조회
         Page<Poll> polls = pollRepository.findAllByClubAndDeletedAtIsNullOrderByCreatedAtDesc(club, pageable);
 
-        return polls.map(PollRespDTO::fromEntity); // fromEntity 내에서 KST로 변환됨
+        return polls.map(this::convertToPollRespDTO);
     }
 
     @Transactional(readOnly = true)
@@ -74,10 +75,10 @@ public class PollService {
 
         // PollSongResponseDto로 변환
         List<PollSongRespDTO> songResponseDtos = pollSongs.stream()
-                .map(PollSongRespDTO::fromEntity) // fromEntity 내에서 KST로 변환됨
+                .map(this::convertToPollSongRespDTO)
                 .collect(Collectors.toList());
 
-        return PollDetailRespDTO.fromEntity(poll, songResponseDtos); // fromEntity 내에서 KST로 변환됨
+        return convertToPollDetailRespDTO(poll, songResponseDtos);
     }
 
     @Transactional
@@ -101,6 +102,59 @@ public class PollService {
 
         PollSong savedPollSong = pollSongRepository.save(pollSong);
 
-        return PollSongRespDTO.fromEntity(savedPollSong); // fromEntity 내에서 KST로 변환됨
+        return convertToPollSongRespDTO(savedPollSong);
+    }
+
+    private PollRespDTO convertToPollRespDTO(Poll poll) {
+        return PollRespDTO.builder()
+                .id(poll.getId())
+                .title(poll.getTitle())
+                .clubId(poll.getClub() != null ? poll.getClub().getId() : null)
+                .clubName(poll.getClub() != null ? poll.getClub().getName() : null)
+                .startDatetime(TimeUtil.toKST(poll.getStartDatetime()))
+                .endDatetime(TimeUtil.toKST(poll.getEndDatetime()))
+                .creatorId(poll.getCreator() != null ? poll.getCreator().getId() : null)
+                .creatorName(poll.getCreator() != null ? poll.getCreator().getNickname() : null)
+                .createdAt(TimeUtil.toKST(poll.getCreatedAt()))
+                .build();
+    }
+
+    private PollDetailRespDTO convertToPollDetailRespDTO(Poll poll, List<PollSongRespDTO> songs) {
+        return PollDetailRespDTO.builder()
+                .id(poll.getId())
+                .title(poll.getTitle())
+                .clubId(poll.getClub() != null ? poll.getClub().getId() : null)
+                .clubName(poll.getClub() != null ? poll.getClub().getName() : null)
+                .startDatetime(TimeUtil.toKST(poll.getStartDatetime()))
+                .endDatetime(TimeUtil.toKST(poll.getEndDatetime()))
+                .creatorId(poll.getCreator() != null ? poll.getCreator().getId() : null)
+                .creatorName(poll.getCreator() != null ? poll.getCreator().getNickname() : null)
+                .createdAt(TimeUtil.toKST(poll.getCreatedAt()))
+                .songs(songs)
+                .build();
+    }
+
+    private PollSongRespDTO convertToPollSongRespDTO(PollSong pollSong) {
+        return PollSongRespDTO.builder()
+                .id(pollSong.getId())
+                .pollId(pollSong.getPoll() != null ? pollSong.getPoll().getId() : null)
+                .songName(pollSong.getSongName())
+                .artistName(pollSong.getArtistName())
+                .youtubeUrl(pollSong.getYoutubeUrl())
+                .description(pollSong.getDescription())
+                .suggesterId(pollSong.getSuggester() != null ? pollSong.getSuggester().getId() : null)
+                .suggesterName(pollSong.getSuggester() != null ? pollSong.getSuggester().getNickname() : null)
+                .createdAt(TimeUtil.toKST(pollSong.getCreatedAt()))
+                .likeCount(calculateVoteCount(pollSong, "LIKE"))
+                .dislikeCount(calculateVoteCount(pollSong, "DISLIKE"))
+                .cantCount(calculateVoteCount(pollSong, "CANT"))
+                .hajjCount(calculateVoteCount(pollSong, "HAJJ"))
+                .build();
+    }
+
+    private int calculateVoteCount(PollSong pollSong, String voteMark) {
+        return (int) pollSong.getVotes().stream()
+                .filter(vote -> vote.getVotedMark().name().equals(voteMark))
+                .count();
     }
 }

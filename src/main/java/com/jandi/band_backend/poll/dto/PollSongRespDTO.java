@@ -27,28 +27,4 @@ public class PollSongRespDTO {
     private Integer dislikeCount;
     private Integer cantCount;
     private Integer hajjCount;
-
-    public static PollSongRespDTO fromEntity(PollSong pollSong) {
-        return PollSongRespDTO.builder()
-                .id(pollSong.getId())
-                .pollId(pollSong.getPoll() != null ? pollSong.getPoll().getId() : null)
-                .songName(pollSong.getSongName())
-                .artistName(pollSong.getArtistName())
-                .youtubeUrl(pollSong.getYoutubeUrl())
-                .description(pollSong.getDescription())
-                .suggesterId(pollSong.getSuggester() != null ? pollSong.getSuggester().getId() : null)
-                .suggesterName(pollSong.getSuggester() != null ? pollSong.getSuggester().getNickname() : null)
-                .createdAt(TimeUtil.toKST(pollSong.getCreatedAt()))
-                .likeCount(calculateVoteCount(pollSong, "LIKE"))
-                .dislikeCount(calculateVoteCount(pollSong, "DISLIKE"))
-                .cantCount(calculateVoteCount(pollSong, "CANT"))
-                .hajjCount(calculateVoteCount(pollSong, "HAJJ"))
-                .build();
-    }
-
-    private static int calculateVoteCount(PollSong pollSong, String voteMark) {
-        return (int) pollSong.getVotes().stream()
-                .filter(vote -> vote.getVotedMark().name().equals(voteMark))
-                .count();
-    }
 }

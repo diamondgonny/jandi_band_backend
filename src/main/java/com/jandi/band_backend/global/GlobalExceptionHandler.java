@@ -33,6 +33,47 @@ public class GlobalExceptionHandler {
     }
 
     /// 부적절 예외 처리
+    // 대학 미존재
+    @ExceptionHandler(UniversityNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleUniversityNotFound(UniversityNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage(), "UNIVERSITY_NOT_FOUND"));
+    }
+
+    // 동아리 미존재
+    @ExceptionHandler(ClubNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleClubNotFound(ClubNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage(), "CLUB_NOT_FOUND"));
+    }
+
+    // 투표 미존재
+    @ExceptionHandler(PollNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handlePollNotFound(PollNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage(), "POLL_NOT_FOUND"));
+    }
+
+    // 투표 노래 미존재
+    @ExceptionHandler(PollSongNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handlePollSongNotFound(PollSongNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage(), "POLL_SONG_NOT_FOUND"));
+    }
+
+    // 동아리 접근 권한 없음
+    @ExceptionHandler(UnauthorizedClubAccessException.class)
+    public ResponseEntity<ApiResponse<?>> handleUnauthorizedClubAccess(UnauthorizedClubAccessException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(ex.getMessage(), "UNAUTHORIZED_CLUB_ACCESS"));
+    }
+
+    /// 토큰 예외 처리
     // 부적절한 토큰
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<ApiResponse<?>> handleInvalidToken(InvalidTokenException ex) {

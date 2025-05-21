@@ -5,21 +5,22 @@ import com.jandi.band_backend.club.dto.ClubRespDTO;
 import com.jandi.band_backend.club.dto.ClubSimpleRespDTO;
 import com.jandi.band_backend.club.dto.ClubUpdateReqDTO;
 import com.jandi.band_backend.club.dto.PageRespDTO;
-import com.jandi.band_backend.univ.dto.UniversityRespDTO;
 import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.club.entity.ClubPhoto;
-import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.club.repository.ClubPhotoRepository;
 import com.jandi.band_backend.club.repository.ClubRepository;
-import com.jandi.band_backend.user.repository.UserRepository;
+import com.jandi.band_backend.univ.dto.UniversityRespDTO;
 import com.jandi.band_backend.univ.entity.University;
 import com.jandi.band_backend.univ.repository.UniversityRepository;
+import com.jandi.band_backend.user.entity.Users;
+import com.jandi.band_backend.user.repository.UserRepository;
 import com.jandi.band_backend.global.exception.ClubNotFoundException;
 import com.jandi.band_backend.global.exception.UnauthorizedClubAccessException;
 import com.jandi.band_backend.global.exception.UniversityNotFoundException;
 import com.jandi.band_backend.global.exception.UserNotFoundException;
+import com.jandi.band_backend.global.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -84,7 +85,7 @@ public class ClubService {
 
         clubMemberRepository.save(clubMember);
 
-        return ClubRespDTO.fromEntity(savedClub, photoUrl, 1);
+        return convertToClubRespDTO(savedClub, photoUrl, 1);
     }
 
     @Transactional(readOnly = true)
@@ -99,7 +100,7 @@ public class ClubService {
 
                     int memberCount = club.getClubMembers().size();
 
-                    return ClubSimpleRespDTO.fromEntity(club, photoUrl, memberCount);
+                    return convertToClubSimpleRespDTO(club, photoUrl, memberCount);
                 })
                 .collect(Collectors.toList());
 
@@ -123,7 +124,7 @@ public class ClubService {
         // 동아리 대표 사진 URL 조회
         String photoUrl = getClubMainPhotoUrl(club.getId());
 
-        return ClubRespDTO.fromEntity(club, photoUrl, memberCount);
+        return convertToClubRespDTO(club, photoUrl, memberCount);
     }
 
     @Transactional
@@ -184,7 +185,7 @@ public class ClubService {
         Club updatedClub = clubRepository.save(club);
         int memberCount = clubMemberRepository.countByClubId(clubId);
 
-        return ClubRespDTO.fromEntity(updatedClub, photoUrl, memberCount);
+        return convertToClubRespDTO(updatedClub, photoUrl, memberCount);
     }
 
     @Transactional
@@ -208,6 +209,51 @@ public class ClubService {
         // 동아리 삭제 (소프트 딜리트)
         club.setDeletedAt(Instant.now());
         clubRepository.save(club);
+    }
+
+    private ClubRespDTO convertToClubRespDTO(Club club, String photoUrl, int memberCount) {
+        boolean isUnionClub = (club.getUniversity() == null);
+
+        UniversityRespDTO universityResp = null;
+        if (!isUnionClub) {
+            universityResp = UniversityRespDTO.builder()
+                    .id(club.getUniversity().getId())
+                    .name(club.getUniversity().getName())
+                    .build();
+        }
+
+        return ClubRespDTO.builder()
+                .id(club.getId())
+                .name(club.getName())
+                .university(universityResp)
+                .isUnionClub(isUnionClub)
+                .chatroomUrl(club.getChatroomUrl())
+                .description(club.getDescription())
+                .instagramId(club.getInstagramId())
+                .photoUrl(photoUrl)
+                .memberCount(memberCount)
+                .createdAt(TimeUtil.toKST(club.getCreatedAt()))
+                .updatedAt(TimeUtil.toKST(club.getUpdatedAt()))
+                .build();
+    }
+
+    private ClubSimpleRespDTO convertToClubSimpleRespDTO(Club club, String photoUrl, int memberCount) {
+        // 대학 정보와 연합 동아리 여부 설정
+        String universityName = null;
+        boolean isUnionClub = (club.getUniversity() == null);
+
+        if (!isUnionClub) {
+            universityName = club.getUniversity().getName();
+        }
+
+        return ClubSimpleRespDTO.builder()
+                .id(club.getId())
+                .name(club.getName())
+                .universityName(universityName)
+                .isUnionClub(isUnionClub)
+                .photoUrl(photoUrl)
+                .memberCount(memberCount)
+                .build();
     }
 
     // 동아리 대표 사진 URL 조회 헬퍼 메서드

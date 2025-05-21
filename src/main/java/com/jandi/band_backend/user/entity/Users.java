@@ -56,7 +56,10 @@ public class Users {
     @Enumerated(EnumType.STRING)
     @Column(name = "admin_role", nullable = false)
     private AdminRole adminRole = AdminRole.USER;
-    
+
+    @Column(name = "is_registered", nullable = false)
+    private Boolean isRegistered = Boolean.FALSE;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
     
@@ -122,7 +125,7 @@ public class Users {
     
     @OneToMany(mappedBy = "reporter")
     private List<PromoCommentReport> promoCommentReports = new ArrayList<>();
-    
+
     @PrePersist
     protected void onCreate() {
         position = null;
@@ -136,7 +139,7 @@ public class Users {
     protected void onUpdate() {
         updatedAt = Instant.now();
     }
-    
+
     public enum Position {
         VOCAL, GUITAR, KEYBOARD, BASS, DRUM, OTHER
     }

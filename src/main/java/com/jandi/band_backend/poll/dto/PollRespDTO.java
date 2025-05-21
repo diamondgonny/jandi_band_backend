@@ -23,18 +23,4 @@ public class PollRespDTO {
     private Integer creatorId;
     private String creatorName;
     private ZonedDateTime createdAt;
-
-    public static PollRespDTO fromEntity(Poll poll) {
-        return PollRespDTO.builder()
-                .id(poll.getId())
-                .title(poll.getTitle())
-                .clubId(poll.getClub() != null ? poll.getClub().getId() : null)
-                .clubName(poll.getClub() != null ? poll.getClub().getName() : null)
-                .startDatetime(TimeUtil.toKST(poll.getStartDatetime()))
-                .endDatetime(TimeUtil.toKST(poll.getEndDatetime()))
-                .creatorId(poll.getCreator() != null ? poll.getCreator().getId() : null)
-                .creatorName(poll.getCreator() != null ? poll.getCreator().getNickname() : null)
-                .createdAt(TimeUtil.toKST(poll.getCreatedAt()))
-                .build();
-    }
 }

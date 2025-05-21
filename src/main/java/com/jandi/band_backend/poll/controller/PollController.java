@@ -30,9 +30,9 @@ public class PollController {
                 .body(ApiResponse.success("투표가 성공적으로 생성되었습니다.", responseDto));
     }
 
-    @GetMapping
+    @GetMapping("/clubs/{clubId}")
     public ResponseEntity<ApiResponse<Page<PollRespDTO>>> getPollList(
-            @RequestParam(required = true) Integer clubId,
+            @PathVariable Integer clubId,
             @PageableDefault(size = 10) Pageable pageable) {
 
         Page<PollRespDTO> polls = pollService.getPollsByClub(clubId, pageable);

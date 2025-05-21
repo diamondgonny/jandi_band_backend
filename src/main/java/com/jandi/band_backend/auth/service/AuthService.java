@@ -18,6 +18,7 @@ import com.jandi.band_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -47,6 +48,7 @@ public class AuthService {
     }
 
     /// 정식 회원가입
+    @Transactional
     public UserInfoDTO signup(String kakaoOauthId, SignUpReqDTO reqDTO) {
         // 유저 조회
         Users user = userRepository.findByKakaoOauthId(kakaoOauthId)
@@ -84,8 +86,9 @@ public class AuthService {
     }
 
     /// 내부 메서드
-    // DB에서 유저를 찾되, 없다면 임시 회원 가입 진행
-    private Users getOrCreateUser(KakaoUserInfoDTO kakaoUserInfo) {
+    // DB에서 유저를 찾되, 없다면 임시 회원 가입 진행. 만약 가입시 문제가 생기면 롤백
+    @Transactional
+    public Users getOrCreateUser(KakaoUserInfoDTO kakaoUserInfo) {
         String kakaoOauthId = kakaoUserInfo.getKakaoOauthId();
         return userRepository.findByKakaoOauthId(kakaoOauthId)
                 .orElseGet(() -> createTemporaryUser(kakaoUserInfo));

@@ -21,12 +21,15 @@ import com.jandi.band_backend.global.exception.UnauthorizedClubAccessException;
 import com.jandi.band_backend.global.exception.UniversityNotFoundException;
 import com.jandi.band_backend.global.exception.UserNotFoundException;
 import com.jandi.band_backend.global.util.TimeUtil;
+import com.jandi.band_backend.image.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,6 +43,9 @@ public class ClubService {
     private final ClubPhotoRepository clubPhotoRepository;
     private final UserRepository userRepository;
     private final UniversityRepository universityRepository;
+    private final S3Service s3Service;
+
+    private static final String CLUB_PHOTO_DIR = "club-photo";
 
     @Transactional
     public ClubRespDTO createClub(ClubReqDTO request, Integer userId) {
@@ -209,6 +215,61 @@ public class ClubService {
         // 동아리 삭제 (소프트 딜리트)
         club.setDeletedAt(Instant.now());
         clubRepository.save(club);
+    }
+
+    /**
+     * TODO: 동아리 대표 사진 업로드 기능 적용
+     */
+    @Transactional
+    public String uploadClubPhoto(Integer clubId, MultipartFile image, Integer userId) throws IOException {
+        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
+                .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
+
+        // 권한 확인 (대표자만 업로드 가능)
+        clubMemberRepository.findByClubIdAndUserId(clubId, userId)
+                .filter(member -> member.getRole() == ClubMember.MemberRole.REPRESENTATIVE)
+                .orElseThrow(() -> new UnauthorizedClubAccessException("동아리 사진 업로드 권한이 없습니다."));
+
+        // S3에 이미지 업로드
+        String imageUrl = s3Service.uploadImage(image, CLUB_PHOTO_DIR);
+
+        // 기존 사진이 있으면 소프트 삭제 처리
+        clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
+                .ifPresent(photo -> {
+                    photo.setIsCurrent(false);
+                    photo.setDeletedAt(Instant.now());
+                    clubPhotoRepository.save(photo);
+                });
+
+        // 새 사진 저장
+        saveClubPhoto(club, imageUrl);
+
+        return imageUrl;
+    }
+
+    /**
+     * TODO: 동아리 대표 사진 삭제 기능 적용
+     */
+    @Transactional
+    public void deleteClubPhoto(Integer clubId, Integer userId) {
+        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
+                .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
+
+        // 권한 확인 (대표자만 삭제 가능)
+        clubMemberRepository.findByClubIdAndUserId(clubId, userId)
+                .filter(member -> member.getRole() == ClubMember.MemberRole.REPRESENTATIVE)
+                .orElseThrow(() -> new UnauthorizedClubAccessException("동아리 사진 삭제 권한이 없습니다."));
+
+        clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
+                .ifPresent(photo -> {
+                    // S3에서 이미지 삭제
+                    s3Service.deleteImage(photo.getImageUrl());
+
+                    // DB에서 삭제 처리
+                    photo.setIsCurrent(false);
+                    photo.setDeletedAt(Instant.now());
+                    clubPhotoRepository.save(photo);
+                });
     }
 
     private ClubRespDTO convertToClubRespDTO(Club club, String photoUrl, int memberCount) {

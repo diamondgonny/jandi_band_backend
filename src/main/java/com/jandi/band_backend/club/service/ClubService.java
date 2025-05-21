@@ -71,16 +71,6 @@ public class ClubService {
 
         Club savedClub = clubRepository.save(club);
 
-        // 동아리 대표 사진 URL (제공된 경우에만)
-        String photoUrl = (request.getPhotoUrl() != null && !request.getPhotoUrl().isEmpty())
-                ? request.getPhotoUrl()
-                : null;
-
-        // 동아리 대표 사진 저장 (제공된 경우)
-        if (request.getPhotoUrl() != null && !request.getPhotoUrl().isEmpty()) {
-            saveClubPhoto(savedClub, photoUrl);
-        }
-
         // 동아리 멤버 추가 (생성자를 대표자로 설정)
         ClubMember clubMember = new ClubMember();
         clubMember.setClub(savedClub);
@@ -91,7 +81,7 @@ public class ClubService {
 
         clubMemberRepository.save(clubMember);
 
-        return convertToClubRespDTO(savedClub, photoUrl, 1);
+        return convertToClubRespDTO(savedClub, null, 1);
     }
 
     @Transactional(readOnly = true)
@@ -169,26 +159,8 @@ public class ClubService {
 
         club.setUpdatedAt(Instant.now());
 
-        // 동아리 대표 사진 URL (제공된 경우 사용, 없으면 기존 URL 조회)
-        String photoUrl = (request.getPhotoUrl() != null && !request.getPhotoUrl().isEmpty())
-                ? request.getPhotoUrl()
-                : getClubMainPhotoUrl(clubId);
-
-        // 동아리 대표 사진 업데이트 (제공된 경우)
-        if (request.getPhotoUrl() != null && !request.getPhotoUrl().isEmpty()) {
-            // 기존 사진이 있으면 소프트 삭제 처리
-            clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
-                    .ifPresent(photo -> {
-                        photo.setIsCurrent(false);
-                        photo.setDeletedAt(Instant.now());
-                        clubPhotoRepository.save(photo);
-                    });
-
-            // 새 사진 저장
-            saveClubPhoto(club, photoUrl);
-        }
-
         Club updatedClub = clubRepository.save(club);
+        String photoUrl = getClubMainPhotoUrl(clubId);
         int memberCount = clubMemberRepository.countByClubId(clubId);
 
         return convertToClubRespDTO(updatedClub, photoUrl, memberCount);

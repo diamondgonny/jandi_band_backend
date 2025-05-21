@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
-    /// 일반적인 예외
+    /// 일반적인 예외 처리
     // 전역적 런타임 에러
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<?>> handleRuntimeException(RuntimeException ex) {
@@ -32,6 +32,7 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage(), "USER_NOT_FOUND"));
     }
 
+    /// 부적절 예외 처리
     // 대학 미존재
     @ExceptionHandler(UniversityNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleUniversityNotFound(UniversityNotFoundException ex) {
@@ -79,6 +80,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error(ex.getMessage(), "INVALID_TOKEN"));
+    }
+
+    // 잘못된 접근
+    @ExceptionHandler(InvalidAccessException.class)
+    public ResponseEntity<ApiResponse<?>> handleInvalidAccess(InvalidAccessException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(ex.getMessage(), "INVALID_ACCESS"));
     }
 
     /// 카카오 예외 처리

@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -136,7 +136,7 @@ public class PromoService {
             throw new IllegalStateException("공연 홍보를 삭제할 권한이 없습니다.");
         }
 
-        promo.setDeletedAt(Instant.now());
+        promo.setDeletedAt(LocalDateTime.now());
     }
 
     // 공연 홍보 이미지 업로드
@@ -194,14 +194,14 @@ public class PromoService {
         s3Service.deleteImage(imageUrl);
 
         // DB에서 이미지 정보 삭제 (소프트 삭제)
-        photo.setDeletedAt(Instant.now());
+        photo.setDeletedAt(LocalDateTime.now());
     }
 
     // 공연 상태 자동 업데이트 (스케줄러로 주기적 실행)
     @Scheduled(cron = "0 0 * * * *")  // 매시 정각에 실행
     @Transactional
     public void updatePromoStatuses() {
-        Instant now = Instant.now();
+        LocalDateTime now = LocalDateTime.now();
         
         // 진행 중인 공연 업데이트
         List<Promo> ongoingPromos = promoRepository.findByStatusAndEventDatetimeBefore(
@@ -227,8 +227,8 @@ public class PromoService {
     // 공연 홍보 필터링
     public Page<PromoResponse> filterPromos(
             Promo.PromoStatus status,
-            Instant startDate,
-            Instant endDate,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
             Integer clubId,
             Pageable pageable) {
         return promoRepository.filterPromos(status, startDate, endDate, clubId, pageable)

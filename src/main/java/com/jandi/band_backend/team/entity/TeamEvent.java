@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,11 +29,11 @@ public class TeamEvent {
     @Column(name = "name", nullable = false, length = 255)
     private String name;
 
-    @Column(name = "start_datetime", nullable = false)
-    private Instant startDatetime;
+    @Column(nullable = false)
+    private LocalDateTime startDatetime;
 
-    @Column(name = "end_datetime", nullable = false)
-    private Instant endDatetime;
+    @Column(nullable = false)
+    private LocalDateTime endDatetime;
 
     @Column(name = "location", length = 255)
     private String location;
@@ -52,27 +52,27 @@ public class TeamEvent {
     @JoinColumn(name = "creator_user_id", nullable = false)
     private Users creator;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
 
-    @Column(name = "deleted_at")
-    private Instant deletedAt;
+    @Column
+    private LocalDateTime deletedAt;
 
     @OneToMany(mappedBy = "teamEvent")
     private List<TeamEventParticipant> participants = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
-        createdAt = Instant.now();
-        updatedAt = Instant.now();
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = Instant.now();
+        updatedAt = LocalDateTime.now();
     }
 
     public enum NoPosition {

@@ -1,6 +1,6 @@
 package com.jandi.band_backend.auth.controller;
 
-import com.jandi.band_backend.auth.dto.AuthRespDTO;
+import com.jandi.band_backend.auth.dto.TokenRespDTO;
 import com.jandi.band_backend.auth.dto.RefreshReqDTO;
 import com.jandi.band_backend.auth.dto.SignUpReqDTO;
 import com.jandi.band_backend.global.ApiResponse;
@@ -18,10 +18,10 @@ public class AuthController {
     private final JwtTokenProvider jwtTokenProvider;
 
     @GetMapping("/login")
-    public ApiResponse<AuthRespDTO> kakaoLogin(
+    public ApiResponse<TokenRespDTO> kakaoLogin(
             @RequestParam String code
     ){
-        AuthRespDTO tokens = authService.login(code);
+        TokenRespDTO tokens = authService.login(code);
         return ApiResponse.success("로그인 성공", tokens);
     }
 
@@ -37,11 +37,11 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ApiResponse<AuthRespDTO> refresh(
+    public ApiResponse<TokenRespDTO> refresh(
             @RequestBody RefreshReqDTO refreshReqDTO
     ){
         String refreshToken = refreshReqDTO.getRefreshToken();
-        AuthRespDTO tokens = authService.refresh(refreshToken);
+        TokenRespDTO tokens = authService.refresh(refreshToken);
         return ApiResponse.success("토큰 재발급 성공", tokens);
     }
 }

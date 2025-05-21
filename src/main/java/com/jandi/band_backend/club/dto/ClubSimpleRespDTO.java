@@ -18,23 +18,4 @@ public class ClubSimpleRespDTO {
     private Boolean isUnionClub;
     private String photoUrl;
     private Integer memberCount;
-
-    public static ClubSimpleRespDTO fromEntity(Club club, String photoUrl, int memberCount) {
-        // 대학 정보와 연합 동아리 여부 설정
-        String universityName = null;
-        boolean isUnionClub = (club.getUniversity() == null);
-
-        if (!isUnionClub) {
-            universityName = club.getUniversity().getName();
-        }
-
-        return ClubSimpleRespDTO.builder()
-                .id(club.getId())
-                .name(club.getName())
-                .universityName(universityName)
-                .isUnionClub(isUnionClub)
-                .photoUrl(photoUrl)
-                .memberCount(memberCount)
-                .build();
-    }
 }

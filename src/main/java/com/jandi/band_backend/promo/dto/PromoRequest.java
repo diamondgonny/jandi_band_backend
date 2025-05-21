@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -22,7 +22,7 @@ public class PromoRequest {
 
     private BigDecimal admissionFee;
 
-    private Instant eventDatetime;
+    private LocalDateTime eventDatetime;
 
     @Size(max = 255, message = "장소는 255자를 초과할 수 없습니다")
     private String location;

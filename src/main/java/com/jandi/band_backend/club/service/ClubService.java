@@ -30,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -59,8 +59,8 @@ public class ClubService {
         club.setChatroomUrl(request.getChatroomUrl());
         club.setDescription(request.getDescription());
         club.setInstagramId(request.getInstagramId());
-        club.setCreatedAt(Instant.now());
-        club.setUpdatedAt(Instant.now());
+        club.setCreatedAt(LocalDateTime.now());
+        club.setUpdatedAt(LocalDateTime.now());
 
         // 대학 정보 설정 (연합 동아리인 경우 null)
         if (request.getUniversityId() != null) {
@@ -76,8 +76,8 @@ public class ClubService {
         clubMember.setClub(savedClub);
         clubMember.setUser(user);
         clubMember.setRole(ClubMember.MemberRole.REPRESENTATIVE);
-        clubMember.setJoinedAt(Instant.now());
-        clubMember.setUpdatedAt(Instant.now());
+        clubMember.setJoinedAt(LocalDateTime.now());
+        clubMember.setUpdatedAt(LocalDateTime.now());
 
         clubMemberRepository.save(clubMember);
 
@@ -157,7 +157,7 @@ public class ClubService {
             club.setUniversity(null);
         }
 
-        club.setUpdatedAt(Instant.now());
+        club.setUpdatedAt(LocalDateTime.now());
 
         Club updatedClub = clubRepository.save(club);
         String photoUrl = getClubMainPhotoUrl(clubId);
@@ -180,12 +180,12 @@ public class ClubService {
         clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
                 .ifPresent(photo -> {
                     photo.setIsCurrent(false);
-                    photo.setDeletedAt(Instant.now());
+                    photo.setDeletedAt(LocalDateTime.now());
                     clubPhotoRepository.save(photo);
                 });
 
         // 동아리 삭제 (소프트 딜리트)
-        club.setDeletedAt(Instant.now());
+        club.setDeletedAt(LocalDateTime.now());
         clubRepository.save(club);
     }
 
@@ -209,7 +209,7 @@ public class ClubService {
         clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
                 .ifPresent(photo -> {
                     photo.setIsCurrent(false);
-                    photo.setDeletedAt(Instant.now());
+                    photo.setDeletedAt(LocalDateTime.now());
                     clubPhotoRepository.save(photo);
                 });
 
@@ -239,7 +239,7 @@ public class ClubService {
 
                     // DB에서 삭제 처리
                     photo.setIsCurrent(false);
-                    photo.setDeletedAt(Instant.now());
+                    photo.setDeletedAt(LocalDateTime.now());
                     clubPhotoRepository.save(photo);
                 });
     }

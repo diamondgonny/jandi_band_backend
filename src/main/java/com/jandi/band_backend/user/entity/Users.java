@@ -23,7 +23,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -57,18 +57,18 @@ public class Users {
     @Enumerated(EnumType.STRING)
     @Column(name = "admin_role", nullable = false)
     private AdminRole adminRole = AdminRole.USER;
-
+  
     @Column(name = "is_registered", nullable = false)
     private Boolean isRegistered = Boolean.FALSE;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
     
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
     
-    @Column(name = "deleted_at")
-    private Instant deletedAt;
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+    
+    @Column
+    private LocalDateTime deletedAt;
     
     @OneToMany(mappedBy = "user")
     private List<UserPhoto> photos = new ArrayList<>();
@@ -132,13 +132,13 @@ public class Users {
         position = null;
         university = null;
 
-        createdAt = Instant.now();
-        updatedAt = Instant.now();
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
     
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = Instant.now();
+        updatedAt = LocalDateTime.now();
     }
 
     public enum Position {

@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "promo_comment_like", uniqueConstraints = {
@@ -30,11 +30,11 @@ public class PromoCommentLike {
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
     
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
     
     @PrePersist
     protected void onCreate() {
-        createdAt = Instant.now();
+        createdAt = LocalDateTime.now();
     }
 } 

@@ -24,6 +24,7 @@ public class JwtTokenProvider {
     private final Key secretKey;
     private final long validityInMilliseconds; // 액세스 토큰 유효 기간
     private final long refreshValidityInMilliseconds; // 리프레시 토큰 유효 기간
+    private final long refreshTokenReissueThreshold; // 리프레시 토큰 재발급 기준
     private final UserRepository userRepository;
     private final CustomUserDetailsService userDetailsService;
 
@@ -33,11 +34,13 @@ public class JwtTokenProvider {
             @Value("${jwt.secret}") String jwtSecret,
             @Value("${jwt.access-token-validity}") long validityInMilliseconds,
             @Value("${jwt.refresh-token-validity}") long refreshValidityInMilliseconds,
+            @Value("${jwt.refresh-token-reissue-threshold}") long refreshTokenReissueThreshold,
             UserRepository userRepository,
             CustomUserDetailsService userDetailsService
     ) {
         this.secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         this.validityInMilliseconds = validityInMilliseconds;
+        this.refreshTokenReissueThreshold = refreshTokenReissueThreshold;
         this.refreshValidityInMilliseconds = refreshValidityInMilliseconds;
         this.userRepository = userRepository;
         this.userDetailsService = userDetailsService;
@@ -80,6 +83,15 @@ public class JwtTokenProvider {
 
         log.debug("리프레시 토큰 생성 완료: 사용자 카카오 계정={}, 만료 시간={}", kakaoOauthId, expiry);
         return token;
+    }
+
+    public String ReissueRefreshToken(String originalRefreshToken) {
+        Claims claims = parseClaims(originalRefreshToken);
+        Date expiration = claims.getExpiration();
+        long remainTime = expiration.getTime() - System.currentTimeMillis();
+
+        return (remainTime < refreshTokenReissueThreshold) ?
+                generateRefreshToken(originalRefreshToken) : originalRefreshToken;
     }
 
     /// 토큰에서 유저 정보 추출

@@ -40,8 +40,11 @@ public class PollController {
     }
 
     @GetMapping("/{pollId}")
-    public ResponseEntity<ApiResponse<PollDetailRespDTO>> getPollDetail(@PathVariable Integer pollId) {
-        PollDetailRespDTO responseDto = pollService.getPollDetail(pollId);
+    public ResponseEntity<ApiResponse<PollDetailRespDTO>> getPollDetail(
+            @PathVariable Integer pollId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer currentUserId = userDetails != null ? userDetails.getUserId() : null;
+        PollDetailRespDTO responseDto = pollService.getPollDetail(pollId, currentUserId);
         return ResponseEntity.ok(ApiResponse.success("투표 상세 정보를 조회했습니다.", responseDto));
     }
 

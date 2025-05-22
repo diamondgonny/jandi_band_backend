@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -69,7 +70,7 @@ public class PollService {
     }
 
     @Transactional(readOnly = true)
-    public PollDetailRespDTO getPollDetail(Integer pollId) {
+    public PollDetailRespDTO getPollDetail(Integer pollId, Integer currentUserId) {
         // 투표 조회
         Poll poll = pollRepository.findByIdAndDeletedAtIsNull(pollId)
                 .orElseThrow(() -> new PollNotFoundException("해당 투표를 찾을 수 없습니다."));
@@ -79,7 +80,7 @@ public class PollService {
 
         // PollSongResponseDto로 변환
         List<PollSongRespDTO> songResponseDtos = pollSongs.stream()
-                .map(this::convertToPollSongRespDTO)
+                .map(pollSong -> convertToPollSongRespDTO(pollSong, currentUserId))
                 .collect(Collectors.toList());
 
         return convertToPollDetailRespDTO(poll, songResponseDtos);
@@ -164,7 +165,7 @@ public class PollService {
         }
 
         // 업데이트된 노래 정보 반환
-        return convertToPollSongRespDTO(pollSong);
+        return convertToPollSongRespDTO(pollSong, currentUserId);
     }
 
     @Transactional
@@ -193,8 +194,36 @@ public class PollService {
         // 투표 삭제
         voteRepository.delete(vote);
 
-        // DB 조회 없이 해당 투표 타입의 카운트를 줄인 응답 생성
-        return convertToPollSongRespDTOWithAdjustedVote(pollSong, voteType, -1);
+        // 투표 타입 계산
+        int likeCount = calculateVoteCount(pollSong, "LIKE");
+        int dislikeCount = calculateVoteCount(pollSong, "DISLIKE");
+        int cantCount = calculateVoteCount(pollSong, "CANT");
+        int hajjCount = calculateVoteCount(pollSong, "HAJJ");
+
+        // 삭제한 투표 타입의 카운트 조정
+        switch (voteType.toUpperCase()) {
+            case "LIKE", "좋아요" -> likeCount -= 1;
+            case "DISLIKE", "별로에요" -> dislikeCount -= 1;
+            case "CANT", "실력부족" -> cantCount -= 1;
+            case "HAJJ", "하고싶지_않은데_존중해요" -> hajjCount -= 1;
+        }
+
+        return PollSongRespDTO.builder()
+                .id(pollSong.getId())
+                .pollId(pollSong.getPoll().getId())
+                .songName(pollSong.getSongName())
+                .artistName(pollSong.getArtistName())
+                .youtubeUrl(pollSong.getYoutubeUrl())
+                .description(pollSong.getDescription())
+                .suggesterId(pollSong.getSuggester() != null ? pollSong.getSuggester().getId() : null)
+                .suggesterName(pollSong.getSuggester() != null ? pollSong.getSuggester().getNickname() : null)
+                .createdAt(pollSong.getCreatedAt())
+                .likeCount(likeCount)
+                .dislikeCount(dislikeCount)
+                .cantCount(cantCount)
+                .hajjCount(hajjCount)
+                .userVoteType(null)
+                .build();
     }
 
     private PollRespDTO convertToPollRespDTO(Poll poll) {
@@ -259,6 +288,23 @@ public class PollService {
     }
 
     private PollSongRespDTO convertToPollSongRespDTO(PollSong pollSong) {
+        return convertToPollSongRespDTO(pollSong, null);
+    }
+
+    private PollSongRespDTO convertToPollSongRespDTO(PollSong pollSong, Integer currentUserId) {
+        String userVoteType = null;
+        if (currentUserId != null) {
+            // 현재 사용자의 투표 조회
+            Optional<Vote> userVote = pollSong.getVotes().stream()
+                    .filter(vote -> vote.getUser().getId().equals(currentUserId))
+                    .findFirst();
+
+            // 투표가 있으면 투표 타입 설정
+            if (userVote.isPresent()) {
+                userVoteType = userVote.get().getVotedMark().name();
+            }
+        }
+
         return PollSongRespDTO.builder()
                 .id(pollSong.getId())
                 .pollId(
@@ -285,51 +331,7 @@ public class PollService {
                 .dislikeCount(calculateVoteCount(pollSong, "DISLIKE"))
                 .cantCount(calculateVoteCount(pollSong, "CANT"))
                 .hajjCount(calculateVoteCount(pollSong, "HAJJ"))
-                .build();
-    }
-
-    // 특정 투표 타입의 카운트를 조정하여 DTO 반환하는 메서드 추가
-    private PollSongRespDTO convertToPollSongRespDTOWithAdjustedVote(PollSong pollSong, String voteType, int adjustment) {
-        // 기본 카운트 계산
-        int likeCount = calculateVoteCount(pollSong, "LIKE");
-        int dislikeCount = calculateVoteCount(pollSong, "DISLIKE");
-        int cantCount = calculateVoteCount(pollSong, "CANT");
-        int hajjCount = calculateVoteCount(pollSong, "HAJJ");
-
-        // 해당 투표 타입의 카운트 조정
-        switch (voteType.toUpperCase()) {
-            case "LIKE", "좋아요" -> likeCount += adjustment;
-            case "DISLIKE", "별로에요" -> dislikeCount += adjustment;
-            case "CANT", "실력부족" -> cantCount += adjustment;
-            case "HAJJ", "하고싶지_않은데_존중해요" -> hajjCount += adjustment;
-        }
-
-        return PollSongRespDTO.builder()
-                .id(pollSong.getId())
-                .pollId(
-                        pollSong.getPoll() != null ?
-                        pollSong.getPoll().getId() :
-                        null
-                )
-                .songName(pollSong.getSongName())
-                .artistName(pollSong.getArtistName())
-                .youtubeUrl(pollSong.getYoutubeUrl())
-                .description(pollSong.getDescription())
-                .suggesterId(
-                        pollSong.getSuggester() != null ?
-                        pollSong.getSuggester().getId() :
-                        null
-                )
-                .suggesterName(
-                        pollSong.getSuggester() != null ?
-                        pollSong.getSuggester().getNickname() :
-                        null
-                )
-                .createdAt(pollSong.getCreatedAt())
-                .likeCount(likeCount)
-                .dislikeCount(dislikeCount)
-                .cantCount(cantCount)
-                .hajjCount(hajjCount)
+                .userVoteType(userVoteType)
                 .build();
     }
 

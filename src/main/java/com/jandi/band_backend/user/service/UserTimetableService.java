@@ -36,6 +36,7 @@ public class UserTimetableService {
     }
 
     /// 특정 시간표 조회
+    @Transactional(readOnly = true)
     public UserTimetableRespDTO getMyTimetableById(String kakaoOauthId, Integer timetableId) {
         UserTimetable myTimetable = getIfMyTimetable(kakaoOauthId, timetableId);
 
@@ -87,6 +88,7 @@ public class UserTimetableService {
     }
 
     /// 내 시간표 삭제
+    @Transactional
     public void deleteMyTimetable(String kakaoOauthId, Integer timetableId) {
         UserTimetable myTimetable = getIfMyTimetable(kakaoOauthId, timetableId); // 본인의 시간표일 때만 GET
 

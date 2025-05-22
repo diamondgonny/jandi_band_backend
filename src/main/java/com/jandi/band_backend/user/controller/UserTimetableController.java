@@ -55,4 +55,17 @@ public class UserTimetableController {
         UserTimetableRespDTO newTimetable = userTimetableService.createTimetable(kakaoOauthId, userTimetableReqDTO);
         return ApiResponse.success("새 시간표 생성 성공, ", newTimetable);
     }
+
+    @PatchMapping("/me/timetables/{timetableId}")
+    public ApiResponse<UserTimetableRespDTO> updateTimetable(
+            @RequestHeader("Authorization") String token,
+            @RequestBody UserTimetableReqDTO userTimetableReqDTO,
+            @PathVariable Integer timetableId
+    ){
+        String accessToken = token.replace("Bearer ", "");
+        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
+
+        UserTimetableRespDTO updateTimetable = userTimetableService.updateTimetable(kakaoOauthId, timetableId, userTimetableReqDTO);
+        return ApiResponse.success("내 시간표 수정 성공", updateTimetable);
+    }
 }

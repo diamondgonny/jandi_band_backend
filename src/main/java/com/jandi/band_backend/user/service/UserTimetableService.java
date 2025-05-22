@@ -86,6 +86,42 @@ public class UserTimetableService {
         );
     }
 
+    /// 내 시간표 수정
+    @Transactional
+    public UserTimetableRespDTO updateTimetable(String kakaoOauthId, Integer timetableId, UserTimetableReqDTO requestDTO) {
+        UserTimetable myTimetable = userTimetableRepository.findByIdAndDeletedAtIsNull(timetableId)
+                .orElseThrow(TimetableNotFoundException::new);
+
+        // 본인의 시간표인지 검사
+        Users user = userService.getMyInfo(kakaoOauthId);
+        if(myTimetable.getUser() != user)
+            throw new InvalidAccessException("본인의 시간표만 열람할 수 있습니다");
+
+        // DTO 검증
+        String name = requestDTO.getName();
+        JsonNode timetableData = requestDTO.getTimetableData();
+        if(name == null || name.isEmpty())
+            throw new IllegalArgumentException("제목은 공란이 될 수 없습니다.");
+        else if(timetableData == null || timetableData.isEmpty())
+            throw new IllegalArgumentException("시간표 데이터는 공란이 될 수 없습니다");
+
+        // 시간표 형식 검증
+        checkWeekFormIsValid(timetableData);
+        checkTimeListFormIsValid(timetableData);
+
+        // 시간표 수정
+        myTimetable.setName(name);
+        myTimetable.setTimetableData(timetableData.toString());
+        userTimetableRepository.save(myTimetable);
+
+        // DTO로 반환
+        return new UserTimetableRespDTO(
+                myTimetable.getId(),
+                myTimetable.getName(),
+                stringToJson(myTimetable.getTimetableData())
+        );
+    }
+
     /// 내부 메서드
     // String 형식의 시간표 데이터를 JSON으로 변환
     private JsonNode stringToJson(String stringData) {

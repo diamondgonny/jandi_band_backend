@@ -10,6 +10,7 @@ import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserTimetableRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -24,6 +25,7 @@ public class UserTimetableService {
     private static final Set<String> WEEKDAYS = Set.of("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun");
 
     /// 내 시간표 목록 조회
+    @Transactional(readOnly = true)
     public List<UserTimetableListRespDTO> getMyTimetables(String kakaoOauthId) {
         Users user = userService.getMyInfo(kakaoOauthId);
 
@@ -33,6 +35,8 @@ public class UserTimetableService {
                 .map(UserTimetableListRespDTO::new).collect(Collectors.toList());
     }
 
+    /// 새 시간표 생성
+    @Transactional
     public UserTimetableRespDTO createTimetable(String kakaoOauthId, UserTimetableReqDTO requestDTO) {
         Users user = userService.getMyInfo(kakaoOauthId);
 

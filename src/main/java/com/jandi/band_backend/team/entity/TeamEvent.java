@@ -29,10 +29,10 @@ public class TeamEvent {
     @Column(name = "name", nullable = false, length = 255)
     private String name;
 
-    @Column(nullable = false)
+    @Column(name = "start_datetime", nullable = false)
     private LocalDateTime startDatetime;
 
-    @Column(nullable = false)
+    @Column(name = "end_datetime", nullable = false)
     private LocalDateTime endDatetime;
 
     @Column(name = "location", length = 255)
@@ -52,13 +52,13 @@ public class TeamEvent {
     @JoinColumn(name = "creator_user_id", nullable = false)
     private Users creator;
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column
+    @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
     @OneToMany(mappedBy = "teamEvent")

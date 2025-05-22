@@ -38,7 +38,7 @@ public class PromoReport {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
     
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
     @PrePersist

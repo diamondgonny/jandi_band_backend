@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -120,6 +121,20 @@ public class UserTimetableService {
                 myTimetable.getName(),
                 stringToJson(myTimetable.getTimetableData())
         );
+    }
+
+    /// 내 시간표 삭제
+    public void deleteMyTimetable(String kakaoOauthId, Integer timetableId) {
+        UserTimetable myTimetable = userTimetableRepository.findByIdAndDeletedAtIsNull(timetableId)
+                .orElseThrow(TimetableNotFoundException::new);
+
+        // 본인의 시간표인지 검사
+        Users user = userService.getMyInfo(kakaoOauthId);
+        if(myTimetable.getUser() != user)
+            throw new InvalidAccessException("본인의 시간표만 삭제할 수 있습니다");
+
+        myTimetable.setDeletedAt(LocalDateTime.now());
+        userTimetableRepository.save(myTimetable);
     }
 
     /// 내부 메서드

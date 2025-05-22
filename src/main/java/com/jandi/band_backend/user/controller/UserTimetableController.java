@@ -56,6 +56,7 @@ public class UserTimetableController {
         return ApiResponse.success("새 시간표 생성 성공, ", newTimetable);
     }
 
+    /// 내 시간표 수정
     @PatchMapping("/me/timetables/{timetableId}")
     public ApiResponse<UserTimetableRespDTO> updateTimetable(
             @RequestHeader("Authorization") String token,
@@ -67,5 +68,18 @@ public class UserTimetableController {
 
         UserTimetableRespDTO updateTimetable = userTimetableService.updateTimetable(kakaoOauthId, timetableId, userTimetableReqDTO);
         return ApiResponse.success("내 시간표 수정 성공", updateTimetable);
+    }
+
+    /// 내 시간표 삭제
+    @DeleteMapping("/me/timetables/{timetableId}")
+    public ApiResponse<?> deleteTimetable(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Integer timetableId
+    ){
+        String accessToken = token.replace("Bearer ", "");
+        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
+
+        userTimetableService.deleteMyTimetable(kakaoOauthId, timetableId);
+        return ApiResponse.success("내 시간표 삭제 성공");
     }
 }

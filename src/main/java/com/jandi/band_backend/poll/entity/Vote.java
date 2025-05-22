@@ -32,7 +32,7 @@ public class Vote {
     @Column(name = "voted_mark", nullable = false)
     private VotedMark votedMark;
     
-    @Column(name = "voted_at", nullable = false, updatable = false)
+    @Column(name = "voted_at", nullable = false)
     private LocalDateTime votedAt;
     
     @PrePersist
@@ -40,7 +40,12 @@ public class Vote {
         votedAt = LocalDateTime.now();
     }
     
+    @PreUpdate
+    protected void onUpdate() {
+        votedAt = LocalDateTime.now();
+    }
+
     public enum VotedMark {
         LIKE, DISLIKE, CANT, HAJJ
     }
-} 
+}

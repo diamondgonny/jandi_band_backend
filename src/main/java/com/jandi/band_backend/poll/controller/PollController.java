@@ -54,4 +54,24 @@ public class PollController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("곡이 성공적으로 투표에 추가되었습니다.", responseDto));
     }
+
+    @PutMapping("/{pollId}/songs/{songId}/votes/{emoji}")
+    public ResponseEntity<ApiResponse<PollSongRespDTO>> setVoteForSong(
+            @PathVariable Integer pollId,
+            @PathVariable Integer songId,
+            @PathVariable String emoji,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        PollSongRespDTO responseDto = pollService.setVoteForSong(pollId, songId, emoji, userDetails.getUserId());
+        return ResponseEntity.ok(ApiResponse.success("투표가 설정되었습니다.", responseDto));
+    }
+
+    @DeleteMapping("/{pollId}/songs/{songId}/votes/{emoji}")
+    public ResponseEntity<ApiResponse<PollSongRespDTO>> removeVoteFromSong(
+            @PathVariable Integer pollId,
+            @PathVariable Integer songId,
+            @PathVariable String emoji,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        PollSongRespDTO responseDto = pollService.removeVoteFromSong(pollId, songId, emoji, userDetails.getUserId());
+        return ResponseEntity.ok(ApiResponse.success("투표가 취소되었습니다.", responseDto));
+    }
 }

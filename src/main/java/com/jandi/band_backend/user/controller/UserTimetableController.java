@@ -18,7 +18,7 @@ public class UserTimetableController {
     private final UserTimetableService userTimetableService;
     private final JwtTokenProvider jwtTokenProvider;
 
-    //내 시간표 목록 조회
+    /// 내 시간표 목록 조회
     @GetMapping("/me/timetables")
     public ApiResponse<List<UserTimetableListRespDTO>> getMyTimetables(
         @RequestHeader("Authorization") String token
@@ -30,6 +30,20 @@ public class UserTimetableController {
         return ApiResponse.success("내 시간표 목록 조회 성공", myTimetables);
     }
 
+    /// 내 특정 시간표 조회
+    @GetMapping("me/timetables/{timetableId}")
+    public ApiResponse<UserTimetableRespDTO> getTimetableById(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Integer timetableId
+    ){
+        String accessToken = token.replace("Bearer ", "");
+        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
+
+        UserTimetableRespDTO myTimetable = userTimetableService.getMyTimetableById(kakaoOauthId, timetableId);
+        return ApiResponse.success("내 시간표 조회 성공", myTimetable);
+    }
+
+    /// 새 시간표 생성
     @PostMapping("/me/timetables")
     public ApiResponse<UserTimetableRespDTO> createTimetable(
             @RequestHeader("Authorization") String token,

@@ -2,6 +2,8 @@ package com.jandi.band_backend.user.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jandi.band_backend.global.exception.InvalidAccessException;
+import com.jandi.band_backend.global.exception.TimetableNotFoundException;
 import com.jandi.band_backend.user.dto.UserTimetableListRespDTO;
 import com.jandi.band_backend.user.dto.UserTimetableReqDTO;
 import com.jandi.band_backend.user.dto.UserTimetableRespDTO;
@@ -33,6 +35,23 @@ public class UserTimetableService {
         List<UserTimetable> myTimetables = userTimetableRepository.findByUserAndDeletedAtIsNull(user);
         return myTimetables.stream()
                 .map(UserTimetableListRespDTO::new).collect(Collectors.toList());
+    }
+
+    /// 특정 시간표 조회
+    public UserTimetableRespDTO getMyTimetableById(String kakaoOauthId, Integer timetableId) {
+        UserTimetable myTimetable = userTimetableRepository.findByIdAndDeletedAtIsNull(timetableId)
+                .orElseThrow(TimetableNotFoundException::new);
+
+        // 본인의 시간표인지 검사
+        Users user = userService.getMyInfo(kakaoOauthId);
+        if(myTimetable.getUser() != user)
+            throw new InvalidAccessException("본인의 시간표만 열람할 수 있습니다");
+
+        return new UserTimetableRespDTO(
+                myTimetable.getId(),
+                myTimetable.getName(),
+                stringToJson(myTimetable.getTimetableData())
+        );
     }
 
     /// 새 시간표 생성

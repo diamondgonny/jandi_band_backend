@@ -32,7 +32,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage(), "USER_NOT_FOUND"));
     }
 
-    /// 부적절 예외 처리
     // 대학 미존재
     @ExceptionHandler(UniversityNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleUniversityNotFound(UniversityNotFoundException ex) {
@@ -65,6 +64,15 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage(), "POLL_SONG_NOT_FOUND"));
     }
 
+    // 시간표 미존재
+    @ExceptionHandler(TimetableNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleTimetableNotFound(TimetableNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage(), "TIMETABLE_NOT_FOUND"));
+    }
+
+    /// 부적절 접근 처리
     // 동아리 접근 권한 없음
     @ExceptionHandler(UnauthorizedClubAccessException.class)
     public ResponseEntity<ApiResponse<?>> handleUnauthorizedClubAccess(UnauthorizedClubAccessException ex) {
@@ -73,7 +81,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage(), "UNAUTHORIZED_CLUB_ACCESS"));
     }
 
-    /// 토큰 예외 처리
     // 부적절한 토큰
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<ApiResponse<?>> handleInvalidToken(InvalidTokenException ex) {

@@ -1,13 +1,15 @@
 package com.jandi.band_backend.user.dto;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import lombok.AllArgsConstructor;
+import com.jandi.band_backend.user.entity.UserTimetable;
 import lombok.Data;
 
 @Data
-@AllArgsConstructor
 public class UserTimetableRespDTO {
     private Integer id;
     private String name;
-    private JsonNode timetableData;
+
+    public UserTimetableRespDTO(UserTimetable userTimetable) {
+        this.id=userTimetable.getId();
+        this.name=userTimetable.getName();
+    }
 }

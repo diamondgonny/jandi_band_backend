@@ -2,9 +2,9 @@ package com.jandi.band_backend.user.service;
 
 import com.jandi.band_backend.global.exception.InvalidAccessException;
 import com.jandi.band_backend.global.exception.TimetableNotFoundException;
-import com.jandi.band_backend.user.dto.UserTimetableListRespDTO;
-import com.jandi.band_backend.user.dto.UserTimetableReqDTO;
 import com.jandi.band_backend.user.dto.UserTimetableRespDTO;
+import com.jandi.band_backend.user.dto.UserTimetableReqDTO;
+import com.jandi.band_backend.user.dto.UserTimetableDetailsRespDTO;
 import com.jandi.band_backend.user.entity.UserTimetable;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserTimetableRepository;
@@ -26,21 +26,21 @@ public class UserTimetableService {
 
     /// 내 시간표 목록 조회
     @Transactional(readOnly = true)
-    public List<UserTimetableListRespDTO> getMyTimetables(String kakaoOauthId) {
+    public List<UserTimetableRespDTO> getMyTimetables(String kakaoOauthId) {
         Users user = userService.getMyInfo(kakaoOauthId);
 
         // 내 시간표 조회 및 DTO 형태로 반환
         List<UserTimetable> myTimetables = userTimetableRepository.findByUserAndDeletedAtIsNull(user);
         return myTimetables.stream()
-                .map(UserTimetableListRespDTO::new).collect(Collectors.toList());
+                .map(UserTimetableRespDTO::new).collect(Collectors.toList());
     }
 
     /// 특정 시간표 조회
     @Transactional(readOnly = true)
-    public UserTimetableRespDTO getMyTimetableById(String kakaoOauthId, Integer timetableId) {
+    public UserTimetableDetailsRespDTO getMyTimetableById(String kakaoOauthId, Integer timetableId) {
         UserTimetable myTimetable = getIfMyTimetable(kakaoOauthId, timetableId);
 
-        return new UserTimetableRespDTO(
+        return new UserTimetableDetailsRespDTO(
                 myTimetable.getId(),
                 myTimetable.getName(),
                 userTimetableUtil.stringToJson(myTimetable.getTimetableData())
@@ -49,7 +49,7 @@ public class UserTimetableService {
 
     /// 새 시간표 생성
     @Transactional
-    public UserTimetableRespDTO createTimetable(String kakaoOauthId, UserTimetableReqDTO requestDTO) {
+    public UserTimetableDetailsRespDTO createTimetable(String kakaoOauthId, UserTimetableReqDTO requestDTO) {
         Users user = userService.getMyInfo(kakaoOauthId);
         userTimetableUtil.validateTimetableRequest(requestDTO); // DTO 형식 검사
 
@@ -61,7 +61,7 @@ public class UserTimetableService {
         userTimetableRepository.save(newTimetable);
 
         // DTO로 반환
-        return new UserTimetableRespDTO(
+        return new UserTimetableDetailsRespDTO(
             newTimetable.getId(),
             newTimetable.getName(),
             userTimetableUtil.stringToJson(newTimetable.getTimetableData())
@@ -70,7 +70,7 @@ public class UserTimetableService {
 
     /// 내 시간표 수정
     @Transactional
-    public UserTimetableRespDTO updateTimetable(String kakaoOauthId, Integer timetableId, UserTimetableReqDTO requestDTO) {
+    public UserTimetableDetailsRespDTO updateTimetable(String kakaoOauthId, Integer timetableId, UserTimetableReqDTO requestDTO) {
         UserTimetable myTimetable = getIfMyTimetable(kakaoOauthId, timetableId); // 본인의 시간표일 때만 GET
         userTimetableUtil.validateTimetableRequest(requestDTO); // DTO 형식 검사
 
@@ -80,7 +80,7 @@ public class UserTimetableService {
         userTimetableRepository.save(myTimetable);
 
         // DTO로 반환
-        return new UserTimetableRespDTO(
+        return new UserTimetableDetailsRespDTO(
                 myTimetable.getId(),
                 myTimetable.getName(),
                 userTimetableUtil.stringToJson(myTimetable.getTimetableData())

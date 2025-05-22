@@ -3,6 +3,7 @@ package com.jandi.band_backend.user.controller;
 import com.jandi.band_backend.global.ApiResponse;
 import com.jandi.band_backend.security.jwt.JwtTokenProvider;
 import com.jandi.band_backend.user.dto.UserTimetableListRespDTO;
+import com.jandi.band_backend.user.dto.UserTimetableReqDTO;
 import com.jandi.band_backend.user.dto.UserTimetableRespDTO;
 import com.jandi.band_backend.user.service.UserTimetableService;
 import lombok.RequiredArgsConstructor;
@@ -27,5 +28,17 @@ public class UserTimetableController {
 
         List<UserTimetableListRespDTO> myTimetables = userTimetableService.getMyTimetables(kakaoOauthId);
         return ApiResponse.success("내 시간표 목록 조회 성공", myTimetables);
+    }
+
+    @PostMapping("/me/timetables")
+    public ApiResponse<UserTimetableRespDTO> createTimetable(
+            @RequestHeader("Authorization") String token,
+            @RequestBody UserTimetableReqDTO userTimetableReqDTO
+    ) {
+        String accessToken = token.replace("Bearer ", "");
+        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
+
+        UserTimetableRespDTO newTimetable = userTimetableService.createTimetable(kakaoOauthId, userTimetableReqDTO);
+        return ApiResponse.success("새 시간표 생성 성공, ", newTimetable);
     }
 }

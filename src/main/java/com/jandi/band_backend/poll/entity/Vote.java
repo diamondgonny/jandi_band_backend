@@ -32,7 +32,7 @@ public class Vote {
     @Column(name = "voted_mark", nullable = false)
     private VotedMark votedMark;
     
-    @Column(name = "voted_at", nullable = false)
+    @Column(name = "voted_at", nullable = false, updatable = false)
     private LocalDateTime votedAt;
     
     @PrePersist

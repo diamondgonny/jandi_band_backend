@@ -97,6 +97,14 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage(), "INVALID_ACCESS"));
     }
 
+    // 잘못된 인자
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<?>> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(ex.getMessage(), "ILLEGAL_ARGUMENT"));
+    }
+
     /// 카카오 예외 처리
     // 카카오 로그인 토큰 발급 실패
     @ExceptionHandler(FailKakaoLoginException.class)

@@ -143,7 +143,7 @@ public class UserTimetableService {
         try {
             convertedTime = LocalTime.parse(timeNode.asText(), timeFormatter);
         }catch (Exception e){
-            throw new IllegalArgumentException(timeNode.asText() + "은 HH:mm 형식의 문자열이어야 합니다.");
+            throw new IllegalArgumentException(timeNode.asText() + "은 HH:mm (HH: 00~24, mm: 00, 30)형식의 문자열이어야 합니다.");
         }
 
         // MM이 30분 단위(00 or 30)인지 확인

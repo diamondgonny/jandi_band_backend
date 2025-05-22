@@ -2,7 +2,6 @@ package com.jandi.band_backend.univ.controller;
 
 import com.jandi.band_backend.global.ApiResponse;
 import com.jandi.band_backend.univ.dto.RegionRespDTO;
-import com.jandi.band_backend.univ.entity.Region;
 import com.jandi.band_backend.univ.service.RegionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +16,7 @@ import java.util.List;
 public class RegionController {
     private final RegionService regionService;
 
+    /// 전체 지역 조회
     @GetMapping("/all")
     public ApiResponse<List<RegionRespDTO>> getAllRegion() {
         List<RegionRespDTO> regionList = regionService.getAllRegions();

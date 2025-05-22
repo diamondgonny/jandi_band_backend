@@ -96,7 +96,7 @@ public class UserTimetableService {
         // 본인의 시간표인지 검사
         Users user = userService.getMyInfo(kakaoOauthId);
         if(myTimetable.getUser() != user)
-            throw new InvalidAccessException("본인의 시간표만 열람할 수 있습니다");
+            throw new InvalidAccessException("본인의 시간표만 수정할 수 있습니다");
 
         // DTO 검증
         String name = requestDTO.getName();

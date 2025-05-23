@@ -25,4 +25,5 @@ public class PollSongRespDTO {
     private Integer dislikeCount;
     private Integer cantCount;
     private Integer hajjCount;
+    private String userVoteType;
 }

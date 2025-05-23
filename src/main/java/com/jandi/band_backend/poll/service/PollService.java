@@ -35,7 +35,7 @@ public class PollService {
     private final VoteRepository voteRepository;
 
     @Transactional
-    public PollRespDTO createPoll(PollCreateReqDTO requestDto, Integer currentUserId) {
+    public PollRespDTO createPoll(PollReqDTO requestDto, Integer currentUserId) {
         // 동아리 조회
         Club club = clubRepository.findById(requestDto.getClubId())
                 .orElseThrow(() -> new ClubNotFoundException("해당 동아리를 찾을 수 없습니다."));
@@ -87,7 +87,7 @@ public class PollService {
     }
 
     @Transactional
-    public PollSongRespDTO addSongToPoll(Integer pollId, PollSongCreateReqDTO requestDto, Integer currentUserId) {
+    public PollSongRespDTO addSongToPoll(Integer pollId, PollSongReqDTO requestDto, Integer currentUserId) {
         // 투표 조회
         Poll poll = pollRepository.findByIdAndDeletedAtIsNull(pollId)
                 .orElseThrow(() -> new PollNotFoundException("해당 투표를 찾을 수 없습니다."));

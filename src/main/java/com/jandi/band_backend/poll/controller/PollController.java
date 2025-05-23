@@ -23,7 +23,7 @@ public class PollController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<PollRespDTO>> createPoll(
-            @Valid @RequestBody PollCreateReqDTO requestDto,
+            @Valid @RequestBody PollReqDTO requestDto,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         PollRespDTO responseDto = pollService.createPoll(requestDto, userDetails.getUserId());
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -51,7 +51,7 @@ public class PollController {
     @PostMapping("/{pollId}/songs")
     public ResponseEntity<ApiResponse<PollSongRespDTO>> addSongToPoll(
             @PathVariable Integer pollId,
-            @Valid @RequestBody PollSongCreateReqDTO requestDto,
+            @Valid @RequestBody PollSongReqDTO requestDto,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         PollSongRespDTO responseDto = pollService.addSongToPoll(pollId, requestDto, userDetails.getUserId());
         return ResponseEntity.status(HttpStatus.CREATED)

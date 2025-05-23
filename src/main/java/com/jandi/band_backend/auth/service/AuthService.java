@@ -94,7 +94,7 @@ public class AuthService {
         String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(refreshToken);
         return new TokenRespDTO(
                 jwtTokenProvider.generateAccessToken(kakaoOauthId),
-                jwtTokenProvider.generateRefreshToken(kakaoOauthId)
+                jwtTokenProvider.ReissueRefreshToken(refreshToken)
         );
     }
 

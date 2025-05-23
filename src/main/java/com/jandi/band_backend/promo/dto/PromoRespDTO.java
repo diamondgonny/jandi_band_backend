@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 @Getter
 @Setter
-public class PromoResponse {
+public class PromoRespDTO {
     private Integer id;
     private Integer clubId;
     private String clubName;
@@ -31,8 +31,8 @@ public class PromoResponse {
     private LocalDateTime updatedAt;
     private List<String> photoUrls;
 
-    public static PromoResponse from(Promo promo) {
-        PromoResponse response = new PromoResponse();
+    public static PromoRespDTO from(Promo promo) {
+        PromoRespDTO response = new PromoRespDTO();
         response.setId(promo.getId());
         response.setClubId(promo.getClub().getId());
         response.setClubName(promo.getClub().getName());

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PollCreateReqDTO {
+public class PollReqDTO {
     @NotBlank(message = "투표 제목은 필수입니다.")
     private String title;
     @NotNull(message = "동아리 ID는 필수입니다.")

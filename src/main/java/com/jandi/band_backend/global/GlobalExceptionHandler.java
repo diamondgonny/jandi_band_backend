@@ -65,6 +65,22 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage(), "POLL_SONG_NOT_FOUND"));
     }
 
+    // 행사한 해당 투표 미존재
+    @ExceptionHandler(VoteNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleVoteNotFound(VoteNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage(), "VOTE_NOT_FOUND"));
+    }
+
+    // 행사한 해당 투표 이미 존재
+    @ExceptionHandler(VoteAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<?>> handleVoteAlreadyExists(VoteAlreadyExistsException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT) // 409 Conflict - 리소스 충돌
+                .body(ApiResponse.error(ex.getMessage(), "VOTE_ALREADY_EXISTS"));
+    }
+
     // 동아리 접근 권한 없음
     @ExceptionHandler(UnauthorizedClubAccessException.class)
     public ResponseEntity<ApiResponse<?>> handleUnauthorizedClubAccess(UnauthorizedClubAccessException ex) {

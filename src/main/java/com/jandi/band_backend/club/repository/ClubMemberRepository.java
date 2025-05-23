@@ -24,4 +24,10 @@ public interface ClubMemberRepository extends JpaRepository<ClubMember, Integer>
     int countByClubId(@Param("clubId") Integer clubId);
 
     boolean existsByClubAndUser(Club club, Users user);
+    
+    /**
+     * 특정 사용자가 참가한 동아리 목록 조회 (가입일시 역순)
+     */
+    @Query("SELECT cm FROM ClubMember cm WHERE cm.user.id = :userId AND cm.club.deletedAt IS NULL ORDER BY cm.joinedAt DESC")
+    List<ClubMember> findByUserId(@Param("userId") Integer userId);
 }

@@ -40,7 +40,12 @@ public class Vote {
         votedAt = LocalDateTime.now();
     }
     
+    @PreUpdate
+    protected void onUpdate() {
+        votedAt = LocalDateTime.now();
+    }
+
     public enum VotedMark {
         LIKE, DISLIKE, CANT, HAJJ
     }
-} 
+}

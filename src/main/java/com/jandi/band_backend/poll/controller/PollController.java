@@ -23,7 +23,7 @@ public class PollController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<PollRespDTO>> createPoll(
-            @Valid @RequestBody PollCreateReqDTO requestDto,
+            @Valid @RequestBody PollReqDTO requestDto,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         PollRespDTO responseDto = pollService.createPoll(requestDto, userDetails.getUserId());
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -33,25 +33,48 @@ public class PollController {
     @GetMapping("/clubs/{clubId}")
     public ResponseEntity<ApiResponse<Page<PollRespDTO>>> getPollList(
             @PathVariable Integer clubId,
-            @PageableDefault(size = 10) Pageable pageable) {
+            @PageableDefault(size = 5) Pageable pageable) {
 
         Page<PollRespDTO> polls = pollService.getPollsByClub(clubId, pageable);
         return ResponseEntity.ok(ApiResponse.success("투표 목록을 조회했습니다.", polls));
     }
 
     @GetMapping("/{pollId}")
-    public ResponseEntity<ApiResponse<PollDetailRespDTO>> getPollDetail(@PathVariable Integer pollId) {
-        PollDetailRespDTO responseDto = pollService.getPollDetail(pollId);
+    public ResponseEntity<ApiResponse<PollDetailRespDTO>> getPollDetail(
+            @PathVariable Integer pollId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer currentUserId = userDetails != null ? userDetails.getUserId() : null;
+        PollDetailRespDTO responseDto = pollService.getPollDetail(pollId, currentUserId);
         return ResponseEntity.ok(ApiResponse.success("투표 상세 정보를 조회했습니다.", responseDto));
     }
 
     @PostMapping("/{pollId}/songs")
     public ResponseEntity<ApiResponse<PollSongRespDTO>> addSongToPoll(
             @PathVariable Integer pollId,
-            @Valid @RequestBody PollSongCreateReqDTO requestDto,
+            @Valid @RequestBody PollSongReqDTO requestDto,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         PollSongRespDTO responseDto = pollService.addSongToPoll(pollId, requestDto, userDetails.getUserId());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("곡이 성공적으로 투표에 추가되었습니다.", responseDto));
+    }
+
+    @PutMapping("/{pollId}/songs/{songId}/votes/{emoji}")
+    public ResponseEntity<ApiResponse<PollSongRespDTO>> setVoteForSong(
+            @PathVariable Integer pollId,
+            @PathVariable Integer songId,
+            @PathVariable String emoji,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        PollSongRespDTO responseDto = pollService.setVoteForSong(pollId, songId, emoji, userDetails.getUserId());
+        return ResponseEntity.ok(ApiResponse.success("투표가 설정되었습니다.", responseDto));
+    }
+
+    @DeleteMapping("/{pollId}/songs/{songId}/votes/{emoji}")
+    public ResponseEntity<ApiResponse<PollSongRespDTO>> removeVoteFromSong(
+            @PathVariable Integer pollId,
+            @PathVariable Integer songId,
+            @PathVariable String emoji,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        PollSongRespDTO responseDto = pollService.removeVoteFromSong(pollId, songId, emoji, userDetails.getUserId());
+        return ResponseEntity.ok(ApiResponse.success("투표가 취소되었습니다.", responseDto));
     }
 }

@@ -34,7 +34,7 @@ public class ClubTeamService {
      */
     public Page<ClubTeamResponse> getTeamsByClub(Integer clubId, Pageable pageable) {
         // 동아리 존재 확인
-        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
+        clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ResourceNotFoundException("동아리를 찾을 수 없습니다."));
 
         Page<Team> teams = teamRepository.findAllByClubId(clubId, pageable);
@@ -58,9 +58,8 @@ public class ClubTeamService {
                 .findLatestPracticeSchedulesByTeamId(teamId, LocalDateTime.now(), PageRequest.of(0, 1));
         
         if (!latestPractices.isEmpty()) {
-            String eventName = latestPractices.get(0).getName();
             // "곡명 - 아티스트" 형태에서 곡명만 추출하거나 전체 반환
-            return eventName;
+            return latestPractices.getFirst().getName();
         }
         
         return null; // 연습 일정이 없으면 null

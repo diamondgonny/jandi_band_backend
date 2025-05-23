@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-@Tag(name = "User API", description = "사용자 관리 API")
+@Tag(name = "User API")
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -22,10 +22,10 @@ public class UserController {
     private final UserPhotoService userPhotoService;
     private final JwtTokenProvider jwtTokenProvider;
 
-    @Operation(summary = "내 정보 조회", description = "현재 로그인한 사용자의 정보 조회")
+    @Operation(summary = "내 정보 조회")
     @GetMapping("/me/info")
     public ApiResponse<UserInfoDTO> getMyInfo(
-            @Parameter(description = "Bearer 토큰") @RequestHeader("Authorization") String token
+            @RequestHeader("Authorization") String token
     ) {
         String accessToken = token.replace("Bearer ", "");
         String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
@@ -38,12 +38,12 @@ public class UserController {
         return ApiResponse.success("내 정보 조회 성공", userInfo);
     }
 
-    @Operation(summary = "내 정보 수정", description = "현재 로그인한 사용자의 정보 수정")
+    @Operation(summary = "내 정보 수정")
     @PatchMapping("/me/info")
     public ApiResponse<UserInfoDTO> updateMyInfo(
-            @Parameter(description = "Bearer 토큰") @RequestHeader("Authorization") String token,
-            @Parameter(description = "수정할 사용자 정보") @ModelAttribute UpdateUserInfoReqDTO updateDTO,
-            @Parameter(description = "프로필 사진 파일 (선택사항)") @RequestPart(value = "profilePhoto", required = false) MultipartFile profilePhoto
+            @RequestHeader("Authorization") String token,
+            @ModelAttribute UpdateUserInfoReqDTO updateDTO,
+            @RequestPart(value = "profilePhoto", required = false) MultipartFile profilePhoto
 
     ) {
         String accessToken = token.replace("Bearer ", "");

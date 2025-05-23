@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Tag(name = "MyPage API", description = "마이페이지 관련 API")
+@Tag(name = "MyPage API")
 @RestController
 @RequestMapping("/api/my")
 @RequiredArgsConstructor

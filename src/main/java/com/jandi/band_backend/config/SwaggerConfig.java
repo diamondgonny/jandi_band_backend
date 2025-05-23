@@ -39,17 +39,6 @@ public class SwaggerConfig {
 
     private Info apiInfo() {
         return new Info()
-                .title("Jandi Band Backend API")
-                .description("잔디밴드 백엔드 API 문서입니다. 동아리 및 팀 관리, 연습 일정, 투표 등의 기능을 제공합니다.")
-                .version("v1.0.0")
-                .contact(new Contact()
-                        .name("Jandi Band Team")
-                        .email("contact@jandiband.com")
-                        .url("https://jandiband.com")
-                )
-                .license(new License()
-                        .name("MIT License")
-                        .url("https://opensource.org/licenses/MIT")
-                );
+                .title("Jandi Band Backend API");
     }
 } 

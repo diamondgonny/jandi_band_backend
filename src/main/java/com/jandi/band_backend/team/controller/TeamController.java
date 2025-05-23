@@ -18,7 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Team API", description = "팀 관리 API")
+@Tag(name = "Team API")
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -26,7 +26,7 @@ public class TeamController {
 
     private final TeamService teamService;
 
-    @Operation(summary = "팀 생성", description = "동아리 내 새로운 곡 팀 생성")
+    @Operation(summary = "팀 생성")
     @PostMapping("/clubs/{clubId}/teams")
     public ResponseEntity<ApiResponse<TeamDetailRespDTO>> createTeam(
             @PathVariable Integer clubId,

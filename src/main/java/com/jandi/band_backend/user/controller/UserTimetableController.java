@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "User Timetable API", description = "사용자 시간표 관리 API")
+@Tag(name = "User Timetable API")
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -25,7 +25,7 @@ public class UserTimetableController {
     @Operation(summary = "내 시간표 목록 조회")
     @GetMapping("/me/timetables")
     public ApiResponse<List<UserTimetableRespDTO>> getMyTimetables(
-        @Parameter(description = "Bearer 토큰") @RequestHeader("Authorization") String token
+        @RequestHeader("Authorization") String token
     ) {
         String accessToken = token.replace("Bearer ", "");
         String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
@@ -37,8 +37,8 @@ public class UserTimetableController {
     @Operation(summary = "내 특정 시간표 조회")
     @GetMapping("me/timetables/{timetableId}")
     public ApiResponse<UserTimetableDetailsRespDTO> getTimetableById(
-            @Parameter(description = "Bearer 토큰") @RequestHeader("Authorization") String token,
-            @Parameter(description = "시간표 ID") @PathVariable Integer timetableId
+            @RequestHeader("Authorization") String token,
+            @PathVariable Integer timetableId
     ) {
         String accessToken = token.replace("Bearer ", "");
         String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
@@ -50,7 +50,7 @@ public class UserTimetableController {
     @Operation(summary = "시간표 생성")
     @PostMapping("/me/timetables")
     public ApiResponse<UserTimetableDetailsRespDTO> createTimetable(
-            @Parameter(description = "Bearer 토큰") @RequestHeader("Authorization") String token,
+            @RequestHeader("Authorization") String token,
             @RequestBody UserTimetableReqDTO userTimetableReqDTO
     ) {
         String accessToken = token.replace("Bearer ", "");
@@ -63,8 +63,8 @@ public class UserTimetableController {
     @Operation(summary = "시간표 수정")
     @PatchMapping("/me/timetables/{timetableId}")
     public ApiResponse<UserTimetableDetailsRespDTO> updateTimetable(
-            @Parameter(description = "Bearer 토큰") @RequestHeader("Authorization") String token,
-            @Parameter(description = "시간표 ID") @PathVariable Integer timetableId,
+            @RequestHeader("Authorization") String token,
+            @PathVariable Integer timetableId,
             @RequestBody UserTimetableReqDTO userTimetableReqDTO
     ) {
         String accessToken = token.replace("Bearer ", "");
@@ -77,8 +77,8 @@ public class UserTimetableController {
     @Operation(summary = "시간표 삭제")
     @DeleteMapping("/me/timetables/{timetableId}")
     public ApiResponse<Void> deleteTimetable(
-            @Parameter(description = "Bearer 토큰") @RequestHeader("Authorization") String token,
-            @Parameter(description = "시간표 ID") @PathVariable Integer timetableId
+            @RequestHeader("Authorization") String token,
+            @PathVariable Integer timetableId
     ) {
         String accessToken = token.replace("Bearer ", "");
         String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);

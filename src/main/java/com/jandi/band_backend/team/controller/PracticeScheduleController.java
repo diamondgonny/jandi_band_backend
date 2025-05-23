@@ -13,7 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Practice Schedule API", description = "연습 일정 관리 API")
+@Tag(name = "Practice Schedule API")
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor

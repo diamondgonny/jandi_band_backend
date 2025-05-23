@@ -16,7 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Poll API", description = "투표 관리 API")
+@Tag(name = "Poll API")
 @RestController
 @RequestMapping("/api/polls")
 @RequiredArgsConstructor

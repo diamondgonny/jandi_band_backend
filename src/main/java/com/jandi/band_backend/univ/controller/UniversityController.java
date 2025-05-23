@@ -11,14 +11,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "University API", description = "대학교 정보 API")
+@Tag(name = "University API")
 @RestController
 @RequestMapping("/api/univ")
 @RequiredArgsConstructor
 public class UniversityController {
     private final UniversityService universityService;
 
-    @Operation(summary = "대학교 목록 조회", description = "필터 조건에 따라 대학교 목록 조회")
+    @Operation(summary = "대학교 목록 조회")
     @GetMapping("/all")
     public ApiResponse<List<UniversityRespDTO>> getAllUniversity(
             @RequestParam(defaultValue = "ALL") String filter,

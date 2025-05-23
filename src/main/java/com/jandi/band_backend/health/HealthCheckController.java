@@ -10,7 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
-@Tag(name = "Health Check API", description = "서버 상태 확인 API")
+@Tag(name = "Health Check API")
 @RestController
 public class HealthCheckController {
 

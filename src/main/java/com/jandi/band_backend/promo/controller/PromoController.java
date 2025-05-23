@@ -21,7 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
-@Tag(name = "Promo API", description = "공연 홍보 관리 API")
+@Tag(name = "Promo API")
 @RestController
 @RequestMapping("/api/promos")
 @RequiredArgsConstructor
@@ -102,7 +102,7 @@ public class PromoController {
     @Operation(summary = "공연 홍보 검색")
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<Page<PromoRespDTO>>> searchPromos(
-            @Parameter(description = "검색 키워드") @RequestParam String keyword,
+            @RequestParam String keyword,
             Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success("공연 홍보 검색 성공", 
                 promoService.searchPromos(keyword, pageable)));

@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Club Event API", description = "동아리 이벤트 관리 API")
+@Tag(name = "Club Event API")
 @RestController
 @RequestMapping("/api/clubs/{clubId}/events")
 @RequiredArgsConstructor

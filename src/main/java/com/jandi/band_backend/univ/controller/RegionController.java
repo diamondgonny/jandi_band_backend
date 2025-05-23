@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Tag(name = "Region API", description = "지역 정보 API")
+@Tag(name = "Region API")
 @RestController
 @RequestMapping("/api/region")
 @RequiredArgsConstructor

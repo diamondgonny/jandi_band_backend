@@ -8,6 +8,7 @@ import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -16,12 +17,14 @@ public class UserService {
     private final UniversityRepository universityRepository;
 
     /// 내 기본 정보 조회
+    @Transactional(readOnly = true)
     public Users getMyInfo(String kakaoOauthId) {
         return userRepository.findByKakaoOauthId(kakaoOauthId)
                 .orElseThrow(UserNotFoundException::new);
     }
 
     /// 내 기본 정보 수정
+    @Transactional
     public void updateMyInfo(String kakaoOauthId, UpdateUserInfoReqDTO updateDTO) {
         Users user = getMyInfo(kakaoOauthId);
         updateUser(user, updateDTO);

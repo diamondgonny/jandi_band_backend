@@ -18,7 +18,7 @@ import java.util.List;
 public class UniversityController {
     private final UniversityService universityService;
 
-    @Operation(summary = "대학교 목록 조회", description = "필터 조건에 따라 대학교 목록 조회")
+    @Operation(summary = "대학교 목록 조회")
     @GetMapping("/all")
     public ApiResponse<List<UniversityRespDTO>> getAllUniversity(
             @RequestParam(defaultValue = "ALL") String filter,

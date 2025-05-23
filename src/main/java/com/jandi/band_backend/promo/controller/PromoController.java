@@ -6,7 +6,6 @@ import com.jandi.band_backend.promo.dto.PromoRespDTO;
 import com.jandi.band_backend.promo.entity.Promo;
 import com.jandi.band_backend.promo.service.PromoService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -102,7 +101,7 @@ public class PromoController {
     @Operation(summary = "공연 홍보 검색")
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<Page<PromoRespDTO>>> searchPromos(
-            @Parameter(description = "검색 키워드") @RequestParam String keyword,
+            @RequestParam String keyword,
             Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success("공연 홍보 검색 성공", 
                 promoService.searchPromos(keyword, pageable)));

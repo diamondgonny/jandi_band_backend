@@ -7,10 +7,10 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-@Schema(description = "사용자 시간표 생성/수정 요청 DTO")
+@Schema(description = "사용자 시간표 생성/수정 요청")
 public class UserTimetableReqDTO {
     
-    @Schema(description = "시간표 이름", example = "2024년 1학기 시간표", required = true)
+    @Schema(description = "시간표 이름")
     private String name;
     
     @Schema(description = "시간표 데이터 (JSON 형태)", 

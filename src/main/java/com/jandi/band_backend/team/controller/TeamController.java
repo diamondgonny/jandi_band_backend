@@ -26,7 +26,7 @@ public class TeamController {
 
     private final TeamService teamService;
 
-    @Operation(summary = "팀 생성", description = "동아리 내 새로운 곡 팀 생성")
+    @Operation(summary = "팀 생성")
     @PostMapping("/clubs/{clubId}/teams")
     public ResponseEntity<ApiResponse<TeamDetailRespDTO>> createTeam(
             @PathVariable Integer clubId,

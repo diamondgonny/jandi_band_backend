@@ -28,7 +28,7 @@ public class ClubController {
 
     private final ClubService clubService;
 
-    @Operation(summary = "동아리 생성", description = "새로운 동아리 생성")
+    @Operation(summary = "동아리 생성")
     @PostMapping
     public ResponseEntity<ApiResponse<ClubDetailRespDTO>> createClub(
             @Valid @RequestBody ClubReqDTO request,

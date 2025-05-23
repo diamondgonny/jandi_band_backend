@@ -4,7 +4,6 @@ import com.jandi.band_backend.club.dto.ClubReqDTO;
 import com.jandi.band_backend.club.dto.ClubRespDTO;
 import com.jandi.band_backend.club.dto.ClubSimpleRespDTO;
 import com.jandi.band_backend.club.dto.ClubUpdateReqDTO;
-import com.jandi.band_backend.club.dto.PageRespDTO;
 import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.club.entity.ClubPhoto;
@@ -30,8 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -84,29 +81,18 @@ public class ClubService {
     }
 
     @Transactional(readOnly = true)
-    public PageRespDTO<ClubSimpleRespDTO> getClubList(Pageable pageable) {
+    public Page<ClubSimpleRespDTO> getClubList(Pageable pageable) {
         // deletedAt이 null인 동아리만 조회하도록 수정
         Page<Club> clubPage = clubRepository.findAllByDeletedAtIsNull(pageable);
 
-        List<ClubSimpleRespDTO> content = clubPage.getContent().stream()
-                .map(club -> {
-                    // 동아리 대표 사진 URL 조회
-                    String photoUrl = getClubMainPhotoUrl(club.getId());
+        return clubPage.map(club -> {
+            // 동아리 대표 사진 URL 조회
+            String photoUrl = getClubMainPhotoUrl(club.getId());
 
-                    int memberCount = club.getClubMembers().size();
+            int memberCount = club.getClubMembers().size();
 
-                    return convertToClubSimpleRespDTO(club, photoUrl, memberCount);
-                })
-                .collect(Collectors.toList());
-
-        return PageRespDTO.<ClubSimpleRespDTO>builder()
-                .content(content)
-                .page(pageable.getPageNumber())
-                .size(pageable.getPageSize())
-                .totalElements(Math.toIntExact(clubPage.getTotalElements()))
-                .totalPages(clubPage.getTotalPages())
-                .last(clubPage.isLast())
-                .build();
+            return convertToClubSimpleRespDTO(club, photoUrl, memberCount);
+        });
     }
 
     @Transactional(readOnly = true)

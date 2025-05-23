@@ -4,11 +4,11 @@ import com.jandi.band_backend.club.dto.ClubReqDTO;
 import com.jandi.band_backend.club.dto.ClubRespDTO;
 import com.jandi.band_backend.club.dto.ClubSimpleRespDTO;
 import com.jandi.band_backend.club.dto.ClubUpdateReqDTO;
-import com.jandi.band_backend.club.dto.PageRespDTO;
 import com.jandi.band_backend.club.service.ClubService;
 import com.jandi.band_backend.global.ApiResponse;
 import com.jandi.band_backend.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -46,9 +46,9 @@ public class ClubController {
      * 응답에는 각 동아리가 연합 동아리인지 여부(isUnionClub)와 소속 대학(있는 경우)이 포함됩니다.
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<PageRespDTO<ClubSimpleRespDTO>>> getClubList(
+    public ResponseEntity<ApiResponse<Page<ClubSimpleRespDTO>>> getClubList(
             @PageableDefault(size = 5) Pageable pageable) {
-        PageRespDTO<ClubSimpleRespDTO> response = clubService.getClubList(pageable);
+        Page<ClubSimpleRespDTO> response = clubService.getClubList(pageable);
         return ResponseEntity.ok(ApiResponse.success("동아리 목록 조회 성공", response));
     }
 

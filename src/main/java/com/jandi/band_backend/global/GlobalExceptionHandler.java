@@ -24,6 +24,14 @@ public class GlobalExceptionHandler {
     }
 
     /// 미존재 예외 처리
+    // 리소스 미존재 (일반적인 경우)
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleResourceNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage(), "RESOURCE_NOT_FOUND"));
+    }
+
     // 사용자 미존재
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleUserNotFound(UserNotFoundException ex) {

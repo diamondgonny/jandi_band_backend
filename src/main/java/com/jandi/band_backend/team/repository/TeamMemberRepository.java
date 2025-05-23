@@ -10,10 +10,13 @@ import java.util.List;
 
 @Repository
 public interface TeamMemberRepository extends JpaRepository<TeamMember, Integer> {
-    
+
     @Query("SELECT tm FROM TeamMember tm WHERE tm.user.id = :userId AND tm.team.deletedAt IS NULL ORDER BY tm.joinedAt DESC")
     List<TeamMember> findByUserId(@Param("userId") Integer userId);
-    
+
     @Query("SELECT tm FROM TeamMember tm WHERE tm.team.id = :teamId")
     List<TeamMember> findByTeamId(@Param("teamId") Integer teamId);
-} 
+
+    @Query("SELECT COUNT(tm) FROM TeamMember tm WHERE tm.team.id = :teamId")
+    Integer countByTeamId(@Param("teamId") Integer teamId);
+}

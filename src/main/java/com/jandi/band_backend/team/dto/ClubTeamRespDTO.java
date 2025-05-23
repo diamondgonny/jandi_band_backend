@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class ClubTeamResponse {
+public class ClubTeamRespDTO {
     private Integer id;
     private String name;
     private String description;
@@ -18,8 +18,8 @@ public class ClubTeamResponse {
     private Integer memberCount;
     private String currentPracticeSong; // 현재 연습 중인 곡 (가장 최근 연습 일정 기준)
     
-    public static ClubTeamResponse from(Team team, Integer memberCount, String currentPracticeSong) {
-        ClubTeamResponse response = new ClubTeamResponse();
+    public static ClubTeamRespDTO from(Team team, Integer memberCount, String currentPracticeSong) {
+        ClubTeamRespDTO response = new ClubTeamRespDTO();
         response.setId(team.getId());
         response.setName(team.getName());
         response.setDescription(team.getDescription());

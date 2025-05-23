@@ -18,6 +18,7 @@ spring.jackson.time-zone=UTC
 jwt.secret=
 jwt.access-token-validity=900000
 jwt.refresh-token-validity=604800000
+jwt.refresh-token-reissue-threshold=8640000
 
 #Kakao OAuth Secret
 kakao.rest-api-key=
@@ -37,3 +38,11 @@ cloud.aws.s3.url=
 # Multipart File Configuration
 spring.servlet.multipart.max-file-size=10MB
 spring.servlet.multipart.max-request-size=10MB
+
+# Swagger/OpenAPI Configuration
+springdoc.api-docs.path=/v3/api-docs
+springdoc.swagger-ui.path=/swagger-ui.html
+springdoc.swagger-ui.operations-sorter=alpha
+springdoc.swagger-ui.tags-sorter=alpha
+springdoc.swagger-ui.try-it-out-enabled=true
+springdoc.swagger-ui.filter=true

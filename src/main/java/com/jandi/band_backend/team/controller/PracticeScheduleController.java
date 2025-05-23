@@ -1,8 +1,8 @@
 package com.jandi.band_backend.team.controller;
 
 import com.jandi.band_backend.global.ApiResponse;
-import com.jandi.band_backend.team.dto.PracticeScheduleRequest;
-import com.jandi.band_backend.team.dto.PracticeScheduleResponse;
+import com.jandi.band_backend.team.dto.PracticeScheduleReqDTO;
+import com.jandi.band_backend.team.dto.PracticeScheduleRespDTO;
 import com.jandi.band_backend.team.service.PracticeScheduleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ public class PracticeScheduleController {
 
     // 팀별 곡 연습 일정 목록 조회
     @GetMapping("/teams/{teamId}/practice-schedules")
-    public ResponseEntity<ApiResponse<Page<PracticeScheduleResponse>>> getPracticeSchedulesByTeam(
+    public ResponseEntity<ApiResponse<Page<PracticeScheduleRespDTO>>> getPracticeSchedulesByTeam(
             @PathVariable Integer teamId,
             Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success("팀별 곡 연습 일정 목록 조회 성공", 
@@ -29,7 +29,7 @@ public class PracticeScheduleController {
 
     // 곡 연습 일정 상세 조회
     @GetMapping("/practice-schedules/{scheduleId}")
-    public ResponseEntity<ApiResponse<PracticeScheduleResponse>> getPracticeSchedule(
+    public ResponseEntity<ApiResponse<PracticeScheduleRespDTO>> getPracticeSchedule(
             @PathVariable Integer scheduleId) {
         return ResponseEntity.ok(ApiResponse.success("곡 연습 일정 상세 조회 성공", 
                 practiceScheduleService.getPracticeSchedule(scheduleId)));
@@ -37,9 +37,9 @@ public class PracticeScheduleController {
 
     // 곡 연습 일정 생성
     @PostMapping("/teams/{teamId}/practice-schedules")
-    public ResponseEntity<ApiResponse<PracticeScheduleResponse>> createPracticeSchedule(
+    public ResponseEntity<ApiResponse<PracticeScheduleRespDTO>> createPracticeSchedule(
             @PathVariable Integer teamId,
-            @Valid @RequestBody PracticeScheduleRequest request,
+            @Valid @RequestBody PracticeScheduleReqDTO request,
             @RequestAttribute("userId") Integer userId) {
         // teamId를 request에 설정
         request.setTeamId(teamId);
@@ -56,4 +56,4 @@ public class PracticeScheduleController {
         practiceScheduleService.deletePracticeSchedule(scheduleId, userId);
         return ResponseEntity.ok(ApiResponse.success("곡 연습 일정 삭제 성공"));
     }
-} 
+}

@@ -4,8 +4,8 @@ import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.repository.ClubRepository;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
 import com.jandi.band_backend.image.S3Service;
-import com.jandi.band_backend.promo.dto.PromoRequest;
-import com.jandi.band_backend.promo.dto.PromoResponse;
+import com.jandi.band_backend.promo.dto.PromoReqDTO;
+import com.jandi.band_backend.promo.dto.PromoRespDTO;
 import com.jandi.band_backend.promo.entity.Promo;
 import com.jandi.band_backend.promo.entity.PromoPhoto;
 import com.jandi.band_backend.promo.repository.PromoRepository;
@@ -38,20 +38,20 @@ public class PromoService {
     private static final String PROMO_PHOTO_DIR = "promo-photo";
 
     // 공연 홍보 목록 조회
-    public Page<PromoResponse> getPromos(Pageable pageable) {
+    public Page<PromoRespDTO> getPromos(Pageable pageable) {
         return promoRepository.findAllNotDeleted(pageable)
-                .map(PromoResponse::from);
+                .map(PromoRespDTO::from);
     }
 
     // 클럽별 공연 홍보 목록 조회
-    public Page<PromoResponse> getPromosByClub(Integer clubId, Pageable pageable) {
+    public Page<PromoRespDTO> getPromosByClub(Integer clubId, Pageable pageable) {
         return promoRepository.findAllByClubId(clubId, pageable)
-                .map(PromoResponse::from);
+                .map(PromoRespDTO::from);
     }
 
     // 공연 홍보 상세 조회
     @Transactional
-    public PromoResponse getPromo(Integer promoId) {
+    public PromoRespDTO getPromo(Integer promoId) {
         Promo promo = promoRepository.findByIdAndNotDeleted(promoId);
         if (promo == null) {
             throw new ResourceNotFoundException("공연 홍보를 찾을 수 없습니다.");
@@ -59,12 +59,12 @@ public class PromoService {
         
         // 조회수 증가
         promo.setViewCount(promo.getViewCount() + 1);
-        return PromoResponse.from(promo);
+        return PromoRespDTO.from(promo);
     }
 
     // 공연 홍보 생성
     @Transactional
-    public PromoResponse createPromo(PromoRequest request, Integer creatorId) {
+    public PromoRespDTO createPromo(PromoReqDTO request, Integer creatorId) {
         Club club = clubRepository.findById(request.getClubId())
                 .orElseThrow(() -> new ResourceNotFoundException("클럽을 찾을 수 없습니다."));
         
@@ -87,12 +87,12 @@ public class PromoService {
         promo.setDescription(request.getDescription());
         promo.setStatus(request.getStatus() != null ? request.getStatus() : Promo.PromoStatus.UPCOMING);
 
-        return PromoResponse.from(promoRepository.save(promo));
+        return PromoRespDTO.from(promoRepository.save(promo));
     }
 
     // 공연 홍보 수정
     @Transactional
-    public PromoResponse updatePromo(Integer promoId, PromoRequest request, Integer userId) {
+    public PromoRespDTO updatePromo(Integer promoId, PromoReqDTO request, Integer userId) {
         Promo promo = promoRepository.findByIdAndNotDeleted(promoId);
         if (promo == null) {
             throw new ResourceNotFoundException("공연 홍보를 찾을 수 없습니다.");
@@ -120,7 +120,7 @@ public class PromoService {
             promo.setStatus(request.getStatus());
         }
 
-        return PromoResponse.from(promo);
+        return PromoRespDTO.from(promo);
     }
 
     // 공연 홍보 삭제 (소프트 삭제)
@@ -219,19 +219,19 @@ public class PromoService {
     }
 
     // 공연 홍보 검색
-    public Page<PromoResponse> searchPromos(String keyword, Pageable pageable) {
+    public Page<PromoRespDTO> searchPromos(String keyword, Pageable pageable) {
         return promoRepository.searchByKeyword(keyword, pageable)
-                .map(PromoResponse::from);
+                .map(PromoRespDTO::from);
     }
 
     // 공연 홍보 필터링
-    public Page<PromoResponse> filterPromos(
+    public Page<PromoRespDTO> filterPromos(
             Promo.PromoStatus status,
             LocalDateTime startDate,
             LocalDateTime endDate,
             Integer clubId,
             Pageable pageable) {
         return promoRepository.filterPromos(status, startDate, endDate, clubId, pageable)
-                .map(PromoResponse::from);
+                .map(PromoRespDTO::from);
     }
 } 

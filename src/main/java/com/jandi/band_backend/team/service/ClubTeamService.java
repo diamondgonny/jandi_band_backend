@@ -1,9 +1,8 @@
 package com.jandi.band_backend.team.service;
 
-import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.repository.ClubRepository;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
-import com.jandi.band_backend.team.dto.ClubTeamResponse;
+import com.jandi.band_backend.team.dto.ClubTeamRespDTO;
 import com.jandi.band_backend.team.entity.Team;
 import com.jandi.band_backend.team.entity.TeamEvent;
 import com.jandi.band_backend.team.repository.TeamEventRepository;
@@ -32,7 +31,7 @@ public class ClubTeamService {
     /**
      * 동아리별 팀 목록 조회
      */
-    public Page<ClubTeamResponse> getTeamsByClub(Integer clubId, Pageable pageable) {
+    public Page<ClubTeamRespDTO> getTeamsByClub(Integer clubId, Pageable pageable) {
         // 동아리 존재 확인
         clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ResourceNotFoundException("동아리를 찾을 수 없습니다."));
@@ -46,7 +45,7 @@ public class ClubTeamService {
             // 현재 연습 중인 곡 조회 (가장 가까운 미래 연습 일정)
             String currentPracticeSong = getCurrentPracticeSong(team.getId());
             
-            return ClubTeamResponse.from(team, memberCount, currentPracticeSong);
+            return ClubTeamRespDTO.from(team, memberCount, currentPracticeSong);
         });
     }
 

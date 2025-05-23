@@ -45,7 +45,11 @@ public class SecurityConfig {
                                 "/api/promos",           // 공연 홍보 목록 조회
                                 "/api/promos/{promoId}", // 공연 홍보 상세 조회
                                 "/api/promos/search",    // 공연 홍보 검색
-                                "/api/promos/filter"     // 공연 홍보 필터링
+                                "/api/promos/filter",    // 공연 홍보 필터링
+                                // Swagger UI 관련 경로
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

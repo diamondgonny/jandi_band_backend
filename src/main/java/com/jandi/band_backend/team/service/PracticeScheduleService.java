@@ -1,8 +1,8 @@
 package com.jandi.band_backend.team.service;
 
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
-import com.jandi.band_backend.team.dto.PracticeScheduleRequest;
-import com.jandi.band_backend.team.dto.PracticeScheduleResponse;
+import com.jandi.band_backend.team.dto.PracticeScheduleReqDTO;
+import com.jandi.band_backend.team.dto.PracticeScheduleRespDTO;
 import com.jandi.band_backend.team.entity.Team;
 import com.jandi.band_backend.team.entity.TeamEvent;
 import com.jandi.band_backend.team.repository.TeamEventRepository;
@@ -27,13 +27,13 @@ public class PracticeScheduleService {
     private final UserRepository userRepository;
 
     // 팀별 곡 연습 일정 목록 조회
-    public Page<PracticeScheduleResponse> getPracticeSchedulesByTeam(Integer teamId, Pageable pageable) {
+    public Page<PracticeScheduleRespDTO> getPracticeSchedulesByTeam(Integer teamId, Pageable pageable) {
         return teamEventRepository.findPracticeSchedulesByTeamId(teamId, pageable)
-                .map(PracticeScheduleResponse::from);
+                .map(PracticeScheduleRespDTO::from);
     }
 
     // 곡 연습 일정 상세 조회
-    public PracticeScheduleResponse getPracticeSchedule(Integer scheduleId) {
+    public PracticeScheduleRespDTO getPracticeSchedule(Integer scheduleId) {
         TeamEvent teamEvent = teamEventRepository.findByIdAndNotDeleted(scheduleId)
                 .orElseThrow(() -> new ResourceNotFoundException("연습 일정을 찾을 수 없습니다."));
         
@@ -42,12 +42,12 @@ public class PracticeScheduleService {
             throw new ResourceNotFoundException("곡 연습 일정이 아닙니다.");
         }
         
-        return PracticeScheduleResponse.from(teamEvent);
+        return PracticeScheduleRespDTO.from(teamEvent);
     }
 
     // 곡 연습 일정 생성
     @Transactional
-    public PracticeScheduleResponse createPracticeSchedule(PracticeScheduleRequest request, Integer creatorId) {
+    public PracticeScheduleRespDTO createPracticeSchedule(PracticeScheduleReqDTO request, Integer creatorId) {
         Team team = teamRepository.findByIdAndNotDeleted(request.getTeamId())
                 .orElseThrow(() -> new ResourceNotFoundException("팀을 찾을 수 없습니다."));
         
@@ -84,7 +84,7 @@ public class PracticeScheduleService {
         }
         teamEvent.setDescription(description);
 
-        return PracticeScheduleResponse.from(teamEventRepository.save(teamEvent));
+        return PracticeScheduleRespDTO.from(teamEventRepository.save(teamEvent));
     }
 
     // 곡 연습 일정 삭제 (소프트 삭제)

@@ -1,7 +1,7 @@
 package com.jandi.band_backend.team.controller;
 
 import com.jandi.band_backend.global.ApiResponse;
-import com.jandi.band_backend.team.dto.ClubTeamResponse;
+import com.jandi.band_backend.team.dto.ClubTeamRespDTO;
 import com.jandi.band_backend.team.service.ClubTeamService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,11 +23,11 @@ public class ClubTeamController {
      * 동아리 팀 목록 조회
      */
     @GetMapping("/{clubId}/teams")
-    public ApiResponse<Page<ClubTeamResponse>> getClubTeams(
+    public ApiResponse<Page<ClubTeamRespDTO>> getClubTeams(
             @PathVariable Integer clubId,
             @PageableDefault(size = 10) Pageable pageable
     ) {
-        Page<ClubTeamResponse> teams = clubTeamService.getTeamsByClub(clubId, pageable);
+        Page<ClubTeamRespDTO> teams = clubTeamService.getTeamsByClub(clubId, pageable);
         return ApiResponse.success("동아리 팀 목록 조회 성공", teams);
     }
-} 
+}

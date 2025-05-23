@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class MyTeamResponse {
+public class MyTeamRespDTO {
     private Integer id;
     private String name;
     private String description;
@@ -20,8 +20,8 @@ public class MyTeamResponse {
     private LocalDateTime createdAt;
     private Integer memberCount;
 
-    public static MyTeamResponse from(TeamMember teamMember, Integer memberCount) {
-        MyTeamResponse response = new MyTeamResponse();
+    public static MyTeamRespDTO from(TeamMember teamMember, Integer memberCount) {
+        MyTeamRespDTO response = new MyTeamRespDTO();
         response.setId(teamMember.getTeam().getId());
         response.setName(teamMember.getTeam().getName());
         response.setDescription(teamMember.getTeam().getDescription());

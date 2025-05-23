@@ -33,7 +33,7 @@ public class PollController {
     @GetMapping("/clubs/{clubId}")
     public ResponseEntity<ApiResponse<Page<PollRespDTO>>> getPollList(
             @PathVariable Integer clubId,
-            @PageableDefault(size = 10) Pageable pageable) {
+            @PageableDefault(size = 5) Pageable pageable) {
 
         Page<PollRespDTO> polls = pollService.getPollsByClub(clubId, pageable);
         return ResponseEntity.ok(ApiResponse.success("투표 목록을 조회했습니다.", polls));

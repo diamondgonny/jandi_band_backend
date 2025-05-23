@@ -29,10 +29,10 @@ public class ReportReason {
     @Column(name = "description", nullable = false, length = 255)
     private String description;
     
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
     
     @OneToMany(mappedBy = "reportReason")

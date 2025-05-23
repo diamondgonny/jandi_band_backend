@@ -30,7 +30,7 @@ public class PromoCommentLike {
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
     
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
     @PrePersist

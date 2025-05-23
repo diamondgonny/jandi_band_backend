@@ -34,10 +34,10 @@ public class ClubMember {
     @Column(name = "role", nullable = false)
     private MemberRole role = MemberRole.MEMBER;
 
-    @Column(nullable = false)
+    @Column(name = "joined_at", nullable = false, updatable = false)
     private LocalDateTime joinedAt;
 
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @PrePersist

@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class PracticeScheduleRequest {
+public class PracticeScheduleReqDTO {
     @NotNull(message = "팀 ID는 필수입니다")
     private Integer teamId;
 

@@ -8,6 +8,7 @@ import com.jandi.band_backend.user.repository.UserPhotoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
@@ -22,6 +23,7 @@ public class UserPhotoService {
     private final String s3DirName = "user-photo";
 
     /// 유저 프로필 사진 조회
+    @Transactional(readOnly = true)
     public UserPhoto getMyPhoto(String kakaoOauthId) {
         Users user = userService.getMyInfo(kakaoOauthId);
         UserPhoto userProfile = userPhotoRepository.findByUser(user);
@@ -31,6 +33,7 @@ public class UserPhotoService {
     }
 
     /// 유저 프로필 사진 수정
+    @Transactional
     public void updateMyPhoto(String kakaoOauthId, MultipartFile newProfileFile) {
         // 프로필 사진이 없을 경우 수정하지 않음
         if (newProfileFile == null || newProfileFile.isEmpty()) return;

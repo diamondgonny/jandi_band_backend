@@ -24,6 +24,14 @@ public class GlobalExceptionHandler {
     }
 
     /// 미존재 예외 처리
+    // 리소스 미존재 (일반적인 경우)
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleResourceNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage(), "RESOURCE_NOT_FOUND"));
+    }
+
     // 사용자 미존재
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleUserNotFound(UserNotFoundException ex) {
@@ -32,7 +40,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage(), "USER_NOT_FOUND"));
     }
 
-    /// 부적절 예외 처리
     // 대학 미존재
     @ExceptionHandler(UniversityNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleUniversityNotFound(UniversityNotFoundException ex) {
@@ -65,6 +72,15 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage(), "POLL_SONG_NOT_FOUND"));
     }
 
+    // 시간표 미존재
+    @ExceptionHandler(TimetableNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleTimetableNotFound(TimetableNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage(), "TIMETABLE_NOT_FOUND"));
+    }
+
+    /// 부적절 접근 처리
     // 행사한 해당 투표 미존재
     @ExceptionHandler(VoteNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleVoteNotFound(VoteNotFoundException ex) {
@@ -89,7 +105,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage(), "UNAUTHORIZED_CLUB_ACCESS"));
     }
 
-    /// 토큰 예외 처리
     // 부적절한 토큰
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<ApiResponse<?>> handleInvalidToken(InvalidTokenException ex) {
@@ -104,6 +119,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error(ex.getMessage(), "INVALID_ACCESS"));
+    }
+
+    // 잘못된 인자
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<?>> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(ex.getMessage(), "ILLEGAL_ARGUMENT"));
     }
 
     /// 카카오 예외 처리

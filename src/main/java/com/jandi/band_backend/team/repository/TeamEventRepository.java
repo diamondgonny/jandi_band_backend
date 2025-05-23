@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -36,6 +37,6 @@ public interface TeamEventRepository extends JpaRepository<TeamEvent, Integer> {
     Page<TeamEvent> findPracticeSchedulesByTeamId(@Param("teamId") Integer teamId, Pageable pageable);
     
     // 팀의 가장 최근 곡 연습 일정 조회 (현재 시간 기준으로 가장 가까운 미래 일정)
-    @Query("SELECT te FROM TeamEvent te WHERE te.deletedAt IS NULL AND te.team.id = :teamId AND te.name LIKE '%-%' AND te.startDatetime >= :now ORDER BY te.startDatetime ASC LIMIT 1")
-    Optional<TeamEvent> findLatestPracticeScheduleByTeamId(@Param("teamId") Integer teamId, @Param("now") LocalDateTime now);
+    @Query("SELECT te FROM TeamEvent te WHERE te.deletedAt IS NULL AND te.team.id = :teamId AND te.name LIKE '%-%' AND te.startDatetime >= :now ORDER BY te.startDatetime ASC")
+    List<TeamEvent> findLatestPracticeSchedulesByTeamId(@Param("teamId") Integer teamId, @Param("now") LocalDateTime now, Pageable pageable);
 } 

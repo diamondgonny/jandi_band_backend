@@ -11,12 +11,13 @@ import com.jandi.band_backend.team.repository.TeamMemberRepository;
 import com.jandi.band_backend.team.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -53,11 +54,11 @@ public class ClubTeamService {
      * 팀의 현재 연습 중인 곡 조회
      */
     private String getCurrentPracticeSong(Integer teamId) {
-        Optional<TeamEvent> latestPractice = teamEventRepository
-                .findLatestPracticeScheduleByTeamId(teamId, LocalDateTime.now());
+        List<TeamEvent> latestPractices = teamEventRepository
+                .findLatestPracticeSchedulesByTeamId(teamId, LocalDateTime.now(), PageRequest.of(0, 1));
         
-        if (latestPractice.isPresent()) {
-            String eventName = latestPractice.get().getName();
+        if (!latestPractices.isEmpty()) {
+            String eventName = latestPractices.get(0).getName();
             // "곡명 - 아티스트" 형태에서 곡명만 추출하거나 전체 반환
             return eventName;
         }

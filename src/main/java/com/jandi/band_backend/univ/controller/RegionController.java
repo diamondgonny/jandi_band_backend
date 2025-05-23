@@ -4,9 +4,6 @@ import com.jandi.band_backend.global.ApiResponse;
 import com.jandi.band_backend.univ.dto.RegionRespDTO;
 import com.jandi.band_backend.univ.service.RegionService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,17 +19,7 @@ import java.util.List;
 public class RegionController {
     private final RegionService regionService;
 
-    @Operation(
-        summary = "전체 지역 목록 조회",
-        description = "시스템에 등록된 모든 지역 목록을 조회합니다."
-    )
-    @ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "200",
-            description = "지역 리스트 조회 성공",
-            content = @Content(schema = @Schema(implementation = ApiResponse.class))
-        )
-    })
+    @Operation(summary = "전체 지역 목록 조회")
     @GetMapping("/all")
     public ApiResponse<List<RegionRespDTO>> getAllRegion() {
         List<RegionRespDTO> regionList = regionService.getAllRegions();

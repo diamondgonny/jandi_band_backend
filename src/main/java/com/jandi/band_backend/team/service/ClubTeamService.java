@@ -11,12 +11,13 @@ import com.jandi.band_backend.team.repository.TeamMemberRepository;
 import com.jandi.band_backend.team.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +34,7 @@ public class ClubTeamService {
      */
     public Page<ClubTeamResponse> getTeamsByClub(Integer clubId, Pageable pageable) {
         // 동아리 존재 확인
-        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
+        clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ResourceNotFoundException("동아리를 찾을 수 없습니다."));
 
         Page<Team> teams = teamRepository.findAllByClubId(clubId, pageable);
@@ -53,13 +54,12 @@ public class ClubTeamService {
      * 팀의 현재 연습 중인 곡 조회
      */
     private String getCurrentPracticeSong(Integer teamId) {
-        Optional<TeamEvent> latestPractice = teamEventRepository
-                .findLatestPracticeScheduleByTeamId(teamId, LocalDateTime.now());
+        List<TeamEvent> latestPractices = teamEventRepository
+                .findLatestPracticeSchedulesByTeamId(teamId, LocalDateTime.now(), PageRequest.of(0, 1));
         
-        if (latestPractice.isPresent()) {
-            String eventName = latestPractice.get().getName();
+        if (!latestPractices.isEmpty()) {
             // "곡명 - 아티스트" 형태에서 곡명만 추출하거나 전체 반환
-            return eventName;
+            return latestPractices.getFirst().getName();
         }
         
         return null; // 연습 일정이 없으면 null

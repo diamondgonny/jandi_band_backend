@@ -1,10 +1,9 @@
 package com.jandi.band_backend.club.service;
 
 import com.jandi.band_backend.club.dto.ClubReqDTO;
+import com.jandi.band_backend.club.dto.ClubDetailRespDTO;
 import com.jandi.band_backend.club.dto.ClubRespDTO;
-import com.jandi.band_backend.club.dto.ClubSimpleRespDTO;
 import com.jandi.band_backend.club.dto.ClubUpdateReqDTO;
-import com.jandi.band_backend.club.dto.PageRespDTO;
 import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.club.entity.ClubPhoto;
@@ -30,8 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,7 +44,7 @@ public class ClubService {
     private static final String CLUB_PHOTO_DIR = "club-photo";
 
     @Transactional
-    public ClubRespDTO createClub(ClubReqDTO request, Integer userId) {
+    public ClubDetailRespDTO createClub(ClubReqDTO request, Integer userId) {
         // 사용자 확인
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException());
@@ -80,37 +77,26 @@ public class ClubService {
 
         clubMemberRepository.save(clubMember);
 
-        return convertToClubRespDTO(savedClub, null, 1);
+        return convertToClubDetailRespDTO(savedClub, null, 1);
     }
 
     @Transactional(readOnly = true)
-    public PageRespDTO<ClubSimpleRespDTO> getClubList(Pageable pageable) {
+    public Page<ClubRespDTO> getClubList(Pageable pageable) {
         // deletedAt이 null인 동아리만 조회하도록 수정
         Page<Club> clubPage = clubRepository.findAllByDeletedAtIsNull(pageable);
 
-        List<ClubSimpleRespDTO> content = clubPage.getContent().stream()
-                .map(club -> {
-                    // 동아리 대표 사진 URL 조회
-                    String photoUrl = getClubMainPhotoUrl(club.getId());
+        return clubPage.map(club -> {
+            // 동아리 대표 사진 URL 조회
+            String photoUrl = getClubMainPhotoUrl(club.getId());
 
-                    int memberCount = club.getClubMembers().size();
+            int memberCount = club.getClubMembers().size();
 
-                    return convertToClubSimpleRespDTO(club, photoUrl, memberCount);
-                })
-                .collect(Collectors.toList());
-
-        return PageRespDTO.<ClubSimpleRespDTO>builder()
-                .content(content)
-                .page(pageable.getPageNumber())
-                .size(pageable.getPageSize())
-                .totalElements(Math.toIntExact(clubPage.getTotalElements()))
-                .totalPages(clubPage.getTotalPages())
-                .last(clubPage.isLast())
-                .build();
+            return convertToClubRespDTO(club, photoUrl, memberCount);
+        });
     }
 
     @Transactional(readOnly = true)
-    public ClubRespDTO getClubDetail(Integer clubId) {
+    public ClubDetailRespDTO getClubDetail(Integer clubId) {
         Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
@@ -119,11 +105,11 @@ public class ClubService {
         // 동아리 대표 사진 URL 조회
         String photoUrl = getClubMainPhotoUrl(club.getId());
 
-        return convertToClubRespDTO(club, photoUrl, memberCount);
+        return convertToClubDetailRespDTO(club, photoUrl, memberCount);
     }
 
     @Transactional
-    public ClubRespDTO updateClub(Integer clubId, ClubUpdateReqDTO request, Integer userId) {
+    public ClubDetailRespDTO updateClub(Integer clubId, ClubUpdateReqDTO request, Integer userId) {
         Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
@@ -146,23 +132,13 @@ public class ClubService {
             club.setInstagramId(request.getInstagramId());
         }
 
-        // 대학 정보 업데이트
-        if (request.getUniversityId() != null) {
-            University university = universityRepository.findById(request.getUniversityId())
-                    .orElseThrow(() -> new UniversityNotFoundException("대학을 찾을 수 없습니다. ID: " + request.getUniversityId()));
-            club.setUniversity(university);
-        } else {
-            // universityId가 null로 들어온 경우 연합 동아리로 설정
-            club.setUniversity(null);
-        }
-
         club.setUpdatedAt(LocalDateTime.now());
 
         Club updatedClub = clubRepository.save(club);
         String photoUrl = getClubMainPhotoUrl(clubId);
         int memberCount = clubMemberRepository.countByClubId(clubId);
 
-        return convertToClubRespDTO(updatedClub, photoUrl, memberCount);
+        return convertToClubDetailRespDTO(updatedClub, photoUrl, memberCount);
     }
 
     @Transactional
@@ -243,7 +219,7 @@ public class ClubService {
                 });
     }
 
-    private ClubRespDTO convertToClubRespDTO(Club club, String photoUrl, int memberCount) {
+    private ClubDetailRespDTO convertToClubDetailRespDTO(Club club, String photoUrl, int memberCount) {
         boolean isUnionClub = (club.getUniversity() == null);
 
         UniversityRespDTO universityResp = null;
@@ -254,7 +230,7 @@ public class ClubService {
                     .build();
         }
 
-        return ClubRespDTO.builder()
+        return ClubDetailRespDTO.builder()
                 .id(club.getId())
                 .name(club.getName())
                 .university(universityResp)
@@ -269,7 +245,7 @@ public class ClubService {
                 .build();
     }
 
-    private ClubSimpleRespDTO convertToClubSimpleRespDTO(Club club, String photoUrl, int memberCount) {
+    private ClubRespDTO convertToClubRespDTO(Club club, String photoUrl, int memberCount) {
         // 대학 정보와 연합 동아리 여부 설정
         String universityName = null;
         boolean isUnionClub = (club.getUniversity() == null);
@@ -278,7 +254,7 @@ public class ClubService {
             universityName = club.getUniversity().getName();
         }
 
-        return ClubSimpleRespDTO.builder()
+        return ClubRespDTO.builder()
                 .id(club.getId())
                 .name(club.getName())
                 .universityName(universityName)

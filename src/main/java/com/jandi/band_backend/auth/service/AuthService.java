@@ -54,6 +54,11 @@ public class AuthService {
         );
     }
 
+    /// 로그아웃
+    public void logout(String accessToken) {
+        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
+    }
+
     /// 정식 회원가입
     @Transactional
     public UserInfoDTO signup(String kakaoOauthId, SignUpReqDTO reqDTO) {

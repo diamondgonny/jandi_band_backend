@@ -25,6 +25,16 @@ public class AuthController {
         return ApiResponse.success("로그인 성공", tokens);
     }
 
+    @PostMapping("/logout")
+    public ApiResponse<String> logout(
+            @RequestHeader("Authorization") String token
+    ){
+        String accessToken = token.replace("Bearer ", "");
+        authService.logout(accessToken);
+        return ApiResponse.success("로그아웃 완료");
+
+    }
+
     @PostMapping("/signup")
     public ApiResponse<UserInfoDTO> signUp(
             @RequestHeader("Authorization") String token,

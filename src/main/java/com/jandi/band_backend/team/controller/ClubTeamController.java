@@ -30,4 +30,4 @@ public class ClubTeamController {
         Page<ClubTeamResponse> teams = clubTeamService.getTeamsByClub(clubId, pageable);
         return ApiResponse.success("동아리 팀 목록 조회 성공", teams);
     }
-} 
+}

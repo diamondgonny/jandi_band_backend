@@ -6,8 +6,8 @@ import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.club.repository.ClubPhotoRepository;
 import com.jandi.band_backend.team.entity.TeamMember;
 import com.jandi.band_backend.team.repository.TeamMemberRepository;
-import com.jandi.band_backend.user.dto.MyClubResponse;
-import com.jandi.band_backend.user.dto.MyTeamResponse;
+import com.jandi.band_backend.user.dto.MyClubRespDTO;
+import com.jandi.band_backend.user.dto.MyTeamRespDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +27,7 @@ public class MyPageService {
     /**
      * 내가 참가한 동아리 목록 조회
      */
-    public List<MyClubResponse> getMyClubs(Integer userId) {
+    public List<MyClubRespDTO> getMyClubs(Integer userId) {
         List<ClubMember> clubMembers = clubMemberRepository.findByUserId(userId);
         
         return clubMembers.stream()
@@ -38,7 +38,7 @@ public class MyPageService {
                     // 동아리 멤버 수 조회
                     Integer memberCount = clubMemberRepository.countByClubId(clubMember.getClub().getId());
                     
-                    return MyClubResponse.from(clubMember, photoUrl, memberCount);
+                    return MyClubRespDTO.from(clubMember, photoUrl, memberCount);
                 })
                 .collect(Collectors.toList());
     }
@@ -46,7 +46,7 @@ public class MyPageService {
     /**
      * 내가 참가한 팀 목록 조회
      */
-    public List<MyTeamResponse> getMyTeams(Integer userId) {
+    public List<MyTeamRespDTO> getMyTeams(Integer userId) {
         List<TeamMember> teamMembers = teamMemberRepository.findByUserId(userId);
         
         return teamMembers.stream()
@@ -54,7 +54,7 @@ public class MyPageService {
                     // 팀 멤버 수 조회
                     Integer memberCount = teamMemberRepository.findByTeamId(teamMember.getTeam().getId()).size();
                     
-                    return MyTeamResponse.from(teamMember, memberCount);
+                    return MyTeamRespDTO.from(teamMember, memberCount);
                 })
                 .collect(Collectors.toList());
     }

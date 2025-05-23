@@ -6,13 +6,13 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class TeamEventParticipantResponse {
+public class TeamEventParticipantRespDTO {
     private Integer id;
     private Integer userId;
     private String userName;
 
-    public static TeamEventParticipantResponse from(TeamEventParticipant participant) {
-        TeamEventParticipantResponse response = new TeamEventParticipantResponse();
+    public static TeamEventParticipantRespDTO from(TeamEventParticipant participant) {
+        TeamEventParticipantRespDTO response = new TeamEventParticipantRespDTO();
         response.setId(participant.getId());
         response.setUserId(participant.getUser().getId());
         response.setUserName(participant.getUser().getNickname());

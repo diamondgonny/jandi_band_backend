@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class MyClubResponse {
+public class MyClubRespDTO {
     private Integer id;
     private String name;
     private String description;
@@ -19,8 +19,8 @@ public class MyClubResponse {
     private LocalDateTime joinedAt;
     private Integer memberCount;
 
-    public static MyClubResponse from(ClubMember clubMember, String photoUrl, Integer memberCount) {
-        MyClubResponse response = new MyClubResponse();
+    public static MyClubRespDTO from(ClubMember clubMember, String photoUrl, Integer memberCount) {
+        MyClubRespDTO response = new MyClubRespDTO();
         response.setId(clubMember.getClub().getId());
         response.setName(clubMember.getClub().getName());
         response.setDescription(clubMember.getClub().getDescription());

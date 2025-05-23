@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class PromoRequest {
+public class PromoReqDTO {
     @NotNull(message = "클럽 ID는 필수입니다")
     private Integer clubId;
 

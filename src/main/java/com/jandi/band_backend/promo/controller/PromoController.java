@@ -1,8 +1,8 @@
 package com.jandi.band_backend.promo.controller;
 
 import com.jandi.band_backend.global.ApiResponse;
-import com.jandi.band_backend.promo.dto.PromoRequest;
-import com.jandi.band_backend.promo.dto.PromoResponse;
+import com.jandi.band_backend.promo.dto.PromoReqDTO;
+import com.jandi.band_backend.promo.dto.PromoRespDTO;
 import com.jandi.band_backend.promo.entity.Promo;
 import com.jandi.band_backend.promo.service.PromoService;
 import jakarta.validation.Valid;
@@ -27,13 +27,13 @@ public class PromoController {
 
     // 공연 홍보 목록 조회
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<PromoResponse>>> getPromos(Pageable pageable) {
+    public ResponseEntity<ApiResponse<Page<PromoRespDTO>>> getPromos(Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success("공연 홍보 목록 조회 성공", promoService.getPromos(pageable)));
     }
 
     // 클럽별 공연 홍보 목록 조회
     @GetMapping("/club/{clubId}")
-    public ResponseEntity<ApiResponse<Page<PromoResponse>>> getPromosByClub(
+    public ResponseEntity<ApiResponse<Page<PromoRespDTO>>> getPromosByClub(
             @PathVariable Integer clubId,
             Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success("클럽별 공연 홍보 목록 조회 성공", 
@@ -42,15 +42,15 @@ public class PromoController {
 
     // 공연 홍보 상세 조회
     @GetMapping("/{promoId}")
-    public ResponseEntity<ApiResponse<PromoResponse>> getPromo(@PathVariable Integer promoId) {
+    public ResponseEntity<ApiResponse<PromoRespDTO>> getPromo(@PathVariable Integer promoId) {
         return ResponseEntity.ok(ApiResponse.success("공연 홍보 상세 조회 성공", 
                 promoService.getPromo(promoId)));
     }
 
     // 공연 홍보 생성
     @PostMapping
-    public ResponseEntity<ApiResponse<PromoResponse>> createPromo(
-            @Valid @RequestBody PromoRequest request,
+    public ResponseEntity<ApiResponse<PromoRespDTO>> createPromo(
+            @Valid @RequestBody PromoReqDTO request,
             @RequestAttribute("userId") Integer userId) {
         return ResponseEntity.ok(ApiResponse.success("공연 홍보 생성 성공", 
                 promoService.createPromo(request, userId)));
@@ -58,9 +58,9 @@ public class PromoController {
 
     // 공연 홍보 수정
     @PutMapping("/{promoId}")
-    public ResponseEntity<ApiResponse<PromoResponse>> updatePromo(
+    public ResponseEntity<ApiResponse<PromoRespDTO>> updatePromo(
             @PathVariable Integer promoId,
-            @Valid @RequestBody PromoRequest request,
+            @Valid @RequestBody PromoReqDTO request,
             @RequestAttribute("userId") Integer userId) {
         return ResponseEntity.ok(ApiResponse.success("공연 홍보 수정 성공", 
                 promoService.updatePromo(promoId, request, userId)));
@@ -97,7 +97,7 @@ public class PromoController {
 
     // 공연 홍보 검색
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<Page<PromoResponse>>> searchPromos(
+    public ResponseEntity<ApiResponse<Page<PromoRespDTO>>> searchPromos(
             @RequestParam String keyword,
             Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success("공연 홍보 검색 성공", 
@@ -106,7 +106,7 @@ public class PromoController {
 
     // 공연 홍보 필터링
     @GetMapping("/filter")
-    public ResponseEntity<ApiResponse<Page<PromoResponse>>> filterPromos(
+    public ResponseEntity<ApiResponse<Page<PromoRespDTO>>> filterPromos(
             @RequestParam(required = false) Promo.PromoStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,

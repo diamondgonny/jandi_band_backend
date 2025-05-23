@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 @Getter
 @Setter
-public class PracticeScheduleResponse {
+public class PracticeScheduleRespDTO {
     private Integer id;
     private Integer teamId;
     private String teamName;
@@ -28,10 +28,10 @@ public class PracticeScheduleResponse {
     private String creatorName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<TeamEventParticipantResponse> participants;
+    private List<TeamEventParticipantRespDTO> participants;
 
-    public static PracticeScheduleResponse from(TeamEvent teamEvent) {
-        PracticeScheduleResponse response = new PracticeScheduleResponse();
+    public static PracticeScheduleRespDTO from(TeamEvent teamEvent) {
+        PracticeScheduleRespDTO response = new PracticeScheduleRespDTO();
         response.setId(teamEvent.getId());
         response.setTeamId(teamEvent.getTeam().getId());
         response.setTeamName(teamEvent.getTeam().getName());
@@ -55,7 +55,7 @@ public class PracticeScheduleResponse {
         response.setCreatedAt(teamEvent.getCreatedAt());
         response.setUpdatedAt(teamEvent.getUpdatedAt());
         response.setParticipants(teamEvent.getParticipants().stream()
-                .map(TeamEventParticipantResponse::from)
+                .map(TeamEventParticipantRespDTO::from)
                 .collect(Collectors.toList()));
         return response;
     }

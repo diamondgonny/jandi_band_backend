@@ -6,6 +6,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
-public class PromoImageRequest {
+public class PromoImageReqDTO {
     private MultipartFile image;
 } 

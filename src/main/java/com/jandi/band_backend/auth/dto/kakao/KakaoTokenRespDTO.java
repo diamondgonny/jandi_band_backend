@@ -4,16 +4,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-@Schema(description = "카카오 토큰 응답 DTO")
+@Schema(description = "카카오 토큰 응답")
 @Data
 @AllArgsConstructor
 public class KakaoTokenRespDTO {
-    @Schema(description = "카카오 액세스 토큰", example = "xxxxxx_kakao_access_token_xxxxxx")
+    @Schema(description = "카카오 액세스 토큰")
     private String accessToken;
     
-    @Schema(description = "카카오 리프레시 토큰", example = "xxxxxx_kakao_refresh_token_xxxxxx")
+    @Schema(description = "카카오 리프레시 토큰")
     private String refreshToken;
     
-    @Schema(description = "토큰 만료 시간 (초)", example = "3600")
+    @Schema(description = "토큰 만료 시간 (초)")
     private int expiresIn;
 }

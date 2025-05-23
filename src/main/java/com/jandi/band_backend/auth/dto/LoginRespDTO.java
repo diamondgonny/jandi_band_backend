@@ -3,10 +3,10 @@ package com.jandi.band_backend.auth.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
-@Schema(description = "로그인 응답 DTO")
+@Schema(description = "로그인 응답")
 @Getter
 public class LoginRespDTO extends TokenRespDTO{
-    @Schema(description = "회원가입 여부 (true: 기존 회원, false: 신규 회원)", example = "true")
+    @Schema(description = "회원가입 여부")
     private final Boolean isRegistered;
 
     public LoginRespDTO(String accessToken, String refreshToken, Boolean isRegistered) {

@@ -5,14 +5,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Schema(description = "회원가입 요청 DTO")
+@Schema(description = "회원가입 요청")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class SignUpReqDTO {
-    @Schema(description = "사용자 포지션 (악기 또는 역할)", example = "기타", required = true)
+    @Schema(description = "사용자 포지션 (악기 또는 역할)")
     private String position;
     
-    @Schema(description = "대학교명", example = "서울대학교", required = true)
+    @Schema(description = "대학교명")
     private String university;
 }

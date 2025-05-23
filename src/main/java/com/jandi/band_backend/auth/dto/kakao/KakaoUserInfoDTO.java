@@ -4,16 +4,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-@Schema(description = "카카오 사용자 정보 DTO")
+@Schema(description = "카카오 사용자 정보")
 @Data
 @AllArgsConstructor
 public class KakaoUserInfoDTO {
-    @Schema(description = "카카오 OAuth ID", example = "123456789")
+    @Schema(description = "카카오 OAuth ID")
     private String kakaoOauthId;
     
-    @Schema(description = "카카오 닉네임", example = "홍길동")
+    @Schema(description = "카카오 닉네임")
     private String nickname;
     
-    @Schema(description = "카카오 프로필 사진 URL", example = "https://k.kakaocdn.net/dn/...")
+    @Schema(description = "카카오 프로필 사진 URL")
     private String profilePhoto;
 }

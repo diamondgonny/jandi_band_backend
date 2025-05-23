@@ -12,24 +12,24 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Schema(description = "팀 응답 DTO")
+@Schema(description = "팀 응답")
 public class TeamRespDTO {
 
-    @Schema(description = "팀 ID", example = "1")
+    @Schema(description = "팀 ID")
     private Integer id;
     
-    @Schema(description = "팀 이름", example = "록밴드 팀")
+    @Schema(description = "팀 이름")
     private String name;
     
-    @Schema(description = "팀 생성자 ID", example = "1")
+    @Schema(description = "팀 생성자 ID")
     private Integer creatorId;
     
-    @Schema(description = "팀 생성자 이름", example = "김철수")
+    @Schema(description = "팀 생성자 이름")
     private String creatorName;
     
-    @Schema(description = "팀 멤버 수", example = "5")
+    @Schema(description = "팀 멤버 수")
     private Integer memberCount;
     
-    @Schema(description = "팀 생성일시", example = "2024-01-15T10:30:00")
+    @Schema(description = "팀 생성일시")
     private LocalDateTime createdAt;
 }

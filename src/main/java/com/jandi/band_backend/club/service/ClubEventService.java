@@ -44,16 +44,7 @@ public class ClubEventService {
 
         ClubEvent saved = clubEventRepository.save(clubEvent);
 
-        ClubEventRespDTO response = new ClubEventRespDTO();
-        response.setId(saved.getId().longValue());
-        response.setName(saved.getName());
-        response.setStartDatetime(saved.getStartDatetime());
-        response.setEndDatetime(saved.getEndDatetime());
-        response.setLocation(saved.getLocation());
-        response.setAddress(saved.getAddress());
-        response.setDescription(saved.getDescription());
-
-        return response;
+        return convertToClubEventRespDTO(saved);
     }
 
     @Transactional(readOnly = true)
@@ -65,16 +56,7 @@ public class ClubEventService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        ClubEventRespDTO response = new ClubEventRespDTO();
-        response.setId(event.getId().longValue());
-        response.setName(event.getName());
-        response.setStartDatetime(event.getStartDatetime());
-        response.setEndDatetime(event.getEndDatetime());
-        response.setLocation(event.getLocation());
-        response.setAddress(event.getAddress());
-        response.setDescription(event.getDescription());
-
-        return response;
+        return convertToClubEventRespDTO(event);
     }
 
     @Transactional(readOnly = true)
@@ -90,17 +72,9 @@ public class ClubEventService {
 
         List<ClubEvent> events = clubEventRepository.findByClubIdAndOverlappingDate(clubId, start, end);
 
-        return events.stream().map(event -> {
-            ClubEventRespDTO dto = new ClubEventRespDTO();
-            dto.setId(event.getId().longValue());
-            dto.setName(event.getName());
-            dto.setStartDatetime(event.getStartDatetime());
-            dto.setEndDatetime(event.getEndDatetime());
-            dto.setLocation(event.getLocation());
-            dto.setAddress(event.getAddress());
-            dto.setDescription(event.getDescription());
-            return dto;
-        }).toList();
+        return events.stream()
+                .map(this::convertToClubEventRespDTO)
+                .toList();
     }
 
     @Transactional
@@ -117,5 +91,18 @@ public class ClubEventService {
 
         event.setDeletedAt(LocalDateTime.now());
         clubEventRepository.save(event);
+    }
+
+    // ClubEvent 엔터티를 ClubEventRespDTO로 변환하는 헬퍼 메서드
+    private ClubEventRespDTO convertToClubEventRespDTO(ClubEvent event) {
+        ClubEventRespDTO response = new ClubEventRespDTO();
+        response.setId(event.getId().longValue());
+        response.setName(event.getName());
+        response.setStartDatetime(event.getStartDatetime());
+        response.setEndDatetime(event.getEndDatetime());
+        response.setLocation(event.getLocation());
+        response.setAddress(event.getAddress());
+        response.setDescription(event.getDescription());
+        return response;
     }
 }

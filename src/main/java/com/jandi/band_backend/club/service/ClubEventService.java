@@ -1,4 +1,3 @@
-// ClubEventService.java
 package com.jandi.band_backend.club.service;
 
 import com.jandi.band_backend.club.dto.ClubEventReqDTO;
@@ -56,7 +55,6 @@ public class ClubEventService {
 
         return response;
     }
-
 
     @Transactional(readOnly = true)
     public ClubEventRespDTO getClubEventDetail(Integer clubId, Long eventId, Integer userId) {

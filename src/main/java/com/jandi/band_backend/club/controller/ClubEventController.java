@@ -36,7 +36,7 @@ public class ClubEventController {
     @GetMapping("/events/{eventId}")
     public ResponseEntity<CommonResponse<ClubEventRespDTO>> getClubEventDetail(
             @PathVariable Integer clubId,
-            @PathVariable Long eventId,
+            @PathVariable Integer eventId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Integer userId = userDetails.getUserId();
@@ -65,7 +65,7 @@ public class ClubEventController {
     @DeleteMapping("/events/{eventId}")
     public ResponseEntity<CommonResponse<Void>> deleteClubEvent(
             @PathVariable Integer clubId,
-            @PathVariable Long eventId,
+            @PathVariable Integer eventId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Integer userId = userDetails.getUserId();

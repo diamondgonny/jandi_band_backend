@@ -8,19 +8,17 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 import java.util.Optional;
 
 @Repository
 public interface ClubEventRepository extends JpaRepository<ClubEvent, Long> {
-    List<ClubEvent> findByClubId(Long clubId);
 
-    Optional<ClubEvent> findByIdAndClubIdAndDeletedAtIsNull(Long eventId, Integer clubId);
+    Optional<ClubEvent> findByIdAndClubIdAndDeletedAtIsNull(Integer id, Integer club_id);
 
     @Query("SELECT e FROM ClubEvent e WHERE e.club.id = :clubId AND e.deletedAt IS NULL AND " +
             "(e.startDatetime <= :end AND e.endDatetime >= :start)")
     List<ClubEvent> findByClubIdAndOverlappingDate(
-            @Param("clubId") Long clubId,
+            @Param("clubId") Integer clubId,
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end
     );

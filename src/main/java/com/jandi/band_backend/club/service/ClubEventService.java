@@ -57,7 +57,7 @@ public class ClubEventService {
     }
 
     @Transactional(readOnly = true)
-    public ClubEventRespDTO getClubEventDetail(Integer clubId, Long eventId, Integer userId) {
+    public ClubEventRespDTO getClubEventDetail(Integer clubId, Integer eventId, Integer userId) {
         ClubEvent event = clubEventRepository
                 .findByIdAndClubIdAndDeletedAtIsNull(eventId, clubId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 동아리에 속한 일정을 찾을 수 없습니다."));
@@ -88,7 +88,7 @@ public class ClubEventService {
         LocalDateTime start = startDate.atStartOfDay();
         LocalDateTime end = endDate.atTime(23, 59, 59);
 
-        List<ClubEvent> events = clubEventRepository.findByClubIdAndOverlappingDate(clubId.longValue(), start, end);
+        List<ClubEvent> events = clubEventRepository.findByClubIdAndOverlappingDate(clubId, start, end);
 
         return events.stream().map(event -> {
             ClubEventRespDTO dto = new ClubEventRespDTO();
@@ -104,7 +104,7 @@ public class ClubEventService {
     }
 
     @Transactional
-    public void deleteClubEvent(Integer clubId, Long eventId, Integer userId) {
+    public void deleteClubEvent(Integer clubId, Integer eventId, Integer userId) {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 

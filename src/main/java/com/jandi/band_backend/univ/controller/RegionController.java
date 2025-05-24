@@ -1,6 +1,6 @@
 package com.jandi.band_backend.univ.controller;
 
-import com.jandi.band_backend.global.ApiResponse;
+import com.jandi.band_backend.global.CommonResponse;
 import com.jandi.band_backend.univ.dto.RegionRespDTO;
 import com.jandi.band_backend.univ.service.RegionService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,8 +21,8 @@ public class RegionController {
 
     @Operation(summary = "전체 지역 목록 조회")
     @GetMapping("/all")
-    public ApiResponse<List<RegionRespDTO>> getAllRegion() {
+    public CommonResponse<List<RegionRespDTO>> getAllRegion() {
         List<RegionRespDTO> regionList = regionService.getAllRegions();
-        return ApiResponse.success("지역 리스트 조회 성공", regionList);
+        return CommonResponse.success("지역 리스트 조회 성공", regionList);
     }
 }

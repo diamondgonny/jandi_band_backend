@@ -15,11 +15,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
+import java.io.IOException;
 
 @Tag(name = "Club API")
 @RestController
@@ -81,5 +84,29 @@ public class ClubController {
         Integer userId = userDetails.getUserId();
         clubService.deleteClub(clubId, userId);
         return ResponseEntity.ok(CommonResponse.success("동아리가 성공적으로 삭제되었습니다"));
+    }
+
+    @Operation(summary = "동아리 대표 사진 업로드/수정")
+    @PutMapping(value = "/{clubId}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CommonResponse<String>> uploadClubPhoto(
+            @PathVariable Integer clubId,
+            @RequestParam("image") MultipartFile image,
+            @AuthenticationPrincipal CustomUserDetails userDetails) throws IOException {
+        Integer userId = userDetails.getUserId();
+        ClubService.PhotoUploadResult result = clubService.uploadClubPhoto(clubId, image, userId);
+        HttpStatus status = result.isNewPhoto() ? HttpStatus.CREATED : HttpStatus.OK;
+        String message = result.isNewPhoto() ? "동아리 대표 사진이 성공적으로 업로드되었습니다"
+                                            : "동아리 대표 사진이 성공적으로 수정되었습니다";
+        return ResponseEntity.status(status).body(CommonResponse.success(message, result.imageUrl()));
+    }
+
+    @Operation(summary = "동아리 대표 사진 삭제")
+    @DeleteMapping("/{clubId}/photo")
+    public ResponseEntity<CommonResponse<Void>> deleteClubPhoto(
+            @PathVariable Integer clubId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails.getUserId();
+        clubService.deleteClubPhoto(clubId, userId);
+        return ResponseEntity.ok(CommonResponse.success("동아리 대표 사진이 성공적으로 삭제되었습니다"));
     }
 }

@@ -5,7 +5,7 @@ import com.jandi.band_backend.club.dto.ClubDetailRespDTO;
 import com.jandi.band_backend.club.dto.ClubRespDTO;
 import com.jandi.band_backend.club.dto.ClubUpdateReqDTO;
 import com.jandi.band_backend.club.service.ClubService;
-import com.jandi.band_backend.global.ApiResponse;
+import com.jandi.band_backend.global.CommonResponse;
 import com.jandi.band_backend.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,48 +30,48 @@ public class ClubController {
 
     @Operation(summary = "동아리 생성")
     @PostMapping
-    public ResponseEntity<ApiResponse<ClubDetailRespDTO>> createClub(
+    public ResponseEntity<CommonResponse<ClubDetailRespDTO>> createClub(
             @Valid @RequestBody ClubReqDTO request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         ClubDetailRespDTO response = clubService.createClub(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("동아리가 성공적으로 생성되었습니다", response));
+                .body(CommonResponse.success("동아리가 성공적으로 생성되었습니다", response));
     }
 
     @Operation(summary = "동아리 목록 조회")
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<ClubRespDTO>>> getClubList(
+    public ResponseEntity<CommonResponse<Page<ClubRespDTO>>> getClubList(
             @PageableDefault(size = 5) Pageable pageable) {
         Page<ClubRespDTO> response = clubService.getClubList(pageable);
-        return ResponseEntity.ok(ApiResponse.success("동아리 목록 조회 성공", response));
+        return ResponseEntity.ok(CommonResponse.success("동아리 목록 조회 성공", response));
     }
 
     @Operation(summary = "동아리 상세 조회")
     @GetMapping("/{clubId}")
-    public ResponseEntity<ApiResponse<ClubDetailRespDTO>> getClubDetail(@PathVariable Integer clubId) {
+    public ResponseEntity<CommonResponse<ClubDetailRespDTO>> getClubDetail(@PathVariable Integer clubId) {
         ClubDetailRespDTO response = clubService.getClubDetail(clubId);
-        return ResponseEntity.ok(ApiResponse.success("동아리 상세 정보 조회 성공", response));
+        return ResponseEntity.ok(CommonResponse.success("동아리 상세 정보 조회 성공", response));
     }
 
     @Operation(summary = "동아리 정보 수정")
     @PatchMapping("/{clubId}")
-    public ResponseEntity<ApiResponse<ClubDetailRespDTO>> updateClub(
+    public ResponseEntity<CommonResponse<ClubDetailRespDTO>> updateClub(
             @PathVariable Integer clubId,
             @Valid @RequestBody ClubUpdateReqDTO request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         ClubDetailRespDTO response = clubService.updateClub(clubId, request, userId);
-        return ResponseEntity.ok(ApiResponse.success("동아리 정보가 성공적으로 수정되었습니다", response));
+        return ResponseEntity.ok(CommonResponse.success("동아리 정보가 성공적으로 수정되었습니다", response));
     }
 
     @Operation(summary = "동아리 삭제")
     @DeleteMapping("/{clubId}")
-    public ResponseEntity<ApiResponse<Void>> deleteClub(
+    public ResponseEntity<CommonResponse<Void>> deleteClub(
             @PathVariable Integer clubId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         clubService.deleteClub(clubId, userId);
-        return ResponseEntity.ok(ApiResponse.success("동아리가 성공적으로 삭제되었습니다"));
+        return ResponseEntity.ok(CommonResponse.success("동아리가 성공적으로 삭제되었습니다"));
     }
 }

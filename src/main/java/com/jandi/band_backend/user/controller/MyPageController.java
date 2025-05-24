@@ -1,6 +1,6 @@
 package com.jandi.band_backend.user.controller;
 
-import com.jandi.band_backend.global.ApiResponse;
+import com.jandi.band_backend.global.CommonResponse;
 import com.jandi.band_backend.security.CustomUserDetails;
 import com.jandi.band_backend.user.dto.MyClubRespDTO;
 import com.jandi.band_backend.user.dto.MyTeamRespDTO;
@@ -25,19 +25,19 @@ public class MyPageController {
 
     @Operation(summary = "내가 참가한 동아리 목록 조회")
     @GetMapping("/clubs")
-    public ApiResponse<List<MyClubRespDTO>> getMyClubs(
+    public CommonResponse<List<MyClubRespDTO>> getMyClubs(
             @AuthenticationPrincipal CustomUserDetails currentUser
     ) {
         List<MyClubRespDTO> myClubs = myPageService.getMyClubs(currentUser.getUserId());
-        return ApiResponse.success("내가 참가한 동아리 목록 조회 성공", myClubs);
+        return CommonResponse.success("내가 참가한 동아리 목록 조회 성공", myClubs);
     }
 
     @Operation(summary = "내가 참가한 팀 목록 조회")
     @GetMapping("/teams")
-    public ApiResponse<List<MyTeamRespDTO>> getMyTeams(
+    public CommonResponse<List<MyTeamRespDTO>> getMyTeams(
             @AuthenticationPrincipal CustomUserDetails currentUser
     ) {
         List<MyTeamRespDTO> myTeams = myPageService.getMyTeams(currentUser.getUserId());
-        return ApiResponse.success("내가 참가한 팀 목록 조회 성공", myTeams);
+        return CommonResponse.success("내가 참가한 팀 목록 조회 성공", myTeams);
     }
 } 

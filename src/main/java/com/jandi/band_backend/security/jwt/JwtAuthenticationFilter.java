@@ -1,7 +1,7 @@
 package com.jandi.band_backend.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jandi.band_backend.global.ApiResponse;
+import com.jandi.band_backend.global.CommonResponse;
 import com.jandi.band_backend.global.exception.InvalidTokenException;
 import com.jandi.band_backend.security.CustomUserDetails;
 import jakarta.servlet.FilterChain;
@@ -58,8 +58,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 형식이 올바르지 않거나 미인가된 토큰일 시 SecurityContext 삭제
             SecurityContextHolder.clearContext();
 
-            // ApiResponse 형식대로 오류 응답 생성
-            ApiResponse<?> errorResponse = ApiResponse.error(e.getMessage(), "INVALID_TOKEN");
+            // CommonResponse 형식대로 오류 응답 생성
+            CommonResponse<?> errorResponse = CommonResponse.error(e.getMessage(), "INVALID_TOKEN");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json; charset=UTF-8");
             response.getWriter().write(objectMapper.writeValueAsString(errorResponse));

@@ -4,6 +4,7 @@ import com.jandi.band_backend.club.dto.ClubReqDTO;
 import com.jandi.band_backend.club.dto.ClubDetailRespDTO;
 import com.jandi.band_backend.club.dto.ClubRespDTO;
 import com.jandi.band_backend.club.dto.ClubUpdateReqDTO;
+import com.jandi.band_backend.club.dto.ClubMembersRespDTO;
 import com.jandi.band_backend.club.service.ClubService;
 import com.jandi.band_backend.global.CommonResponse;
 import com.jandi.band_backend.security.CustomUserDetails;
@@ -52,6 +53,13 @@ public class ClubController {
     public ResponseEntity<CommonResponse<ClubDetailRespDTO>> getClubDetail(@PathVariable Integer clubId) {
         ClubDetailRespDTO response = clubService.getClubDetail(clubId);
         return ResponseEntity.ok(CommonResponse.success("동아리 상세 정보 조회 성공", response));
+    }
+
+    @Operation(summary = "동아리 부원 명단 조회")
+    @GetMapping("/{clubId}/members")
+    public ResponseEntity<CommonResponse<ClubMembersRespDTO>> getClubMembers(@PathVariable Integer clubId) {
+        ClubMembersRespDTO response = clubService.getClubMembers(clubId);
+        return ResponseEntity.ok(CommonResponse.success("동아리 부원 명단 조회 성공", response));
     }
 
     @Operation(summary = "동아리 정보 수정")

@@ -4,6 +4,7 @@ import com.jandi.band_backend.club.dto.ClubReqDTO;
 import com.jandi.band_backend.club.dto.ClubDetailRespDTO;
 import com.jandi.band_backend.club.dto.ClubRespDTO;
 import com.jandi.band_backend.club.dto.ClubUpdateReqDTO;
+import com.jandi.band_backend.club.dto.ClubMembersRespDTO;
 import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.club.entity.ClubPhoto;
@@ -29,6 +30,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -106,6 +110,49 @@ public class ClubService {
         String photoUrl = getClubMainPhotoUrl(club.getId());
 
         return convertToClubDetailRespDTO(club, photoUrl, memberCount);
+    }
+
+    @Transactional(readOnly = true)
+    public ClubMembersRespDTO getClubMembers(Integer clubId) {
+        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
+                .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
+
+        // 동아리 멤버 목록 조회
+        List<ClubMember> clubMembers = clubMemberRepository.findByClubId(clubId);
+
+        // 멤버 정보 변환
+        List<ClubMembersRespDTO.MemberInfoDTO> memberInfos = clubMembers.stream()
+            .map(member -> this.convertToMemberInfoDTO(member))
+            .toList();
+
+        // 포지션별 카운트 계산
+        Map<String, Long> positionCountMap = clubMembers.stream()
+                .map(member -> member.getUser().getPosition())
+                .filter(position -> position != null)
+                .collect(Collectors.groupingBy(
+                        position -> position.name(),
+                        Collectors.counting()
+                ));
+
+        // 포지션별 카운트 매핑 (기본값 0으로 설정)
+        Map<String, Integer> positionCounts = Map.of(
+                "VOCAL", positionCountMap.getOrDefault("VOCAL", 0L).intValue(),
+                "GUITAR", positionCountMap.getOrDefault("GUITAR", 0L).intValue(),
+                "KEYBOARD", positionCountMap.getOrDefault("KEYBOARD", 0L).intValue(),
+                "BASS", positionCountMap.getOrDefault("BASS", 0L).intValue(),
+                "DRUM", positionCountMap.getOrDefault("DRUM", 0L).intValue()
+        );
+
+        return ClubMembersRespDTO.builder()
+                .id(club.getId())
+                .members(memberInfos)
+                .vocalCount(positionCounts.get("VOCAL"))
+                .guitarCount(positionCounts.get("GUITAR"))
+                .keyboardCount(positionCounts.get("KEYBOARD"))
+                .bassCount(positionCounts.get("BASS"))
+                .drumCount(positionCounts.get("DRUM"))
+                .totalMemberCount(clubMembers.size())
+                .build();
     }
 
     @Transactional
@@ -278,5 +325,17 @@ public class ClubService {
         photo.setImageUrl(imageUrl);
         photo.setIsCurrent(true);
         clubPhotoRepository.save(photo);
+    }
+
+    // ClubMember를 MemberInfoDTO로 변환하는 헬퍼 메서드
+    private ClubMembersRespDTO.MemberInfoDTO convertToMemberInfoDTO(ClubMember member) {
+        Users user = member.getUser();
+        String position = user.getPosition() != null ? user.getPosition().name() : null;
+
+        return ClubMembersRespDTO.MemberInfoDTO.builder()
+                .userId(user.getId())
+                .name(user.getNickname())
+                .position(position)
+                .build();
     }
 }

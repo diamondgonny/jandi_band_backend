@@ -1,4 +1,3 @@
-// ClubEventReqDTO.java
 package com.jandi.band_backend.club.dto;
 
 import lombok.Getter;

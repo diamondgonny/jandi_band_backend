@@ -163,9 +163,8 @@ public class ClubService {
         Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
-        // 권한 확인 (대표자만 수정 가능)
+        // 권한 확인 (동아리 회원이면 수정 가능)
         clubMemberRepository.findByClubIdAndUserId(clubId, userId)
-                .filter(member -> member.getRole() == ClubMember.MemberRole.REPRESENTATIVE)
                 .orElseThrow(() -> new UnauthorizedClubAccessException("동아리 정보 수정 권한이 없습니다."));
 
         // 동아리 정보 수정
@@ -219,9 +218,8 @@ public class ClubService {
         Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
-        // 권한 확인 (대표자만 업로드 가능)
+        // 권한 확인 (동아리 회원이면 업로드 가능)
         clubMemberRepository.findByClubIdAndUserId(clubId, userId)
-                .filter(member -> member.getRole() == ClubMember.MemberRole.REPRESENTATIVE)
                 .orElseThrow(() -> new UnauthorizedClubAccessException("동아리 사진 업로드 권한이 없습니다."));
 
         // 기존 사진 존재 여부 확인
@@ -252,9 +250,8 @@ public class ClubService {
         Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
-        // 권한 확인 (대표자만 삭제 가능)
+        // 권한 확인 (동아리 회원이면 삭제 가능)
         clubMemberRepository.findByClubIdAndUserId(clubId, userId)
-                .filter(member -> member.getRole() == ClubMember.MemberRole.REPRESENTATIVE)
                 .orElseThrow(() -> new UnauthorizedClubAccessException("동아리 사진 삭제 권한이 없습니다."));
 
         ClubPhoto photo = clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)

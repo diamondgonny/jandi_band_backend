@@ -21,14 +21,16 @@ public class ClubEventController {
 
     // 동아리 일정 추가 API
     @PostMapping("/events")
-    public ClubEventRespDTO createClubEvent(
+    public ResponseEntity<CommonResponse<ClubEventRespDTO>> createClubEvent(
             @PathVariable Integer clubId,
             @RequestHeader("Authorization") String token,
             @RequestBody ClubEventReqDTO dto
     ) {
         String accessToken = token.replace("Bearer ", "");
         String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
-        return clubEventService.createClubEvent(clubId, kakaoOauthId, dto);
+        ClubEventRespDTO response = clubEventService.createClubEvent(clubId, kakaoOauthId, dto);
+        
+        return ResponseEntity.ok(CommonResponse.success("동아리 일정이 생성되었습니다.", response));
     }
 
     // 동아리 일정 상세 조회 API

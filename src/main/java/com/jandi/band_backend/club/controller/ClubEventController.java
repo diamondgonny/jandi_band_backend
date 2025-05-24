@@ -4,9 +4,10 @@ import com.jandi.band_backend.club.dto.ClubEventReqDTO;
 import com.jandi.band_backend.club.dto.ClubEventRespDTO;
 import com.jandi.band_backend.club.service.ClubEventService;
 import com.jandi.band_backend.global.CommonResponse;
-import com.jandi.band_backend.security.jwt.JwtTokenProvider;
+import com.jandi.band_backend.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,18 +18,16 @@ import java.util.List;
 public class ClubEventController {
 
     private final ClubEventService clubEventService;
-    private final JwtTokenProvider jwtTokenProvider;
 
     // 동아리 일정 추가 API
     @PostMapping("/events")
     public ResponseEntity<CommonResponse<ClubEventRespDTO>> createClubEvent(
             @PathVariable Integer clubId,
-            @RequestHeader("Authorization") String token,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody ClubEventReqDTO dto
     ) {
-        String accessToken = token.replace("Bearer ", "");
-        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
-        ClubEventRespDTO response = clubEventService.createClubEvent(clubId, kakaoOauthId, dto);
+        Integer userId = userDetails.getUserId();
+        ClubEventRespDTO response = clubEventService.createClubEvent(clubId, userId, dto);
         
         return ResponseEntity.ok(CommonResponse.success("동아리 일정이 생성되었습니다.", response));
     }
@@ -38,12 +37,11 @@ public class ClubEventController {
     public ResponseEntity<CommonResponse<ClubEventRespDTO>> getClubEventDetail(
             @PathVariable Integer clubId,
             @PathVariable Long eventId,
-            @RequestHeader("Authorization") String token
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        String accessToken = token.replace("Bearer ", "");
-        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
+        Integer userId = userDetails.getUserId();
 
-        ClubEventRespDTO response = clubEventService.getClubEventDetail(clubId, eventId, kakaoOauthId);
+        ClubEventRespDTO response = clubEventService.getClubEventDetail(clubId, eventId, userId);
 
         return ResponseEntity.ok(CommonResponse.success("동아리 일정 상세 조회 성공", response));
     }
@@ -54,12 +52,11 @@ public class ClubEventController {
             @PathVariable Integer clubId,
             @PathVariable int year,
             @PathVariable int month,
-            @RequestHeader("Authorization") String token
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        String accessToken = token.replace("Bearer ", "");
-        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
+        Integer userId = userDetails.getUserId();
 
-        List<ClubEventRespDTO> response = clubEventService.getClubEventListByMonth(clubId, kakaoOauthId, year, month);
+        List<ClubEventRespDTO> response = clubEventService.getClubEventListByMonth(clubId, userId, year, month);
 
         return ResponseEntity.ok(CommonResponse.success("동아리 일정 목록 조회 성공", response));
     }
@@ -69,12 +66,11 @@ public class ClubEventController {
     public ResponseEntity<CommonResponse<Void>> deleteClubEvent(
             @PathVariable Integer clubId,
             @PathVariable Long eventId,
-            @RequestHeader("Authorization") String token
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        String accessToken = token.replace("Bearer ", "");
-        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
+        Integer userId = userDetails.getUserId();
 
-        clubEventService.deleteClubEvent(clubId, eventId, kakaoOauthId);
+        clubEventService.deleteClubEvent(clubId, eventId, userId);
 
         return ResponseEntity.ok(CommonResponse.success("동아리 일정이 삭제되었습니다."));
     }

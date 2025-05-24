@@ -26,11 +26,11 @@ public class ClubEventService {
     private final ClubEventRepository clubEventRepository;
 
     @Transactional
-    public ClubEventRespDTO createClubEvent(Integer clubId, String kakaoOauthId, ClubEventReqDTO dto) {
+    public ClubEventRespDTO createClubEvent(Integer clubId, Integer userId, ClubEventReqDTO dto) {
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(() -> new IllegalArgumentException("Club not found"));
 
-        Users creator = userRepository.findByKakaoOauthId(kakaoOauthId)
+        Users creator = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         ClubEvent clubEvent = new ClubEvent();
@@ -59,12 +59,12 @@ public class ClubEventService {
 
 
     @Transactional(readOnly = true)
-    public ClubEventRespDTO getClubEventDetail(Integer clubId, Long eventId, String kakaoOauthId) {
+    public ClubEventRespDTO getClubEventDetail(Integer clubId, Long eventId, Integer userId) {
         ClubEvent event = clubEventRepository
                 .findByIdAndClubIdAndDeletedAtIsNull(eventId, clubId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 동아리에 속한 일정을 찾을 수 없습니다."));
 
-        userRepository.findByKakaoOauthId(kakaoOauthId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         ClubEventRespDTO response = new ClubEventRespDTO();
@@ -80,8 +80,8 @@ public class ClubEventService {
     }
 
     @Transactional(readOnly = true)
-    public List<ClubEventRespDTO> getClubEventListByMonth(Integer clubId, String kakaoOauthId, int year, int month) {
-        userRepository.findByKakaoOauthId(kakaoOauthId)
+    public List<ClubEventRespDTO> getClubEventListByMonth(Integer clubId, Integer userId, int year, int month) {
+        userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         LocalDate startDate = LocalDate.of(year, month, 1);
@@ -106,8 +106,8 @@ public class ClubEventService {
     }
 
     @Transactional
-    public void deleteClubEvent(Integer clubId, Long eventId, String kakaoOauthId) {
-        Users user = userRepository.findByKakaoOauthId(kakaoOauthId)
+    public void deleteClubEvent(Integer clubId, Long eventId, Integer userId) {
+        Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         ClubEvent event = clubEventRepository.findByIdAndClubIdAndDeletedAtIsNull(eventId, clubId)

@@ -67,8 +67,9 @@ public class ClubService {
 
         // 대학 정보 설정 (연합 동아리인 경우 null)
         if (request.getUniversityId() != null) {
+            String errorMessage = "대학을 찾을 수 없습니다. ID: " + request.getUniversityId();
             University university = universityRepository.findById(request.getUniversityId())
-                    .orElseThrow(() -> new UniversityNotFoundException("대학을 찾을 수 없습니다. ID: " + request.getUniversityId()));
+                    .orElseThrow(() -> new UniversityNotFoundException(errorMessage));
             club.setUniversity(university);
         }
 
@@ -164,8 +165,9 @@ public class ClubService {
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
         // 권한 확인 (동아리 회원이면 수정 가능)
+        String updateAccessErrorMessage = "동아리 정보 수정 권한이 없습니다.";
         clubMemberRepository.findByClubIdAndUserId(clubId, userId)
-                .orElseThrow(() -> new UnauthorizedClubAccessException("동아리 정보 수정 권한이 없습니다."));
+                .orElseThrow(() -> new UnauthorizedClubAccessException(updateAccessErrorMessage));
 
         // 동아리 정보 수정
         if (request.getName() != null) {
@@ -196,12 +198,14 @@ public class ClubService {
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
         // 권한 확인 (대표자만 삭제 가능)
+        String deleteAccessErrorMessage = "동아리 삭제 권한이 없습니다.";
         clubMemberRepository.findByClubIdAndUserId(clubId, userId)
                 .filter(member -> member.getRole() == ClubMember.MemberRole.REPRESENTATIVE)
-                .orElseThrow(() -> new UnauthorizedClubAccessException("동아리 삭제 권한이 없습니다."));
+                .orElseThrow(() -> new UnauthorizedClubAccessException(deleteAccessErrorMessage));
 
         // 동아리 대표 사진 소프트 삭제
-        clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
+        clubPhotoRepository
+                .findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
                 .ifPresent(photo -> {
                     photo.setIsCurrent(false);
                     photo.setDeletedAt(LocalDateTime.now());
@@ -219,11 +223,13 @@ public class ClubService {
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
         // 권한 확인 (동아리 회원이면 업로드 가능)
+        String uploadAccessErrorMessage = "동아리 사진 업로드 권한이 없습니다.";
         clubMemberRepository.findByClubIdAndUserId(clubId, userId)
-                .orElseThrow(() -> new UnauthorizedClubAccessException("동아리 사진 업로드 권한이 없습니다."));
+                .orElseThrow(() -> new UnauthorizedClubAccessException(uploadAccessErrorMessage));
 
         // 기존 사진 존재 여부 확인
-        boolean hasExistingPhoto = clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
+        boolean hasExistingPhoto = clubPhotoRepository
+                .findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
                 .isPresent();
 
         // S3에 이미지 업로드
@@ -251,10 +257,12 @@ public class ClubService {
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
         // 권한 확인 (동아리 회원이면 삭제 가능)
+        String deletePhotoAccessErrorMessage = "동아리 사진 삭제 권한이 없습니다.";
         clubMemberRepository.findByClubIdAndUserId(clubId, userId)
-                .orElseThrow(() -> new UnauthorizedClubAccessException("동아리 사진 삭제 권한이 없습니다."));
+                .orElseThrow(() -> new UnauthorizedClubAccessException(deletePhotoAccessErrorMessage));
 
-        ClubPhoto photo = clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
+        ClubPhoto photo = clubPhotoRepository
+                .findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ResourceNotFoundException("이미지를 찾을 수 없습니다."));
 
         // S3에서 이미지 삭제

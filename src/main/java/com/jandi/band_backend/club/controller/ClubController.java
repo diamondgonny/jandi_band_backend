@@ -86,18 +86,15 @@ public class ClubController {
         return ResponseEntity.ok(CommonResponse.success("동아리가 성공적으로 삭제되었습니다"));
     }
 
-    @Operation(summary = "동아리 대표 사진 업로드/수정")
-    @PutMapping(value = "/{clubId}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "동아리 대표 사진 업로드")
+    @PostMapping(value = "/{clubId}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CommonResponse<String>> uploadClubPhoto(
             @PathVariable Integer clubId,
             @RequestParam("image") MultipartFile image,
             @AuthenticationPrincipal CustomUserDetails userDetails) throws IOException {
         Integer userId = userDetails.getUserId();
-        ClubService.PhotoUploadResult result = clubService.uploadClubPhoto(clubId, image, userId);
-        HttpStatus status = result.isNewPhoto() ? HttpStatus.CREATED : HttpStatus.OK;
-        String message = result.isNewPhoto() ? "동아리 대표 사진이 성공적으로 업로드되었습니다"
-                                            : "동아리 대표 사진이 성공적으로 수정되었습니다";
-        return ResponseEntity.status(status).body(CommonResponse.success(message, result.imageUrl()));
+        String imageUrl = clubService.uploadClubPhoto(clubId, image, userId);
+        return ResponseEntity.ok(CommonResponse.success("동아리 대표 사진이 성공적으로 업로드되었습니다", imageUrl));
     }
 
     @Operation(summary = "동아리 대표 사진 삭제")

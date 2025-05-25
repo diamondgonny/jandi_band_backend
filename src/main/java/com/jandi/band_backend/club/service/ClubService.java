@@ -39,8 +39,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ClubService {
 
-    public record PhotoUploadResult(boolean isNewPhoto, String imageUrl) {}
-
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final ClubPhotoRepository clubPhotoRepository;
@@ -49,6 +47,7 @@ public class ClubService {
     private final S3Service s3Service;
 
     private static final String CLUB_PHOTO_DIR = "club-photo";
+    private static final String DEFAULT_CLUB_PHOTO_URL = "https://jandi-rhythmeet.s3.ap-northeast-2.amazonaws.com/user-photo/31eef3b5-c915-4142-9b7f-1ff6a96a35a1.jpeg";
 
     @Transactional
     public ClubDetailRespDTO createClub(ClubReqDTO request, Integer userId) {
@@ -75,6 +74,13 @@ public class ClubService {
 
         Club savedClub = clubRepository.save(club);
 
+        // 동아리 기본 사진 설정
+        ClubPhoto defaultPhoto = new ClubPhoto();
+        defaultPhoto.setClub(savedClub);
+        defaultPhoto.setImageUrl(DEFAULT_CLUB_PHOTO_URL);
+        defaultPhoto.setIsCurrent(true);
+        clubPhotoRepository.save(defaultPhoto);
+
         // 동아리 멤버 추가 (생성자를 대표자로 설정)
         ClubMember clubMember = new ClubMember();
         clubMember.setClub(savedClub);
@@ -85,7 +91,7 @@ public class ClubService {
 
         clubMemberRepository.save(clubMember);
 
-        return convertToClubDetailRespDTO(savedClub, null, 1);
+        return convertToClubDetailRespDTO(savedClub, DEFAULT_CLUB_PHOTO_URL, 1);
     }
 
     @Transactional(readOnly = true)
@@ -203,22 +209,25 @@ public class ClubService {
                 .filter(member -> member.getRole() == ClubMember.MemberRole.REPRESENTATIVE)
                 .orElseThrow(() -> new UnauthorizedClubAccessException(deleteAccessErrorMessage));
 
-        // 동아리 대표 사진 소프트 삭제
+        // 동아리 대표 사진 S3 삭제
+        deleteClubPhoto(clubId, userId);
+
+        // 동아리 대표 사진 DB 레코드 소프트 삭제
         clubPhotoRepository
                 .findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
-                .ifPresent(photo -> {
-                    photo.setIsCurrent(false);
-                    photo.setDeletedAt(LocalDateTime.now());
-                    clubPhotoRepository.save(photo);
+                .ifPresent(clubPhoto -> {
+                    clubPhoto.setIsCurrent(false);
+                    clubPhoto.setDeletedAt(LocalDateTime.now());
+                    clubPhotoRepository.save(clubPhoto);
                 });
 
-        // 동아리 삭제 (소프트 딜리트)
+        // 동아리 삭제 (소프트 삭제)
         club.setDeletedAt(LocalDateTime.now());
         clubRepository.save(club);
     }
 
     @Transactional
-    public PhotoUploadResult uploadClubPhoto(Integer clubId, MultipartFile image, Integer userId) throws IOException {
+    public String uploadClubPhoto(Integer clubId, MultipartFile image, Integer userId) throws IOException {
         Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
@@ -227,28 +236,23 @@ public class ClubService {
         clubMemberRepository.findByClubIdAndUserId(clubId, userId)
                 .orElseThrow(() -> new UnauthorizedClubAccessException(uploadAccessErrorMessage));
 
-        // 기존 사진 존재 여부 확인
-        boolean hasExistingPhoto = clubPhotoRepository
+        // 이전 사진 URL 조회
+        ClubPhoto clubPhoto = clubPhotoRepository
                 .findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
-                .isPresent();
+                .orElseThrow(() -> new ResourceNotFoundException("이미지를 찾을 수 없습니다."));
+        String originalUrl = clubPhoto.getImageUrl();
 
-        // S3에 이미지 업로드
-        String imageUrl = s3Service.uploadImage(image, CLUB_PHOTO_DIR);
+        // S3에서 이전 이미지 삭제 및 새로운 이미지 업로드 후 적용
+        // 단, 이전 이미지 != 기본 이미지인 경우에만 S3에서 이전 이미지 삭제
+        if (!originalUrl.equals(DEFAULT_CLUB_PHOTO_URL)) {
+            deleteOriginalClubPhotoFile(originalUrl);
+        }
+        String newUrl = uploadNewClubPhotoFile(image);
+        clubPhoto.setImageUrl(newUrl);
+        clubPhoto.setUploadedAt(LocalDateTime.now());
+        clubPhotoRepository.save(clubPhoto);
 
-        // 기존 사진이 있으면 소프트 삭제 처리
-        clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
-                .ifPresent(photo -> {
-                    photo.setIsCurrent(false);
-                    photo.setDeletedAt(LocalDateTime.now());
-                    clubPhotoRepository.save(photo);
-                });
-
-        // 새 사진 저장
-        saveClubPhoto(club, imageUrl);
-
-        // 새로 생성 여부와 이미지 URL을 함께 반환
-        boolean isNewPhoto = !hasExistingPhoto;
-        return new PhotoUploadResult(isNewPhoto, imageUrl);
+        return newUrl;
     }
 
     @Transactional
@@ -261,17 +265,20 @@ public class ClubService {
         clubMemberRepository.findByClubIdAndUserId(clubId, userId)
                 .orElseThrow(() -> new UnauthorizedClubAccessException(deletePhotoAccessErrorMessage));
 
-        ClubPhoto photo = clubPhotoRepository
+        // 이전 사진 URL 조회
+        ClubPhoto clubPhoto = clubPhotoRepository
                 .findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ResourceNotFoundException("이미지를 찾을 수 없습니다."));
+        String originalUrl = clubPhoto.getImageUrl();
 
-        // S3에서 이미지 삭제
-        s3Service.deleteImage(photo.getImageUrl());
-
-        // DB에서 삭제 처리
-        photo.setIsCurrent(false);
-        photo.setDeletedAt(LocalDateTime.now());
-        clubPhotoRepository.save(photo);
+        // S3에서 이전 이미지 삭제 및 기본 이미지 적용
+        // 단, 이전 이미지 != 기본 이미지인 경우에만 S3에서 이전 이미지 삭제
+        if (!originalUrl.equals(DEFAULT_CLUB_PHOTO_URL)) {
+            deleteOriginalClubPhotoFile(originalUrl);
+        }
+        clubPhoto.setImageUrl(DEFAULT_CLUB_PHOTO_URL);
+        clubPhoto.setUploadedAt(LocalDateTime.now());
+        clubPhotoRepository.save(clubPhoto);
     }
 
     private ClubDetailRespDTO convertToClubDetailRespDTO(Club club, String photoUrl, int memberCount) {
@@ -322,17 +329,8 @@ public class ClubService {
     // 동아리 대표 사진 URL 조회 헬퍼 메서드
     private String getClubMainPhotoUrl(Integer clubId) {
         return clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
-                .map(ClubPhoto::getImageUrl)
+                .map(clubPhoto -> clubPhoto.getImageUrl())
                 .orElse(null);
-    }
-
-    // 동아리 대표 사진 저장 헬퍼 메서드
-    private void saveClubPhoto(Club club, String imageUrl) {
-        ClubPhoto photo = new ClubPhoto();
-        photo.setClub(club);
-        photo.setImageUrl(imageUrl);
-        photo.setIsCurrent(true);
-        clubPhotoRepository.save(photo);
     }
 
     // ClubMember를 MemberInfoDTO로 변환하는 헬퍼 메서드
@@ -345,5 +343,23 @@ public class ClubService {
                 .name(user.getNickname())
                 .position(position)
                 .build();
+    }
+
+    // S3에 새 동아리 사진 업로드하는 헬퍼 메서드
+    private String uploadNewClubPhotoFile(MultipartFile newPhotoFile) {
+        try{
+            return s3Service.uploadImage(newPhotoFile, CLUB_PHOTO_DIR);
+        }catch (Exception e) {
+            throw new RuntimeException("동아리 사진 업로드 실패: " + e.getMessage());
+        }
+    }
+
+    // S3에서 기존 동아리 사진 삭제하는 헬퍼 메서드
+    private void deleteOriginalClubPhotoFile(String originalPhotoUrl) {
+        try{
+            s3Service.deleteImage(originalPhotoUrl);
+        }catch (Exception e) {
+            throw new RuntimeException("동아리 사진 삭제 실패: " + e.getMessage());
+        }
     }
 }

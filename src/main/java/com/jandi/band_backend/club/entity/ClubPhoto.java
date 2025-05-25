@@ -30,7 +30,7 @@ public class ClubPhoto {
     @Column(name = "is_current", nullable = false)
     private Boolean isCurrent = true;
 
-    @Column(name = "uploaded_at", nullable = false, updatable = false)
+    @Column(name = "uploaded_at", nullable = false)
     private LocalDateTime uploadedAt;
 
     @Column(name = "deleted_at")

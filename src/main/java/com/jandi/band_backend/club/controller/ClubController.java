@@ -87,7 +87,7 @@ public class ClubController {
     }
 
     @Operation(summary = "동아리 대표 사진 업로드")
-    @PostMapping(value = "/{clubId}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/{clubId}/main-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CommonResponse<String>> uploadClubPhoto(
             @PathVariable Integer clubId,
             @RequestParam("image") MultipartFile image,
@@ -98,7 +98,7 @@ public class ClubController {
     }
 
     @Operation(summary = "동아리 대표 사진 삭제")
-    @DeleteMapping("/{clubId}/photo")
+    @DeleteMapping("/{clubId}/main-image")
     public ResponseEntity<CommonResponse<Void>> deleteClubPhoto(
             @PathVariable Integer clubId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {

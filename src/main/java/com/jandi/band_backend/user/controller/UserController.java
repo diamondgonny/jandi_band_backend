@@ -1,13 +1,12 @@
 package com.jandi.band_backend.user.controller;
 
-import com.jandi.band_backend.global.ApiResponse;
+import com.jandi.band_backend.global.CommonResponse;
 import com.jandi.band_backend.security.jwt.JwtTokenProvider;
 import com.jandi.band_backend.user.dto.UpdateUserInfoReqDTO;
 import com.jandi.band_backend.user.dto.UserInfoDTO;
 import com.jandi.band_backend.user.service.UserPhotoService;
 import com.jandi.band_backend.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +23,7 @@ public class UserController {
 
     @Operation(summary = "내 정보 조회")
     @GetMapping("/me/info")
-    public ApiResponse<UserInfoDTO> getMyInfo(
+    public CommonResponse<UserInfoDTO> getMyInfo(
             @RequestHeader("Authorization") String token
     ) {
         String accessToken = token.replace("Bearer ", "");
@@ -35,12 +34,12 @@ public class UserController {
                 userService.getMyInfo(kakaoOauthId),
                 userPhotoService.getMyPhoto(kakaoOauthId)
         );
-        return ApiResponse.success("내 정보 조회 성공", userInfo);
+        return CommonResponse.success("내 정보 조회 성공", userInfo);
     }
 
     @Operation(summary = "내 정보 수정")
     @PatchMapping("/me/info")
-    public ApiResponse<UserInfoDTO> updateMyInfo(
+    public CommonResponse<UserInfoDTO> updateMyInfo(
             @RequestHeader("Authorization") String token,
             @ModelAttribute UpdateUserInfoReqDTO updateDTO,
             @RequestPart(value = "profilePhoto", required = false) MultipartFile profilePhoto
@@ -52,6 +51,6 @@ public class UserController {
         // 유저 기본 정보 및 프로필 사진 수정
         userService.updateMyInfo(kakaoOauthId, updateDTO);
         userPhotoService.updateMyPhoto(kakaoOauthId, profilePhoto);
-        return ApiResponse.success("내 정보 수정 성공");
+        return CommonResponse.success("내 정보 수정 성공");
     }
 }

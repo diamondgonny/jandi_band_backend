@@ -96,14 +96,12 @@ public class ClubService {
 
     @Transactional(readOnly = true)
     public Page<ClubRespDTO> getClubList(Pageable pageable) {
-        // deletedAt이 null인 동아리만 조회하도록 수정
+        // 동아리 목록 조회
         Page<Club> clubPage = clubRepository.findAllByDeletedAtIsNull(pageable);
 
         return clubPage.map(club -> {
-            // 동아리 대표 사진 URL 조회
             String photoUrl = getClubMainPhotoUrl(club.getId());
-
-            int memberCount = club.getClubMembers().size();
+            int memberCount = clubMemberRepository.countByClubId(club.getId());
 
             return convertToClubRespDTO(club, photoUrl, memberCount);
         });
@@ -111,13 +109,12 @@ public class ClubService {
 
     @Transactional(readOnly = true)
     public ClubDetailRespDTO getClubDetail(Integer clubId) {
+        // 동아리 상세 조회
         Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
-        int memberCount = clubMemberRepository.countByClubId(clubId);
-
-        // 동아리 대표 사진 URL 조회
         String photoUrl = getClubMainPhotoUrl(club.getId());
+        int memberCount = clubMemberRepository.countByClubId(clubId);
 
         return convertToClubDetailRespDTO(club, photoUrl, memberCount);
     }

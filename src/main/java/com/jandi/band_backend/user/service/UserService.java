@@ -18,15 +18,15 @@ public class UserService {
 
     /// 내 기본 정보 조회
     @Transactional(readOnly = true)
-    public Users getMyInfo(String kakaoOauthId) {
-        return userRepository.findByKakaoOauthId(kakaoOauthId)
+    public Users getMyInfo(Integer userId) {
+        return userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
     }
 
     /// 내 기본 정보 수정
     @Transactional
-    public void updateMyInfo(String kakaoOauthId, UpdateUserInfoReqDTO updateDTO) {
-        Users user = getMyInfo(kakaoOauthId);
+    public void updateMyInfo(Integer userId, UpdateUserInfoReqDTO updateDTO) {
+        Users user = getMyInfo(userId);
         updateUser(user, updateDTO);
     }
 

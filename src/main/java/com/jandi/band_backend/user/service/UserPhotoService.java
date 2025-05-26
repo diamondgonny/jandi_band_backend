@@ -24,8 +24,8 @@ public class UserPhotoService {
 
     /// 유저 프로필 사진 조회
     @Transactional(readOnly = true)
-    public UserPhoto getMyPhoto(String kakaoOauthId) {
-        Users user = userService.getMyInfo(kakaoOauthId);
+    public UserPhoto getMyPhoto(Integer userId) {
+        Users user = userService.getMyInfo(userId);
         UserPhoto userProfile = userPhotoRepository.findByUser(user);
 
         if (userProfile == null) throw new UserNotFoundException();
@@ -34,12 +34,12 @@ public class UserPhotoService {
 
     /// 유저 프로필 사진 수정
     @Transactional
-    public void updateMyPhoto(String kakaoOauthId, MultipartFile newProfileFile) {
+    public void updateMyPhoto(Integer userId, MultipartFile newProfileFile) {
         // 프로필 사진이 없을 경우 수정하지 않음
         if (newProfileFile == null || newProfileFile.isEmpty()) return;
 
         // 프로필 조회
-        UserPhoto profile = getMyPhoto(kakaoOauthId);
+        UserPhoto profile = getMyPhoto(userId);
         String originalUrl = profile.getImageUrl();
 
         // 새 이미지 업로드 및 이전 이미지 삭제

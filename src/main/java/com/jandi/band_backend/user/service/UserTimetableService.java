@@ -26,8 +26,8 @@ public class UserTimetableService {
 
     /// 내 시간표 목록 조회
     @Transactional(readOnly = true)
-    public List<UserTimetableRespDTO> getMyTimetables(String kakaoOauthId) {
-        Users user = userService.getMyInfo(kakaoOauthId);
+    public List<UserTimetableRespDTO> getMyTimetables(Integer userId) {
+        Users user = userService.getMyInfo(userId);
 
         // 내 시간표 조회 및 DTO 형태로 반환
         List<UserTimetable> myTimetables = userTimetableRepository.findByUserAndDeletedAtIsNull(user);
@@ -37,8 +37,8 @@ public class UserTimetableService {
 
     /// 특정 시간표 조회
     @Transactional(readOnly = true)
-    public UserTimetableDetailsRespDTO getMyTimetableById(String kakaoOauthId, Integer timetableId) {
-        UserTimetable myTimetable = getIfMyTimetable(kakaoOauthId, timetableId);
+    public UserTimetableDetailsRespDTO getMyTimetableById(Integer userId, Integer timetableId) {
+        UserTimetable myTimetable = getIfMyTimetable(userId, timetableId);
 
         return new UserTimetableDetailsRespDTO(
                 myTimetable.getId(),
@@ -49,8 +49,8 @@ public class UserTimetableService {
 
     /// 새 시간표 생성
     @Transactional
-    public UserTimetableDetailsRespDTO createTimetable(String kakaoOauthId, UserTimetableReqDTO requestDTO) {
-        Users user = userService.getMyInfo(kakaoOauthId);
+    public UserTimetableDetailsRespDTO createTimetable(Integer userId, UserTimetableReqDTO requestDTO) {
+        Users user = userService.getMyInfo(userId);
         userTimetableUtil.validateTimetableRequest(requestDTO); // DTO 형식 검사
 
         // 새 테이블 생성
@@ -70,8 +70,8 @@ public class UserTimetableService {
 
     /// 내 시간표 수정
     @Transactional
-    public UserTimetableDetailsRespDTO updateTimetable(String kakaoOauthId, Integer timetableId, UserTimetableReqDTO requestDTO) {
-        UserTimetable myTimetable = getIfMyTimetable(kakaoOauthId, timetableId); // 본인의 시간표일 때만 GET
+    public UserTimetableDetailsRespDTO updateTimetable(Integer userId, Integer timetableId, UserTimetableReqDTO requestDTO) {
+        UserTimetable myTimetable = getIfMyTimetable(userId, timetableId); // 본인의 시간표일 때만 GET
         userTimetableUtil.validateTimetableRequest(requestDTO); // DTO 형식 검사
 
         // 시간표 수정
@@ -89,8 +89,8 @@ public class UserTimetableService {
 
     /// 내 시간표 삭제
     @Transactional
-    public void deleteMyTimetable(String kakaoOauthId, Integer timetableId) {
-        UserTimetable myTimetable = getIfMyTimetable(kakaoOauthId, timetableId); // 본인의 시간표일 때만 GET
+    public void deleteMyTimetable(Integer userId, Integer timetableId) {
+        UserTimetable myTimetable = getIfMyTimetable(userId, timetableId); // 본인의 시간표일 때만 GET
 
         myTimetable.setDeletedAt(LocalDateTime.now());
         userTimetableRepository.save(myTimetable);
@@ -98,8 +98,8 @@ public class UserTimetableService {
 
     /// 내부 메서드
     // 시간표 검색 후 본인의 시간표일때만 반환
-    private UserTimetable getIfMyTimetable(String kakaoOauthId, Integer timetableId) {
-        Users user = userService.getMyInfo(kakaoOauthId);
+    private UserTimetable getIfMyTimetable(Integer userId, Integer timetableId) {
+        Users user = userService.getMyInfo(userId);
         UserTimetable timetable = userTimetableRepository.findByIdAndDeletedAtIsNull(timetableId)
                 .orElseThrow(TimetableNotFoundException::new);
 

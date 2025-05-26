@@ -5,9 +5,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.global.exception.BadRequestException;
+import com.jandi.band_backend.global.exception.InvalidAccessException;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
 import com.jandi.band_backend.global.exception.UnauthorizedClubAccessException;
-import com.jandi.band_backend.team.dto.*;
+import com.jandi.band_backend.team.dto.ScheduleSuggestionRespDTO;
+import com.jandi.band_backend.team.dto.TimetableReqDTO;
+import com.jandi.band_backend.team.dto.TimetableRespDTO;
 import com.jandi.band_backend.team.entity.Team;
 import com.jandi.band_backend.team.entity.TeamMember;
 import com.jandi.band_backend.team.repository.TeamMemberRepository;
@@ -19,7 +22,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 @Slf4j
@@ -66,82 +72,6 @@ public class TeamTimetableService {
                 .suggestedScheduleAt(now)
                 .suggesterUserId(currentUserId)
                 .suggesterName(teamMember.getUser().getNickname())
-                .build();
-    }
-
-    /**
-     * 팀내 팀원들 시간표 목록 조회
-     */
-    public TeamTimetablesRespDTO getTeamTimetables(Integer teamId, Integer currentUserId) {
-        // 팀 존재 확인
-        Team team = teamRepository.findByIdAndNotDeleted(teamId)
-                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
-
-        // 동아리 부원 권한 확인 (동아리 부원이면 조회 가능)
-        clubMemberRepository.findByClubIdAndUserId(team.getClub().getId(), currentUserId)
-                .orElseThrow(() -> new UnauthorizedClubAccessException("해당 동아리 부원만 접근할 수 있습니다."));
-
-        // suggestedScheduleAt이 null이면 예외
-        if (team.getSuggestedScheduleAt() == null) {
-            throw new RuntimeException("suggestedScheduleAt이 null입니다.");
-        }
-
-        // 팀 멤버 목록 조회
-        List<TeamMember> teamMembers = teamMemberRepository.findByTeamId(teamId);
-
-        // 제출 현황 계산
-        int submittedCount = 0;
-        List<TeamTimetablesRespDTO.MemberTimetableDTO> memberTimetables = new ArrayList<>();
-
-        for (TeamMember teamMember : teamMembers) {
-            // suggestedScheduleAt 이후에 시간표를 제출했는지 확인
-            boolean isSubmitted = teamMember.getUpdatedTimetableAt() != null &&
-                    teamMember.getUpdatedTimetableAt().isAfter(team.getSuggestedScheduleAt());
-            if (isSubmitted) {
-                submittedCount++;
-            }
-
-            Map<String, List<String>> timetableData = null;
-            if (teamMember.getTimetableData() != null) {
-                try {
-                    timetableData = objectMapper.readValue(teamMember.getTimetableData(),
-                            new TypeReference<Map<String, List<String>>>() {});
-                } catch (JsonProcessingException e) {
-                    log.error("시간표 데이터 파싱 오류: {}", e.getMessage());
-                }
-            }
-
-            TeamTimetablesRespDTO.MemberTimetableDTO memberDTO = TeamTimetablesRespDTO.MemberTimetableDTO.builder()
-                    .userId(teamMember.getUser().getId())
-                    .username(teamMember.getUser().getNickname())
-                    .position(teamMember.getUser().getPosition() != null ?
-                            teamMember.getUser().getPosition().name() : null)
-                    .timetableUpdatedAt(teamMember.getUpdatedTimetableAt())
-                    .isSubmitted(isSubmitted)
-                    .timetableData(timetableData)
-                    .build();
-
-            memberTimetables.add(memberDTO);
-        }
-
-        // 팀 정보
-        TeamTimetablesRespDTO.TeamInfoDTO teamInfo = TeamTimetablesRespDTO.TeamInfoDTO.builder()
-                .id(team.getId())
-                .name(team.getName())
-                .suggestedScheduleAt(team.getSuggestedScheduleAt())
-                .isScheduleActive(team.getSuggestedScheduleAt() != null)
-                .build();
-
-        // 제출 진행률
-        TeamTimetablesRespDTO.SubmissionProgressDTO submissionProgress = TeamTimetablesRespDTO.SubmissionProgressDTO.builder()
-                .submitted(submittedCount)
-                .total(teamMembers.size())
-                .build();
-
-        return TeamTimetablesRespDTO.builder()
-                .teamInfo(teamInfo)
-                .members(memberTimetables)
-                .submissionProgress(submissionProgress)
                 .build();
     }
 

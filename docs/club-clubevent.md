@@ -216,8 +216,8 @@ curl -X DELETE "http://localhost:8080/api/clubs/1/events/15" \
 ```typescript
 interface ClubEventReqDTO {
   name: string;           // 일정 이름 (필수, 최대 255자)
-  startDatetime: string;  // 시작 시간 (필수, ISO 8601)
-  endDatetime: string;    // 종료 시간 (필수, ISO 8601, 시작시간 이후)
+  startDatetime: string;  // 시작 시간 (필수, LocalDateTime)
+  endDatetime: string;    // 종료 시간 (필수, LocalDateTime, 시작시간 이후)
   location?: string;      // 장소명 (선택, 최대 255자)
   address?: string;       // 주소 (선택, 최대 255자)
   description?: string;   // 설명 (선택)
@@ -227,10 +227,10 @@ interface ClubEventReqDTO {
 ### ClubEventRespDTO (응답)
 ```typescript
 interface ClubEventRespDTO {
-  id: number;            // 일정 ID
+  id: number;            // 일정 ID (Long 타입)
   name: string;          // 일정 이름
-  startDatetime: string; // 시작 시간 (ISO 8601)
-  endDatetime: string;   // 종료 시간 (ISO 8601)
+  startDatetime: string; // 시작 시간 (LocalDateTime)
+  endDatetime: string;   // 종료 시간 (LocalDateTime)
   location: string;      // 장소명 (null 가능)
   address: string;       // 주소 (null 가능)
   description: string;   // 설명 (null 가능)
@@ -242,3 +242,7 @@ interface ClubEventRespDTO {
 ### 소프트 삭제
 - 삭제된 일정은 DB에서 물리적으로 제거되지 않고 `deletedAt` 필드로 관리
 - 조회 시 삭제된 일정은 자동으로 제외됨
+
+### 데이터 타입
+- **ID**: Entity는 Integer, 응답 DTO는 Long으로 변환
+- **날짜시간**: LocalDateTime 타입 사용 (JSON 직렬화 시 ISO 8601 형식)

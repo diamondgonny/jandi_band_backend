@@ -19,13 +19,10 @@ public class UserPhotoService {
     private final UserService userService;
     private final UserPhotoRepository userPhotoRepository;
 
-    private final String kakaoPrefix = "k.kakaocdn.net";
-    private final String s3DirName = "user-photo";
-
     /// 유저 프로필 사진 조회
     @Transactional(readOnly = true)
-    public UserPhoto getMyPhoto(String kakaoOauthId) {
-        Users user = userService.getMyInfo(kakaoOauthId);
+    public UserPhoto getMyPhoto(Integer userId) {
+        Users user = userService.getMyInfo(userId);
         UserPhoto userProfile = userPhotoRepository.findByUser(user);
 
         if (userProfile == null) throw new UserNotFoundException();
@@ -34,12 +31,12 @@ public class UserPhotoService {
 
     /// 유저 프로필 사진 수정
     @Transactional
-    public void updateMyPhoto(String kakaoOauthId, MultipartFile newProfileFile) {
+    public void updateMyPhoto(Integer userId, MultipartFile newProfileFile) {
         // 프로필 사진이 없을 경우 수정하지 않음
         if (newProfileFile == null || newProfileFile.isEmpty()) return;
 
         // 프로필 조회
-        UserPhoto profile = getMyPhoto(kakaoOauthId);
+        UserPhoto profile = getMyPhoto(userId);
         String originalUrl = profile.getImageUrl();
 
         // 새 이미지 업로드 및 이전 이미지 삭제
@@ -53,6 +50,7 @@ public class UserPhotoService {
     // S3에 새 프로필 이미지 업로드
     private String uploadNewProfileFile(MultipartFile newProfileFile) {
         try{
+            String s3DirName = "user-photo";
             return s3Service.uploadImage(newProfileFile, s3DirName);
         }catch (Exception e) {
             throw new RuntimeException("프로필 사진 업로드 실패: " + e.getMessage());
@@ -62,6 +60,7 @@ public class UserPhotoService {
     // S3에서 이전 프로필 이미지 삭제
     private void deleteOriginalProfileFile(String originalProfileUrl) {
         // 카카오 기본 프로필인 경우 삭제 작업을 잔행하지 않음
+        String kakaoPrefix = "k.kakaocdn.net";
         if(originalProfileUrl.contains(kakaoPrefix)) return;
 
         try{

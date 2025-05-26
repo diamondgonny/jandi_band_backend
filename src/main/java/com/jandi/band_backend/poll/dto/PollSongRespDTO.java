@@ -20,6 +20,7 @@ public class PollSongRespDTO {
     private String description;
     private Integer suggesterId;
     private String suggesterName;
+    private String suggesterProfilePhoto;
     private LocalDateTime createdAt;
     private Integer likeCount;
     private Integer dislikeCount;

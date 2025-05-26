@@ -14,14 +14,11 @@ import java.time.LocalDateTime;
 public class TeamRespDTO {
 
     private Integer id;
-    
     private String name;
-    
+    private Integer clubId;
+    private String clubName;
     private Integer creatorId;
-    
     private String creatorName;
-    
     private Integer memberCount;
-    
     private LocalDateTime createdAt;
 }

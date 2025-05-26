@@ -129,6 +129,14 @@ public class GlobalExceptionHandler {
                 .body(CommonResponse.error(ex.getMessage(), "ILLEGAL_ARGUMENT"));
     }
 
+    // 잘못된 요청 데이터
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<CommonResponse<?>> handleBadRequest(BadRequestException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(CommonResponse.error(ex.getMessage(), "BAD_REQUEST"));
+    }
+
     /// 카카오 예외 처리
     // 카카오 로그인 토큰 발급 실패
     @ExceptionHandler(FailKakaoLoginException.class)

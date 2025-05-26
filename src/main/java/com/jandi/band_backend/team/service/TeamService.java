@@ -1,5 +1,6 @@
 package com.jandi.band_backend.team.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.club.repository.ClubMemberRepository;
@@ -17,7 +18,9 @@ import com.jandi.band_backend.team.repository.TeamMemberRepository;
 import com.jandi.band_backend.team.repository.TeamRepository;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserRepository;
+import com.jandi.band_backend.team.util.TeamTimetableUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,6 +30,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -37,6 +41,7 @@ public class TeamService {
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final UserRepository userRepository;
+    private final TeamTimetableUtil teamTimetableUtil;
 
     /**
      * 곡 팀 생성
@@ -52,7 +57,7 @@ public class TeamService {
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
 
         // 동아리 부원 권한 확인
-        ClubMember clubMember = clubMemberRepository.findByClubIdAndUserId(clubId, currentUserId)
+        clubMemberRepository.findByClubIdAndUserId(clubId, currentUserId)
                 .orElseThrow(() -> new UnauthorizedClubAccessException("동아리 부원만 팀을 생성할 수 있습니다."));
 
         // 팀 생성
@@ -60,6 +65,8 @@ public class TeamService {
         team.setClub(club);
         team.setName(teamReqDTO.getName());
         team.setCreator(currentUser);
+        // 팀 생성과 동시에 suggestedScheduleAt에 현재 시간 설정
+        team.setSuggestedScheduleAt(LocalDateTime.now());
 
         Team savedTeam = teamRepository.save(team);
 
@@ -90,14 +97,13 @@ public class TeamService {
         Page<Team> teams = teamRepository.findAllByClubId(clubId, pageable);
 
         return teams.map(team -> {
-            // N+1 문제 해결: size() 대신 countByTeamId 사용
             Integer memberCount = teamMemberRepository.countByTeamId(team.getId());
             return createTeamRespDTO(team, memberCount);
         });
     }
 
     /**
-     * 팀 상세 조회
+     * 팀 상세 조회 (시간표 정보 포함)
      */
     public TeamDetailRespDTO getTeamDetail(Integer teamId, Integer currentUserId) {
         // 팀 존재 확인
@@ -111,14 +117,14 @@ public class TeamService {
         // 팀 멤버 목록 조회
         List<TeamMember> teamMembers = teamMemberRepository.findByTeamId(teamId);
 
-        return createTeamDetailRespDTO(team, teamMembers);
+        return createTeamDetailRespDTOWithTimetable(team, teamMembers);
     }
 
     /**
-     * 팀 정보 수정
+     * 팀 이름 수정
      */
     @Transactional
-    public TeamDetailRespDTO updateTeam(Integer teamId, TeamReqDTO teamReqDTO, Integer currentUserId) {
+    public TeamRespDTO updateTeam(Integer teamId, TeamReqDTO teamReqDTO, Integer currentUserId) {
         // 팀 존재 확인
         Team team = teamRepository.findByIdAndNotDeleted(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
@@ -126,15 +132,15 @@ public class TeamService {
         // 권한 확인 (팀 생성자 또는 동아리 대표자)
         validateTeamModificationPermission(team, currentUserId);
 
-        // 팀 정보 수정
+        // 팀 이름 수정
         team.setName(teamReqDTO.getName());
 
         Team updatedTeam = teamRepository.save(team);
 
-        // 팀 멤버 목록 조회
-        List<TeamMember> teamMembers = teamMemberRepository.findByTeamId(teamId);
+        // 팀 멤버 수 조회
+        Integer memberCount = teamMemberRepository.countByTeamId(teamId);
 
-        return createTeamDetailRespDTO(updatedTeam, teamMembers);
+        return createTeamRespDTO(updatedTeam, memberCount);
     }
 
     /**
@@ -155,31 +161,14 @@ public class TeamService {
     }
 
     /**
-     * 팀 수정/삭제 권한 확인 (팀 생성자 또는 동아리 대표자)
-     */
-    private void validateTeamModificationPermission(Team team, Integer currentUserId) {
-        boolean isCreator = team.getCreator().getId().equals(currentUserId);
-        boolean isRepresentative = false;
-
-        ClubMember clubMember = clubMemberRepository.findByClubIdAndUserId(team.getClub().getId(), currentUserId)
-                .orElse(null);
-
-        if (clubMember != null && clubMember.getRole() == ClubMember.MemberRole.REPRESENTATIVE) {
-            isRepresentative = true;
-        }
-
-        if (!isCreator && !isRepresentative) {
-            throw new UnauthorizedClubAccessException("팀 생성자 또는 동아리 대표자만 팀 정보를 수정할 수 있습니다.");
-        }
-    }
-
-    /**
      * TeamRespDTO 생성
      */
     private TeamRespDTO createTeamRespDTO(Team team, Integer memberCount) {
         return TeamRespDTO.builder()
                 .id(team.getId())
                 .name(team.getName())
+                .clubId(team.getClub().getId())
+                .clubName(team.getClub().getName())
                 .creatorId(team.getCreator().getId())
                 .creatorName(team.getCreator().getNickname())
                 .memberCount(memberCount)
@@ -194,34 +183,54 @@ public class TeamService {
         return TeamDetailRespDTO.builder()
                 .id(team.getId())
                 .name(team.getName())
-                .club(createClubInfoDTO(team.getClub()))
-                .creator(createCreatorInfoDTO(team.getCreator()))
+                .clubId(team.getClub().getId())
+                .clubName(team.getClub().getName())
+                .creatorId(team.getCreator().getId())
+                .creatorName(team.getCreator().getNickname())
                 .members(teamMembers.stream()
                         .map(this::createMemberInfoDTO)
                         .collect(Collectors.toList()))
-                .memberCount(teamMembers.size())
+                .suggestedScheduleAt(team.getSuggestedScheduleAt())
                 .createdAt(team.getCreatedAt())
                 .updatedAt(team.getUpdatedAt())
                 .build();
     }
 
     /**
-     * ClubInfoDTO 생성
+     * TeamDetailRespDTO 생성 (시간표 정보 포함)
      */
-    private TeamDetailRespDTO.ClubInfoDTO createClubInfoDTO(Club club) {
-        return TeamDetailRespDTO.ClubInfoDTO.builder()
-                .clubId(club.getId())
-                .name(club.getName())
-                .build();
-    }
+    private TeamDetailRespDTO createTeamDetailRespDTOWithTimetable(Team team, List<TeamMember> teamMembers) {
+        // 제출 현황 계산
+        int submittedCount = 0;
+        if (team.getSuggestedScheduleAt() != null) {
+            for (TeamMember teamMember : teamMembers) {
+                boolean isSubmitted = teamMember.getUpdatedTimetableAt() != null &&
+                        teamMember.getUpdatedTimetableAt().isAfter(team.getSuggestedScheduleAt());
+                if (isSubmitted) {
+                    submittedCount++;
+                }
+            }
+        }
 
-    /**
-     * CreatorInfoDTO 생성
-     */
-    private TeamDetailRespDTO.CreatorInfoDTO createCreatorInfoDTO(Users user) {
-        return TeamDetailRespDTO.CreatorInfoDTO.builder()
-                .userId(user.getId())
-                .name(user.getNickname())
+        TeamDetailRespDTO.SubmissionProgressDTO submissionProgress = TeamDetailRespDTO.SubmissionProgressDTO.builder()
+                .submittedMember(submittedCount)
+                .totalMember(teamMembers.size())
+                .build();
+
+        return TeamDetailRespDTO.builder()
+                .id(team.getId())
+                .name(team.getName())
+                .clubId(team.getClub().getId())
+                .clubName(team.getClub().getName())
+                .creatorId(team.getCreator().getId())
+                .creatorName(team.getCreator().getNickname())
+                .members(teamMembers.stream()
+                        .map(teamMember -> createMemberInfoDTOWithTimetable(teamMember, team.getSuggestedScheduleAt()))
+                        .collect(Collectors.toList()))
+                .suggestedScheduleAt(team.getSuggestedScheduleAt())
+                .submissionProgress(submissionProgress)
+                .createdAt(team.getCreatedAt())
+                .updatedAt(team.getUpdatedAt())
                 .build();
     }
 
@@ -235,5 +244,51 @@ public class TeamService {
                 .position(teamMember.getUser().getPosition() != null ?
                         teamMember.getUser().getPosition().name() : null)
                 .build();
+    }
+
+    /**
+     * MemberInfoDTO 생성 (시간표 정보 포함)
+     */
+    private TeamDetailRespDTO.MemberInfoDTO createMemberInfoDTOWithTimetable(TeamMember teamMember, LocalDateTime suggestedScheduleAt) {
+        // 시간표 데이터 파싱
+        JsonNode timetableData = null;
+        if (teamMember.getTimetableData() != null) {
+            timetableData = teamTimetableUtil.stringToJson(teamMember.getTimetableData());
+        }
+
+        // 제출 여부 확인
+        boolean isSubmitted = false;
+        if (suggestedScheduleAt != null && teamMember.getUpdatedTimetableAt() != null) {
+            isSubmitted = teamMember.getUpdatedTimetableAt().isAfter(suggestedScheduleAt);
+        }
+
+        return TeamDetailRespDTO.MemberInfoDTO.builder()
+                .userId(teamMember.getUser().getId())
+                .name(teamMember.getUser().getNickname())
+                .position(teamMember.getUser().getPosition() != null ?
+                        teamMember.getUser().getPosition().name() : null)
+                .timetableUpdatedAt(teamMember.getUpdatedTimetableAt())
+                .isSubmitted(isSubmitted)
+                .timetableData(timetableData)
+                .build();
+    }
+
+    /**
+     * 팀 수정/삭제 권한 확인 (팀 생성자 또는 동아리 대표자)
+     */
+    private void validateTeamModificationPermission(Team team, Integer currentUserId) {
+        boolean isCreator = team.getCreator().getId().equals(currentUserId);
+        boolean isRepresentative = false;
+
+        ClubMember clubMember = clubMemberRepository.findByClubIdAndUserId(team.getClub().getId(), currentUserId)
+                .orElse(null);
+
+        if (clubMember != null && clubMember.getRole() == ClubMember.MemberRole.REPRESENTATIVE) {
+            isRepresentative = true;
+        }
+
+        if (!isCreator && !isRepresentative) {
+            throw new UnauthorizedClubAccessException("팀 생성자 또는 동아리 대표자만 팀 이름을 수정할 수 있습니다.");
+        }
     }
 }

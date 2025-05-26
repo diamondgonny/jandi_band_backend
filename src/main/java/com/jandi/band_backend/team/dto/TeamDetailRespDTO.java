@@ -1,5 +1,6 @@
 package com.jandi.band_backend.team.dto;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,30 +17,15 @@ public class TeamDetailRespDTO {
 
     private Integer id;
     private String name;
-    private ClubInfoDTO club;
-    private CreatorInfoDTO creator;
+    private Integer clubId;
+    private String clubName;
+    private Integer creatorId;
+    private String creatorName;
     private List<MemberInfoDTO> members;
-    private Integer memberCount;
+    private LocalDateTime suggestedScheduleAt;
+    private SubmissionProgressDTO submissionProgress;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class ClubInfoDTO {
-        private Integer clubId;
-        private String name;
-    }
-
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class CreatorInfoDTO {
-        private Integer userId;
-        private String name;
-    }
 
     @Getter
     @NoArgsConstructor
@@ -49,5 +35,17 @@ public class TeamDetailRespDTO {
         private Integer userId;
         private String name;
         private String position;
+        private LocalDateTime timetableUpdatedAt;
+        private Boolean isSubmitted;
+        private JsonNode timetableData;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class SubmissionProgressDTO {
+        private Integer submittedMember;
+        private Integer totalMember;
     }
 }

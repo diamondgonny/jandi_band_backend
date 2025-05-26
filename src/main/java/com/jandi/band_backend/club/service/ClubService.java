@@ -91,7 +91,7 @@ public class ClubService {
 
         clubMemberRepository.save(clubMember);
 
-        return convertToClubDetailRespDTO(savedClub, DEFAULT_CLUB_PHOTO_URL, 1);
+        return convertToClubDetailRespDTO(savedClub, DEFAULT_CLUB_PHOTO_URL, 1, userId);
     }
 
     @Transactional(readOnly = true)
@@ -115,8 +115,9 @@ public class ClubService {
 
         String photoUrl = getClubMainPhotoUrl(club.getId());
         int memberCount = clubMemberRepository.countByClubId(clubId);
+        Integer representativeId = getClubRepresentativeId(clubId);
 
-        return convertToClubDetailRespDTO(club, photoUrl, memberCount);
+        return convertToClubDetailRespDTO(club, photoUrl, memberCount, representativeId);
     }
 
     @Transactional(readOnly = true)
@@ -191,8 +192,9 @@ public class ClubService {
         Club updatedClub = clubRepository.save(club);
         String photoUrl = getClubMainPhotoUrl(clubId);
         int memberCount = clubMemberRepository.countByClubId(clubId);
+        Integer representativeId = getClubRepresentativeId(clubId);
 
-        return convertToClubDetailRespDTO(updatedClub, photoUrl, memberCount);
+        return convertToClubDetailRespDTO(updatedClub, photoUrl, memberCount, representativeId);
     }
 
     @Transactional
@@ -278,7 +280,7 @@ public class ClubService {
         clubPhotoRepository.save(clubPhoto);
     }
 
-    private ClubDetailRespDTO convertToClubDetailRespDTO(Club club, String photoUrl, int memberCount) {
+    private ClubDetailRespDTO convertToClubDetailRespDTO(Club club, String photoUrl, int memberCount, Integer representativeId) {
         boolean isUnionClub = (club.getUniversity() == null);
 
         UniversityRespDTO universityResp = null;
@@ -299,6 +301,7 @@ public class ClubService {
                 .instagramId(club.getInstagramId())
                 .photoUrl(photoUrl)
                 .memberCount(memberCount)
+                .representativeId(representativeId)
                 .createdAt(club.getCreatedAt())
                 .updatedAt(club.getUpdatedAt())
                 .build();
@@ -327,6 +330,15 @@ public class ClubService {
     private String getClubMainPhotoUrl(Integer clubId) {
         return clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
                 .map(clubPhoto -> clubPhoto.getImageUrl())
+                .orElse(null);
+    }
+
+    // 동아리 대표자 ID 조회 헬퍼 메서드
+    private Integer getClubRepresentativeId(Integer clubId) {
+        return clubMemberRepository.findByClubId(clubId).stream()
+                .filter(member -> member.getRole() == ClubMember.MemberRole.REPRESENTATIVE)
+                .map(member -> member.getUser().getId())
+                .findFirst()
                 .orElse(null);
     }
 

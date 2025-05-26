@@ -208,6 +208,9 @@ public class PollService {
             case "HAJJ", "하고싶지_않은데_존중해요" -> hajjCount -= 1;
         }
 
+        // 제안자의 현재 프로필 사진 URL 조회
+        String suggesterProfilePhoto = getUserProfilePhotoUrl(pollSong.getSuggester());
+
         return PollSongRespDTO.builder()
                 .id(pollSong.getId())
                 .pollId(pollSong.getPoll().getId())
@@ -215,8 +218,9 @@ public class PollService {
                 .artistName(pollSong.getArtistName())
                 .youtubeUrl(pollSong.getYoutubeUrl())
                 .description(pollSong.getDescription())
-                .suggesterId(pollSong.getSuggester() != null ? pollSong.getSuggester().getId() : null)
-                .suggesterName(pollSong.getSuggester() != null ? pollSong.getSuggester().getNickname() : null)
+                .suggesterId(pollSong.getSuggester().getId())
+                .suggesterName(pollSong.getSuggester().getNickname())
+                .suggesterProfilePhoto(suggesterProfilePhoto)
                 .createdAt(pollSong.getCreatedAt())
                 .likeCount(likeCount)
                 .dislikeCount(dislikeCount)
@@ -305,6 +309,9 @@ public class PollService {
             }
         }
 
+        // 제안자의 현재 프로필 사진 URL 조회
+        String suggesterProfilePhoto = getUserProfilePhotoUrl(pollSong.getSuggester());
+
         return PollSongRespDTO.builder()
                 .id(pollSong.getId())
                 .pollId(
@@ -316,16 +323,9 @@ public class PollService {
                 .artistName(pollSong.getArtistName())
                 .youtubeUrl(pollSong.getYoutubeUrl())
                 .description(pollSong.getDescription())
-                .suggesterId(
-                        pollSong.getSuggester() != null ?
-                        pollSong.getSuggester().getId() :
-                        null
-                )
-                .suggesterName(
-                        pollSong.getSuggester() != null ?
-                        pollSong.getSuggester().getNickname() :
-                        null
-                )
+                .suggesterId(pollSong.getSuggester().getId())
+                .suggesterName(pollSong.getSuggester().getNickname())
+                .suggesterProfilePhoto(suggesterProfilePhoto)
                 .createdAt(pollSong.getCreatedAt())
                 .likeCount(calculateVoteCount(pollSong, "LIKE"))
                 .dislikeCount(calculateVoteCount(pollSong, "DISLIKE"))
@@ -349,5 +349,13 @@ public class PollService {
             case "HAJJ", "하고싶지_않은데_존중해요" -> VotedMark.HAJJ;
             default -> throw new IllegalArgumentException("유효하지 않은 투표 타입입니다: " + voteType);
         };
+    }
+
+    private String getUserProfilePhotoUrl(Users user) {
+        return user.getPhotos().stream()
+                .filter(photo -> photo.getIsCurrent() && photo.getDeletedAt() == null)
+                .map(photo -> photo.getImageUrl())
+                .findFirst()
+                .orElse(null);
     }
 }

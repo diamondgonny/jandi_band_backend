@@ -1,5 +1,6 @@
 package com.jandi.band_backend.team.dto;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -7,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 @Getter
 @NoArgsConstructor
@@ -27,8 +27,6 @@ public class TeamDetailRespDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-
-
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
@@ -39,7 +37,7 @@ public class TeamDetailRespDTO {
         private String position;
         private LocalDateTime timetableUpdatedAt;
         private Boolean isSubmitted;
-        private Map<String, List<String>> timetableData;
+        private JsonNode timetableData;
     }
 
     @Getter

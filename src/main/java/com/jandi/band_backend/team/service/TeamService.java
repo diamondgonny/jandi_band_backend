@@ -1,7 +1,7 @@
 package com.jandi.band_backend.team.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.entity.ClubMember;
@@ -20,6 +20,7 @@ import com.jandi.band_backend.team.repository.TeamMemberRepository;
 import com.jandi.band_backend.team.repository.TeamRepository;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserRepository;
+import com.jandi.band_backend.team.util.TeamTimetableUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -29,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -44,6 +44,7 @@ public class TeamService {
     private final ClubMemberRepository clubMemberRepository;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
+    private final TeamTimetableUtil teamTimetableUtil;
 
     /**
      * 곡 팀 생성
@@ -99,7 +100,6 @@ public class TeamService {
         Page<Team> teams = teamRepository.findAllByClubId(clubId, pageable);
 
         return teams.map(team -> {
-            // N+1 문제 해결: size() 대신 countByTeamId 사용
             Integer memberCount = teamMemberRepository.countByTeamId(team.getId());
             return createTeamRespDTO(team, memberCount);
         });
@@ -199,12 +199,10 @@ public class TeamService {
                 .build();
     }
 
-        /**
+    /**
      * TeamDetailRespDTO 생성 (시간표 정보 포함)
      */
     private TeamDetailRespDTO createTeamDetailRespDTOWithTimetable(Team team, List<TeamMember> teamMembers) {
-        // 시간표 정보 설정 (새로 생성되는 팀은 항상 suggestedScheduleAt이 존재)
-
         // 제출 현황 계산
         int submittedCount = 0;
         if (team.getSuggestedScheduleAt() != null) {
@@ -256,14 +254,9 @@ public class TeamService {
      */
     private TeamDetailRespDTO.MemberInfoDTO createMemberInfoDTOWithTimetable(TeamMember teamMember, LocalDateTime suggestedScheduleAt) {
         // 시간표 데이터 파싱
-        Map<String, List<String>> timetableData = null;
+        JsonNode timetableData = null;
         if (teamMember.getTimetableData() != null) {
-            try {
-                timetableData = objectMapper.readValue(teamMember.getTimetableData(),
-                        new TypeReference<Map<String, List<String>>>() {});
-            } catch (JsonProcessingException e) {
-                log.error("시간표 데이터 파싱 오류: {}", e.getMessage());
-            }
+            timetableData = teamTimetableUtil.stringToJson(teamMember.getTimetableData());
         }
 
         // 제출 여부 확인

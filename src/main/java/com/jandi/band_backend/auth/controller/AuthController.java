@@ -39,7 +39,7 @@ public class AuthController {
         return CommonResponse.success("로그인 성공", tokens);
     }
 
-    @Operation(summary = "회원가입")
+    @Operation(summary = "로그아웃")
     @PostMapping("/logout")
     public CommonResponse<String> logout(
             @RequestHeader("Authorization") String token
@@ -50,6 +50,7 @@ public class AuthController {
 
     }
 
+    @Operation(summary = "회원가입")
     @PostMapping("/signup")
     public CommonResponse<UserInfoDTO> signUp(
             @RequestHeader("Authorization") String token,

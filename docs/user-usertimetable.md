@@ -4,7 +4,7 @@
 `/api/users/me/timetables`
 
 ## 인증
-JWT 인증 필요
+JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails)
 
 ---
 
@@ -140,7 +140,25 @@ curl -X PATCH "http://localhost:8080/api/users/me/timetables/1" \
 ```
 
 #### 응답 (200 OK)
-시간표 생성과 동일한 형식
+```json
+{
+  "success": true,
+  "message": "시간표 수정 성공",
+  "data": {
+    "id": 1,
+    "name": "수정된 시간표",
+    "timetableData": {
+      "Mon": ["09:00", "14:00"],
+      "Tue": ["11:00"],
+      "Wed": [],
+      "Thu": ["10:00"],
+      "Fri": ["09:30"],
+      "Sat": [],
+      "Sun": []
+    }
+  }
+}
+```
 
 ---
 

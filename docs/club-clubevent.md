@@ -4,8 +4,7 @@
 `/api/clubs/{clubId}/events`
 
 ## 인증
-- JWT 인증 필요 (Spring Security의 @AuthenticationPrincipal 사용)
-- Authorization 헤더: `Bearer {JWT_TOKEN}`
+JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails)
 
 ## 권한 관리
 - **조회**: 로그인한 모든 사용자

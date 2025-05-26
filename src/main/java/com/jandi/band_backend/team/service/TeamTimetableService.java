@@ -186,43 +186,6 @@ public class TeamTimetableService {
     }
 
     /**
-     * 팀내 내 시간표 조회
-     */
-    public TimetableRespDTO getMyTimetable(Integer teamId, Integer currentUserId) {
-        // 팀 존재 확인
-        Team team = teamRepository.findByIdAndNotDeleted(teamId)
-                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
-
-        // 동아리 부원 권한 확인 (GET은 동아리 부원 권한 필요)
-        clubMemberRepository.findByClubIdAndUserId(team.getClub().getId(), currentUserId)
-                .orElseThrow(() -> new UnauthorizedClubAccessException("해당 동아리 부원만 접근할 수 있습니다."));
-
-        // 팀원 확인 (본인 시간표만 조회 가능)
-        TeamMember teamMember = teamMemberRepository.findByTeamIdAndUserId(teamId, currentUserId)
-                .orElseThrow(() -> new UnauthorizedClubAccessException("팀원의 시간표만 조회할 수 있습니다."));
-
-        Map<String, List<String>> timetableData = null;
-        if (teamMember.getTimetableData() != null) {
-            try {
-                timetableData = objectMapper.readValue(teamMember.getTimetableData(),
-                        new TypeReference<Map<String, List<String>>>() {});
-            } catch (JsonProcessingException e) {
-                log.error("시간표 데이터 파싱 오류: {}", e.getMessage());
-                throw new BadRequestException("시간표 데이터를 읽는 중 오류가 발생했습니다.");
-            }
-        }
-
-        return TimetableRespDTO.builder()
-                .userId(currentUserId)
-                .teamId(teamId)
-                .timetableData(timetableData)
-                .updatedTimetableAt(teamMember.getUpdatedTimetableAt())
-                .build();
-    }
-
-
-
-    /**
      * 시간표 데이터 유효성 검사
      */
     private void validateTimetableData(Map<String, List<String>> timetableData) {

@@ -56,14 +56,5 @@ public class TeamTimetableController {
         return ResponseEntity.ok(CommonResponse.success("팀 시간표 입력 성공", result));
     }
 
-    @Operation(summary = "팀내 내 시간표 조회")
-    @GetMapping("/{teamId}/members/me/timetable")
-    public ResponseEntity<CommonResponse<TimetableRespDTO>> getMyTimetable(
-            @PathVariable Integer teamId,
-            @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
-        Integer currentUserId = userDetails.getUserId();
-        TimetableRespDTO result = teamTimetableService.getMyTimetable(teamId, currentUserId);
-        return ResponseEntity.ok(CommonResponse.success("내 팀 시간표 조회 성공", result));
-    }
+
 }

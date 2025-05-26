@@ -127,4 +127,4 @@ curl -X POST "http://localhost:8080/api/join/clubs?code=jaCprFeFtE" \
 - 팀 초대/가입은 동아리 초대/가입과 유사합니다. 요청 API 엔드포인트만 조금 다른게 전부라 DOCS에선 설명하지 않았습니다.
 
 ## 프론트 예시
-<video controls src="invite-join_example.mp4" title="Title"></video>
+<video controls src="./invite-join_exaple.mp4" title="Title"></video>

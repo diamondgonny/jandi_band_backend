@@ -6,6 +6,28 @@
 ## 인증
 생성, 수정, 삭제, 이미지 업로드는 JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails). 조회/검색은 인증 불필요.
 
+## 페이지네이션 응답 구조
+모든 목록 조회 API는 다음과 같은 페이지네이션 구조를 사용합니다:
+
+```json
+{
+  "success": true,
+  "message": "응답 메시지",
+  "data": {
+    "content": [...],  // 실제 데이터 배열
+    "pageInfo": {
+      "page": 0,           // 현재 페이지 번호 (0부터 시작)
+      "size": 20,          // 페이지 크기
+      "totalElements": 100, // 총 요소 수
+      "totalPages": 5,     // 총 페이지 수
+      "first": true,       // 첫 번째 페이지 여부
+      "last": false,       // 마지막 페이지 여부
+      "empty": false       // 비어있는 페이지 여부
+    }
+  }
+}
+```
+
 ---
 
 ## 1. 공연 홍보 목록 조회
@@ -50,10 +72,15 @@ curl -X GET "http://localhost:8080/api/promos?page=0&size=20"
         "photoUrls": ["https://example.com/photo1.jpg"]
       }
     ],
-    "totalElements": 1,
-    "totalPages": 1,
-    "first": true,
-    "last": true
+    "pageInfo": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 1,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "empty": false
+    }
   }
 }
 ```
@@ -102,10 +129,15 @@ curl -X GET "http://localhost:8080/api/promos/club/1?page=0&size=20"
         "photoUrls": ["https://example.com/photo1.jpg"]
       }
     ],
-    "totalElements": 1,
-    "totalPages": 1,
-    "first": true,
-    "last": true
+    "pageInfo": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 1,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "empty": false
+    }
   }
 }
 ```
@@ -366,10 +398,15 @@ curl -X GET "http://localhost:8080/api/promos/search?keyword=락밴드&page=0&si
         "photoUrls": ["https://example.com/photo1.jpg"]
       }
     ],
-    "totalElements": 1,
-    "totalPages": 1,
-    "first": true,
-    "last": true
+    "pageInfo": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 1,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "empty": false
+    }
   }
 }
 ```
@@ -420,10 +457,15 @@ curl -X GET "http://localhost:8080/api/promos/filter?status=UPCOMING&clubId=1&pa
         "photoUrls": ["https://example.com/photo1.jpg"]
       }
     ],
-    "totalElements": 1,
-    "totalPages": 1,
-    "first": true,
-    "last": true
+    "pageInfo": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 1,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "empty": false
+    }
   }
 }
 ```

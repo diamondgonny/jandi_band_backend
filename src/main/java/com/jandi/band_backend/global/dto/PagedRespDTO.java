@@ -14,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Schema(description = "페이지네이션 응답 DTO")
-public class PagedResponse<T> {
+public class PagedRespDTO<T> {
     
     @Schema(description = "실제 데이터 목록")
     private List<T> content;
@@ -51,10 +51,10 @@ public class PagedResponse<T> {
     }
     
     /**
-     * Spring Data Page 객체를 PagedResponse로 변환
+     * Spring Data Page 객체를 PagedRespDTO로 변환
      */
-    public static <T> PagedResponse<T> from(Page<T> page) {
-        return PagedResponse.<T>builder()
+    public static <T> PagedRespDTO<T> from(Page<T> page) {
+        return PagedRespDTO.<T>builder()
                 .content(page.getContent())
                 .pageInfo(PageInfo.builder()
                         .page(page.getNumber())

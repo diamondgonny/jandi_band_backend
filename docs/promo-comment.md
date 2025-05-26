@@ -6,6 +6,28 @@
 ## 인증
 댓글 생성, 수정, 삭제는 JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails). 조회는 인증 불필요.
 
+## 페이지네이션 응답 구조
+댓글 목록 조회 API는 다음과 같은 페이지네이션 구조를 사용합니다:
+
+```json
+{
+  "success": true,
+  "message": "응답 메시지",
+  "data": {
+    "content": [...],  // 실제 댓글 데이터 배열
+    "pageInfo": {
+      "page": 0,           // 현재 페이지 번호 (0부터 시작)
+      "size": 20,          // 페이지 크기
+      "totalElements": 100, // 총 댓글 수
+      "totalPages": 5,     // 총 페이지 수
+      "first": true,       // 첫 번째 페이지 여부
+      "last": false,       // 마지막 페이지 여부
+      "empty": false       // 비어있는 페이지 여부
+    }
+  }
+}
+```
+
 ---
 
 ## 1. 공연 홍보 댓글 목록 조회
@@ -40,10 +62,15 @@ curl -X GET "http://localhost:8080/api/promos/1/comments?page=0&size=20"
         "updatedAt": "2024-03-15T10:30:00"
       }
     ],
-    "totalElements": 1,
-    "totalPages": 1,
-    "first": true,
-    "last": true
+    "pageInfo": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 1,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "empty": false
+    }
   }
 }
 ```

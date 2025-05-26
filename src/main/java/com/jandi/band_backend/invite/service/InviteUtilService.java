@@ -18,7 +18,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class UtilService {
+public class InviteUtilService {
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final TeamRepository teamRepository;
@@ -64,7 +64,8 @@ public class UtilService {
                 .orElseThrow(() -> new TeamNotFoundException("팀이 존재하지 않습니다"));
     }
 
-    /// 코드 관련
+    /// 기타
+    // key에서 id 추출
     private Integer getOriginalId(String keyId, InviteType inviteType) {
         String[] splitKey = keyId.split(":");
         try {

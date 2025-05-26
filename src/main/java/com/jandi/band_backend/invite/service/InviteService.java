@@ -15,7 +15,7 @@ import java.util.Random;
 @RequiredArgsConstructor
 public class InviteService {
     private final InviteCodeService inviteCodeService;
-    private final UtilService utilService;
+    private final InviteUtilService inviteUtilService;
     private static final Random RANDOM = new Random();
 
     @Value("${invite.club.link.prefix}") private String clubLinkPrefix;
@@ -24,8 +24,8 @@ public class InviteService {
     @Transactional
     public InviteLinkRespDTO generateInviteClubLink(Integer userId, Integer clubId) {
         // 동아리 초대 권한이 있는지 검사
-        utilService.isExistClub(clubId);
-        if(!utilService.isMemberOfClub(userId, clubId)) {
+        inviteUtilService.isExistClub(clubId);
+        if(!inviteUtilService.isMemberOfClub(userId, clubId)) {
             throw new InvalidAccessException("초대 권한이 없습니다");
         }
 
@@ -41,8 +41,8 @@ public class InviteService {
     @Transactional
     public InviteLinkRespDTO generateInviteTeamLink(Integer userId, Integer teamId) {
         // 팀 초대 권한이 있는지 검사
-        utilService.isExistTeam(teamId);
-        if(!utilService.isMemberOfTeam(userId, teamId)) {
+        inviteUtilService.isExistTeam(teamId);
+        if(!inviteUtilService.isMemberOfTeam(userId, teamId)) {
             throw new InvalidAccessException("초대 권한이 없습니다");
         }
 

@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class JoinService {
     private final InviteCodeService inviteCodeService;
-    private final UtilService utilService;
+    private final InviteUtilService inviteUtilService;
     private final UserRepository userRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final TeamMemberRepository teamMemberRepository;
@@ -28,10 +28,10 @@ public class JoinService {
     public void joinClub(Integer userId, String code) {
         // code 유효성 검사 후 clubId 추출
         String keyId = inviteCodeService.getKeyId(code);
-        Club club = utilService.getClub(keyId);
+        Club club = inviteUtilService.getClub(keyId);
 
         // 유저가 이미 동아리 부원인지 검사
-        if(utilService.isMemberOfClub(club.getId(), userId)) {
+        if(inviteUtilService.isMemberOfClub(club.getId(), userId)) {
             throw new InvalidAccessException("이미 가입한 동아리입니다");
         }
 
@@ -45,10 +45,10 @@ public class JoinService {
     public void joinTeam(Integer userId, String code) {
         // code 유효성 검사 후 clubId 추출
         String keyId = inviteCodeService.getKeyId(code);
-        Team team = utilService.getTeam(keyId);
+        Team team = inviteUtilService.getTeam(keyId);
 
         // 유저가 이미 팀원인지 검사
-        if(utilService.isMemberOfTeam(userId, team.getId())) {
+        if(inviteUtilService.isMemberOfTeam(userId, team.getId())) {
             throw new InvalidAccessException("이미 가입한 팀입니다");
         }
 

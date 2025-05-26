@@ -30,6 +30,16 @@ public class AuthController {
     }
 
     @Operation(summary = "회원가입")
+    @PostMapping("/logout")
+    public CommonResponse<String> logout(
+            @RequestHeader("Authorization") String token
+    ){
+        String accessToken = token.replace("Bearer ", "");
+        authService.logout(accessToken);
+        return CommonResponse.success("로그아웃 완료");
+
+    }
+
     @PostMapping("/signup")
     public CommonResponse<UserInfoDTO> signUp(
             @RequestHeader("Authorization") String token,

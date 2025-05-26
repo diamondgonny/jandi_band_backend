@@ -1,8 +1,6 @@
 package com.jandi.band_backend.team.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.club.repository.ClubMemberRepository;
@@ -43,7 +41,6 @@ public class TeamService {
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final UserRepository userRepository;
-    private final ObjectMapper objectMapper;
     private final TeamTimetableUtil teamTimetableUtil;
 
     /**
@@ -60,7 +57,7 @@ public class TeamService {
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
 
         // 동아리 부원 권한 확인
-        ClubMember clubMember = clubMemberRepository.findByClubIdAndUserId(clubId, currentUserId)
+        clubMemberRepository.findByClubIdAndUserId(clubId, currentUserId)
                 .orElseThrow(() -> new UnauthorizedClubAccessException("동아리 부원만 팀을 생성할 수 있습니다."));
 
         // 팀 생성

@@ -6,6 +6,7 @@ import com.jandi.band_backend.invite.redis.InviteCodeService;
 import com.jandi.band_backend.invite.redis.InviteType;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Random;
@@ -17,7 +18,7 @@ public class InviteService {
     private final UtilService utilService;
     private static final Random RANDOM = new Random();
 
-    private final String inviteLinkPrefix = "https://rhythmeetdevelop.netlify.app/invite/accept";
+    @Value("${invite.link.prefix}") private String prefix;
 
     @Transactional
     public InviteLinkRespDTO generateInviteClubLink(Integer userId, Integer clubId) {
@@ -32,7 +33,7 @@ public class InviteService {
         inviteCodeService.saveCode(InviteType.CLUB, clubId, code);
 
         // 초대 링크 생성 및 반환
-        String link = inviteLinkPrefix + "?code=" + code;
+        String link = prefix + "?code=" + code;
         return new InviteLinkRespDTO(link);
     }
 

@@ -191,6 +191,8 @@ curl -X PATCH "http://localhost:8080/api/teams/1" \
 }
 ```
 
+**참고**: 실제 응답은 `TeamRespDTO` 구조를 따름
+
 ---
 
 ## 5. 팀 삭제

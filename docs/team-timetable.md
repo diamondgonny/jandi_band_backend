@@ -1,7 +1,7 @@
 # Team Timetable API 명세서
 
 ## Base URL
-`/api/teams/{teamId}`
+`/api/teams`
 
 ## 인증
 JWT 인증 필요 + 팀내 스케줄 조율 제안 API는 팀원 권한 필요 (팀내 내 시간표 관련 API는 본인만 사용 가능)
@@ -107,7 +107,7 @@ curl -X PATCH "http://localhost:8080/api/teams/1/members/me/timetable" \
 ```
 
 #### 요청 필드
-- `timetableData` (object, 필수): 요일별 가능한 시간 데이터
+- `timetableData` (JsonNode, 필수): 요일별 가능한 시간 데이터
   - 모든 요일(`Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`, `Sun`) 포함 필요
   - 시간은 `"HH:mm"` 형식 (30분 단위만 허용)
   - 빈 배열 허용 (해당 요일 불가능)

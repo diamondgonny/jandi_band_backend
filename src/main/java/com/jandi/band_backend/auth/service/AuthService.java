@@ -56,7 +56,10 @@ public class AuthService {
 
     /// 로그아웃
     public void logout(String accessToken) {
+        // 멘토링 결과 별도의 블랙리스트 처리는 필요하지 않아 로깅만 하는 것으로 작업
+        // 카카오 토큰은 카카오 리소스 접근용이라 알림톡/메시지 공유에선 쓰이지 않아 굳이 카카오에게 로그아웃을 요청해 강제 만료처리할 필요가 없음
         String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
+        log.info("사용자: {}가 로그아웃했습니다", kakaoOauthId);
     }
 
     /// 정식 회원가입

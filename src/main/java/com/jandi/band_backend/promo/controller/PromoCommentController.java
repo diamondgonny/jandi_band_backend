@@ -1,6 +1,7 @@
 package com.jandi.band_backend.promo.controller;
 
 import com.jandi.band_backend.global.CommonResponse;
+import com.jandi.band_backend.global.dto.PagedResponse;
 import com.jandi.band_backend.promo.dto.PromoCommentReqDTO;
 import com.jandi.band_backend.promo.dto.PromoCommentRespDTO;
 import com.jandi.band_backend.promo.service.PromoCommentService;
@@ -43,7 +44,7 @@ public class PromoCommentController {
         @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
     })
     @GetMapping("/{promoId}/comments")
-    public ResponseEntity<CommonResponse<Page<PromoCommentRespDTO>>> getCommentsByPromo(
+    public ResponseEntity<CommonResponse<PagedResponse<PromoCommentRespDTO>>> getCommentsByPromo(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size,
@@ -52,8 +53,9 @@ public class PromoCommentController {
         
         Pageable pageable = createPageable(page, size, sort);
         Integer userId = userDetails != null ? userDetails.getUserId() : null;
+        Page<PromoCommentRespDTO> commentPage = promoCommentService.getCommentsByPromo(promoId, userId, pageable);
         return ResponseEntity.ok(CommonResponse.success("공연 홍보 댓글 목록을 조회했습니다.",
-                promoCommentService.getCommentsByPromo(promoId, userId, pageable)));
+                PagedResponse.from(commentPage)));
     }
 
     @Operation(

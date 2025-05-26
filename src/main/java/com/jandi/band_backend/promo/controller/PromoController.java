@@ -1,6 +1,7 @@
 package com.jandi.band_backend.promo.controller;
 
 import com.jandi.band_backend.global.CommonResponse;
+import com.jandi.band_backend.global.dto.PagedResponse;
 import com.jandi.band_backend.promo.dto.PromoReqDTO;
 import com.jandi.band_backend.promo.dto.PromoRespDTO;
 import com.jandi.band_backend.promo.entity.Promo;
@@ -49,7 +50,7 @@ public class PromoController {
         @ApiResponse(responseCode = "400", description = "잘못된 요청")
     })
     @GetMapping
-    public ResponseEntity<CommonResponse<Page<PromoRespDTO>>> getPromos(
+    public ResponseEntity<CommonResponse<PagedResponse<PromoRespDTO>>> getPromos(
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "정렬 기준 (예: createdAt,desc)", example = "createdAt,desc") @RequestParam(defaultValue = "createdAt,desc") String sort,
@@ -57,8 +58,9 @@ public class PromoController {
         
         Pageable pageable = createPageable(page, size, sort);
         Integer userId = userDetails != null ? userDetails.getUserId() : null;
+        Page<PromoRespDTO> promoPage = promoService.getPromos(userId, pageable);
         return ResponseEntity.ok(CommonResponse.success("공연 홍보 목록 조회 성공", 
-                promoService.getPromos(userId, pageable)));
+                PagedResponse.from(promoPage)));
     }
 
     @Operation(
@@ -70,7 +72,7 @@ public class PromoController {
         @ApiResponse(responseCode = "404", description = "클럽을 찾을 수 없음")
     })
     @GetMapping("/club/{clubId}")
-    public ResponseEntity<CommonResponse<Page<PromoRespDTO>>> getPromosByClub(
+    public ResponseEntity<CommonResponse<PagedResponse<PromoRespDTO>>> getPromosByClub(
             @Parameter(description = "클럽 ID", example = "1") @PathVariable Integer clubId,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size,
@@ -79,8 +81,9 @@ public class PromoController {
         
         Pageable pageable = createPageable(page, size, sort);
         Integer userId = userDetails != null ? userDetails.getUserId() : null;
+        Page<PromoRespDTO> promoPage = promoService.getPromosByClub(clubId, userId, pageable);
         return ResponseEntity.ok(CommonResponse.success("클럽별 공연 홍보 목록 조회 성공",
-                promoService.getPromosByClub(clubId, userId, pageable)));
+                PagedResponse.from(promoPage)));
     }
 
     @Operation(
@@ -254,7 +257,7 @@ public class PromoController {
         @ApiResponse(responseCode = "400", description = "잘못된 검색 키워드")
     })
     @GetMapping("/search")
-    public ResponseEntity<CommonResponse<Page<PromoRespDTO>>> searchPromos(
+    public ResponseEntity<CommonResponse<PagedResponse<PromoRespDTO>>> searchPromos(
             @Parameter(description = "검색 키워드", example = "락밴드") @RequestParam String keyword,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size,
@@ -263,8 +266,9 @@ public class PromoController {
         
         Pageable pageable = createPageable(page, size, sort);
         Integer userId = userDetails != null ? userDetails.getUserId() : null;
+        Page<PromoRespDTO> promoPage = promoService.searchPromos(keyword, userId, pageable);
         return ResponseEntity.ok(CommonResponse.success("공연 홍보 검색 성공",
-                promoService.searchPromos(keyword, userId, pageable)));
+                PagedResponse.from(promoPage)));
     }
 
     @Operation(
@@ -276,7 +280,7 @@ public class PromoController {
         @ApiResponse(responseCode = "400", description = "잘못된 필터 조건")
     })
     @GetMapping("/filter")
-    public ResponseEntity<CommonResponse<Page<PromoRespDTO>>> filterPromos(
+    public ResponseEntity<CommonResponse<PagedResponse<PromoRespDTO>>> filterPromos(
             @Parameter(description = "공연 상태", example = "UPCOMING") @RequestParam(required = false) Promo.PromoStatus status,
             @Parameter(description = "시작 날짜", example = "2024-03-01T00:00:00") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @Parameter(description = "종료 날짜", example = "2024-03-31T23:59:59") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
@@ -288,8 +292,9 @@ public class PromoController {
         
         Pageable pageable = createPageable(page, size, sort);
         Integer userId = userDetails != null ? userDetails.getUserId() : null;
+        Page<PromoRespDTO> promoPage = promoService.filterPromos(status, startDate, endDate, clubId, userId, pageable);
         return ResponseEntity.ok(CommonResponse.success("공연 홍보 필터링 성공",
-                promoService.filterPromos(status, startDate, endDate, clubId, userId, pageable)));
+                PagedResponse.from(promoPage)));
     }
 
     @Operation(

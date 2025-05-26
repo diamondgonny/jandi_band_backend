@@ -3,6 +3,10 @@ package com.jandi.band_backend.auth.controller;
 import com.jandi.band_backend.auth.dto.TokenRespDTO;
 import com.jandi.band_backend.auth.dto.RefreshReqDTO;
 import com.jandi.band_backend.auth.dto.SignUpReqDTO;
+import com.jandi.band_backend.auth.dto.kakao.KakaoTokenRespDTO;
+import com.jandi.band_backend.auth.dto.kakao.KakaoUserInfoDTO;
+import com.jandi.band_backend.auth.service.kakao.KaKaoTokenService;
+import com.jandi.band_backend.auth.service.kakao.KakaoUserService;
 import com.jandi.band_backend.global.CommonResponse;
 import com.jandi.band_backend.user.dto.UserInfoDTO;
 import com.jandi.band_backend.auth.service.AuthService;
@@ -18,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+    private final KaKaoTokenService kaKaoTokenService;
+    private final KakaoUserService kakaoUserService;
     private final JwtTokenProvider jwtTokenProvider;
 
     @Operation(summary = "카카오 로그인")
@@ -25,7 +31,11 @@ public class AuthController {
     public CommonResponse<TokenRespDTO> kakaoLogin(
             @RequestParam String code
     ){
-        TokenRespDTO tokens = authService.login(code);
+        // 카카오로부터 유저 정보 얻기
+        KakaoTokenRespDTO kakaoToken = kaKaoTokenService.getKakaoToken(code);
+        KakaoUserInfoDTO kakaoUserInfo = kakaoUserService.getKakaoUserInfo(kakaoToken.getAccessToken());
+
+        TokenRespDTO tokens = authService.login(kakaoUserInfo);
         return CommonResponse.success("로그인 성공", tokens);
     }
 

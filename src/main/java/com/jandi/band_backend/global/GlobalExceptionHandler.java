@@ -56,6 +56,14 @@ public class GlobalExceptionHandler {
                 .body(CommonResponse.error(ex.getMessage(), "CLUB_NOT_FOUND"));
     }
 
+    // 팀 미존재
+    @ExceptionHandler(TeamNotFoundException.class)
+    public ResponseEntity<CommonResponse<?>> handleTeamNotFound(TeamNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(CommonResponse.error(ex.getMessage(), "TEAM_NOT_FOUND"));
+    }
+
     // 투표 미존재
     @ExceptionHandler(PollNotFoundException.class)
     public ResponseEntity<CommonResponse<?>> handlePollNotFound(PollNotFoundException ex) {

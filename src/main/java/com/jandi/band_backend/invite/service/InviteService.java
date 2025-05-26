@@ -18,7 +18,8 @@ public class InviteService {
     private final UtilService utilService;
     private static final Random RANDOM = new Random();
 
-    @Value("${invite.link.prefix}") private String prefix;
+    @Value("${invite.club.link.prefix}") private String clubLinkPrefix;
+    @Value("${invite.team.link.prefix}") private String teamLinkPrefix;
 
     @Transactional
     public InviteLinkRespDTO generateInviteClubLink(Integer userId, Integer clubId) {
@@ -33,7 +34,24 @@ public class InviteService {
         inviteCodeService.saveCode(InviteType.CLUB, clubId, code);
 
         // 초대 링크 생성 및 반환
-        String link = prefix + "?code=" + code;
+        String link = clubLinkPrefix + "?code=" + code;
+        return new InviteLinkRespDTO(link);
+    }
+
+    @Transactional
+    public InviteLinkRespDTO generateInviteTeamLink(Integer userId, Integer teamId) {
+        // 팀 초대 권한이 있는지 검사
+        utilService.isExistTeam(teamId);
+        if(!utilService.isMemberOfTeam(userId, teamId)) {
+            throw new InvalidAccessException("초대 권한이 없습니다");
+        }
+
+        // code 생성 후 Redis 서버에 저장
+        String code = generateRandomCode();
+        inviteCodeService.saveCode(InviteType.TEAM, teamId, code);
+
+        // 초대 링크 생성 및 반환
+        String link = teamLinkPrefix + "?code=" + code;
         return new InviteLinkRespDTO(link);
     }
 

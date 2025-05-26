@@ -30,4 +30,14 @@ public class JoinController {
         joinService.joinClub(userId, code);
         return CommonResponse.success("동아리 가입 성공");
     }
+
+    @PostMapping("/teams")
+    public CommonResponse<?> joinTeam(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam String code
+    ) {
+        Integer userId = userDetails.getUserId();
+        joinService.joinTeam(userId, code);
+        return CommonResponse.success("팀 가입 성공");
+    }
 }

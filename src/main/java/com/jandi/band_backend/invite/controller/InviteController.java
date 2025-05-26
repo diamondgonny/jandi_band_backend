@@ -20,10 +20,20 @@ public class InviteController {
     @PostMapping("/clubs/{clubId}")
     public CommonResponse<InviteLinkRespDTO> inviteClub(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable("clubId") Integer clubId)
-    {
+            @PathVariable("clubId") Integer clubId
+    ) {
         Integer userId = userDetails.getUserId();
         InviteLinkRespDTO inviteLinkRespDTO = inviteService.generateInviteClubLink(userId, clubId);
         return CommonResponse.success("동아리 초대 링크 생성 성공", inviteLinkRespDTO);
+    }
+
+    @PostMapping("/teams/{teamId}")
+    public CommonResponse<InviteLinkRespDTO> inviteTeam(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable("teamId") Integer teamId
+    ) {
+        Integer userId = userDetails.getUserId();
+        InviteLinkRespDTO inviteLinkRespDTO = inviteService.generateInviteTeamLink(userId, teamId);
+        return CommonResponse.success("팀 초대 링크 생성 성공", inviteLinkRespDTO);
     }
 }

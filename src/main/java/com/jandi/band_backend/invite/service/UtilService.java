@@ -5,8 +5,12 @@ import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.club.repository.ClubRepository;
 import com.jandi.band_backend.global.exception.ClubNotFoundException;
-import com.jandi.band_backend.global.exception.InvalidAccessException;
+import com.jandi.band_backend.global.exception.TeamNotFoundException;
 import com.jandi.band_backend.invite.redis.InviteType;
+import com.jandi.band_backend.team.entity.Team;
+import com.jandi.band_backend.team.entity.TeamMember;
+import com.jandi.band_backend.team.repository.TeamMemberRepository;
+import com.jandi.band_backend.team.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +21,8 @@ import java.util.Optional;
 public class UtilService {
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
+    private final TeamRepository teamRepository;
+    private final TeamMemberRepository teamMemberRepository;
 
     /// 동아리 관련
     // 동아리 존재 확인
@@ -31,11 +37,31 @@ public class UtilService {
         return Optional.isPresent();
     }
 
-    // 동아리 객체 반환
+    // key에서 동아리 객체 반환
     protected Club getClub(String keyId) {
         Integer clubId = getOriginalId(keyId, InviteType.CLUB);
-        return clubRepository.findById(clubId)
+        return clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ClubNotFoundException("동아리가 존재하지 않습니다"));
+    }
+
+    /// 팀 관련
+    // 팀 존재 확인
+    public void isExistTeam(Integer teamId) {
+        teamRepository.findByIdAndNotDeleted(teamId)
+                .orElseThrow(()-> new TeamNotFoundException("팀이 존재하지 않습니다"));
+    }
+
+    // 팀원인지 확인
+    public boolean isMemberOfTeam(Integer userId, Integer teamId) {
+        Optional<TeamMember> Optional = teamMemberRepository.findByTeamIdAndUser_Id(teamId, userId);
+        return Optional.isPresent();
+    }
+
+    // key에서 팀 객체 반환
+    public Team getTeam(String keyId) {
+        Integer teamId = getOriginalId(keyId, InviteType.TEAM);
+        return teamRepository.findByIdAndNotDeleted(teamId)
+                .orElseThrow(() -> new TeamNotFoundException("팀이 존재하지 않습니다"));
     }
 
     /// 코드 관련

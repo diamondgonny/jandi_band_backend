@@ -5,6 +5,7 @@ import com.jandi.band_backend.promo.dto.PromoReqDTO;
 import com.jandi.band_backend.promo.dto.PromoRespDTO;
 import com.jandi.band_backend.promo.entity.Promo;
 import com.jandi.band_backend.promo.service.PromoService;
+import com.jandi.band_backend.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -54,7 +56,8 @@ public class PromoController {
     @PostMapping
     public ResponseEntity<CommonResponse<PromoRespDTO>> createPromo(
             @Valid @RequestBody PromoReqDTO request,
-            @RequestAttribute("userId") Integer userId) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails.getUserId();
         return ResponseEntity.ok(CommonResponse.success("공연 홍보 생성 성공",
                 promoService.createPromo(request, userId)));
     }
@@ -64,7 +67,8 @@ public class PromoController {
     public ResponseEntity<CommonResponse<PromoRespDTO>> updatePromo(
             @PathVariable Integer promoId,
             @Valid @RequestBody PromoReqDTO request,
-            @RequestAttribute("userId") Integer userId) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails.getUserId();
         return ResponseEntity.ok(CommonResponse.success("공연 홍보 수정 성공",
                 promoService.updatePromo(promoId, request, userId)));
     }
@@ -73,7 +77,8 @@ public class PromoController {
     @DeleteMapping("/{promoId}")
     public ResponseEntity<CommonResponse<Void>> deletePromo(
             @PathVariable Integer promoId,
-            @RequestAttribute("userId") Integer userId) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails.getUserId();
         promoService.deletePromo(promoId, userId);
         return ResponseEntity.ok(CommonResponse.success("공연 홍보 삭제 성공", null));
     }
@@ -83,7 +88,8 @@ public class PromoController {
     public ResponseEntity<CommonResponse<String>> uploadPromoImage(
             @PathVariable Integer promoId,
             @RequestParam("image") MultipartFile image,
-            @RequestAttribute("userId") Integer userId) throws IOException {
+            @AuthenticationPrincipal CustomUserDetails userDetails) throws IOException {
+        Integer userId = userDetails.getUserId();
         String imageUrl = promoService.uploadPromoImage(promoId, image, userId);
         return ResponseEntity.ok(CommonResponse.success("공연 홍보 이미지 업로드 성공", imageUrl));
     }
@@ -93,7 +99,8 @@ public class PromoController {
     public ResponseEntity<CommonResponse<Void>> deletePromoImage(
             @PathVariable Integer promoId,
             @RequestParam String imageUrl,
-            @RequestAttribute("userId") Integer userId) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails.getUserId();
         promoService.deletePromoImage(promoId, imageUrl, userId);
         return ResponseEntity.ok(CommonResponse.success("공연 홍보 이미지 삭제 성공", null));
     }

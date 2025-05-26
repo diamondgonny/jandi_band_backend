@@ -4,6 +4,7 @@ import com.jandi.band_backend.global.CommonResponse;
 import com.jandi.band_backend.promo.dto.PromoCommentReqDTO;
 import com.jandi.band_backend.promo.dto.PromoCommentRespDTO;
 import com.jandi.band_backend.promo.service.PromoCommentService;
+import com.jandi.band_backend.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Promo Comment API")
@@ -37,7 +39,8 @@ public class PromoCommentController {
     public ResponseEntity<CommonResponse<PromoCommentRespDTO>> createComment(
             @PathVariable Integer promoId,
             @Valid @RequestBody PromoCommentReqDTO request,
-            @RequestAttribute("userId") Integer userId) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails.getUserId();
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(CommonResponse.success("공연 홍보 댓글이 성공적으로 생성되었습니다.",
                         promoCommentService.createComment(promoId, request, userId)));
@@ -48,7 +51,8 @@ public class PromoCommentController {
     public ResponseEntity<CommonResponse<PromoCommentRespDTO>> updateComment(
             @PathVariable Integer commentId,
             @Valid @RequestBody PromoCommentReqDTO request,
-            @RequestAttribute("userId") Integer userId) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails.getUserId();
         return ResponseEntity.ok(CommonResponse.success("공연 홍보 댓글이 성공적으로 수정되었습니다.",
                 promoCommentService.updateComment(commentId, request, userId)));
     }
@@ -57,7 +61,8 @@ public class PromoCommentController {
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<CommonResponse<Void>> deleteComment(
             @PathVariable Integer commentId,
-            @RequestAttribute("userId") Integer userId) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails.getUserId();
         promoCommentService.deleteComment(commentId, userId);
         return ResponseEntity.ok(CommonResponse.success("공연 홍보 댓글이 성공적으로 삭제되었습니다.", null));
     }

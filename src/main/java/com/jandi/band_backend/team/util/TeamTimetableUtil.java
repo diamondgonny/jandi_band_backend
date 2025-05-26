@@ -2,7 +2,7 @@ package com.jandi.band_backend.team.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jandi.band_backend.team.dto.TimetableReqDTO;
+import com.jandi.band_backend.team.dto.TimetableUpdateReqDTO;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalTime;
@@ -25,8 +25,8 @@ public class TeamTimetableUtil {
         }
     }
 
-    // TimetableReqDTO 검사
-    public void validateTimetableRequest(TimetableReqDTO requestDTO) {
+    // TimetableUpdateReqDTO 검사
+    public void validateTimetableRequest(TimetableUpdateReqDTO requestDTO) {
         // DTO 검증
         JsonNode timetableData = requestDTO.getTimetableData();
 

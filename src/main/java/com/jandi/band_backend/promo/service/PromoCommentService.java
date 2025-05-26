@@ -25,6 +25,7 @@ public class PromoCommentService {
     private final PromoCommentRepository promoCommentRepository;
     private final PromoRepository promoRepository;
     private final UserRepository userRepository;
+    private final PromoCommentLikeService promoCommentLikeService;
 
     // 공연 홍보 댓글 목록 조회
     public Page<PromoCommentRespDTO> getCommentsByPromo(Integer promoId, Pageable pageable) {
@@ -35,6 +36,21 @@ public class PromoCommentService {
         
         return promoCommentRepository.findByPromoAndNotDeleted(promo, pageable)
                 .map(PromoCommentRespDTO::from);
+    }
+
+    // 공연 홍보 댓글 목록 조회 (사용자별 좋아요 상태 포함)
+    public Page<PromoCommentRespDTO> getCommentsByPromo(Integer promoId, Integer userId, Pageable pageable) {
+        Promo promo = promoRepository.findByIdAndNotDeleted(promoId);
+        if (promo == null) {
+            throw new ResourceNotFoundException("공연 홍보를 찾을 수 없습니다.");
+        }
+        
+        return promoCommentRepository.findByPromoAndNotDeleted(promo, pageable)
+                .map(comment -> {
+                    Boolean isLikedByUser = userId != null ? 
+                            promoCommentLikeService.isLikedByUser(comment.getId(), userId) : null;
+                    return PromoCommentRespDTO.from(comment, isLikedByUser);
+                });
     }
 
     // 공연 홍보 댓글 생성

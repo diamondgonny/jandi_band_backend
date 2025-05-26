@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 public class PromoCommentRespDTO {
     
     private Integer id;
@@ -21,6 +21,7 @@ public class PromoCommentRespDTO {
     private String creatorName;
     private String creatorProfilePhoto;
     private Integer likeCount;
+    private Boolean isLikedByUser; // 현재 사용자의 좋아요 상태
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -40,8 +41,16 @@ public class PromoCommentRespDTO {
                 .creatorName(comment.getCreator().getNickname())
                 .creatorProfilePhoto(creatorProfilePhoto)
                 .likeCount(comment.getLikes().size())
+                .isLikedByUser(null) // 기본값은 null (인증되지 않은 사용자)
                 .createdAt(comment.getCreatedAt())
                 .updatedAt(comment.getUpdatedAt())
+                .build();
+    }
+
+    public static PromoCommentRespDTO from(PromoComment comment, Boolean isLikedByUser) {
+        PromoCommentRespDTO response = from(comment);
+        return response.toBuilder()
+                .isLikedByUser(isLikedByUser)
                 .build();
     }
 } 

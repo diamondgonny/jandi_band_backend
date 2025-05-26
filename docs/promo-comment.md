@@ -35,6 +35,7 @@ curl -X GET "http://localhost:8080/api/promos/1/comments?page=0&size=20"
         "creatorName": "홍길동",
         "creatorProfilePhoto": "https://example.com/profile.jpg",
         "likeCount": 5,
+        "isLikedByUser": true,
         "createdAt": "2024-03-15T10:30:00",
         "updatedAt": "2024-03-15T10:30:00"
       }
@@ -143,6 +144,80 @@ curl -X DELETE "http://localhost:8080/api/promos/comments/1" \
 
 ---
 
+## 5. 공연 홍보 댓글 좋아요 추가/취소
+### POST `/api/promos/comments/{commentId}/like`
+
+#### 요청
+```bash
+curl -X POST "http://localhost:8080/api/promos/comments/1/like" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+#### 응답 (200 OK) - 좋아요 추가 시
+```json
+{
+  "success": true,
+  "message": "댓글 좋아요가 추가되었습니다.",
+  "data": "liked"
+}
+```
+
+#### 응답 (200 OK) - 좋아요 취소 시
+```json
+{
+  "success": true,
+  "message": "댓글 좋아요가 취소되었습니다.",
+  "data": "unliked"
+}
+```
+
+---
+
+## 6. 공연 홍보 댓글 좋아요 상태 확인
+### GET `/api/promos/comments/{commentId}/like/status`
+
+#### 요청
+```bash
+curl -X GET "http://localhost:8080/api/promos/comments/1/like/status" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "댓글 좋아요 상태 조회 성공",
+  "data": true
+}
+```
+
+#### 응답 필드
+- `data` (boolean): 사용자의 좋아요 상태 (true: 좋아요 누름, false: 좋아요 안 누름)
+
+---
+
+## 7. 공연 홍보 댓글 좋아요 수 조회
+### GET `/api/promos/comments/{commentId}/like/count`
+
+#### 요청
+```bash
+curl -X GET "http://localhost:8080/api/promos/comments/1/like/count"
+```
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "댓글 좋아요 수 조회 성공",
+  "data": 15
+}
+```
+
+#### 응답 필드
+- `data` (integer): 댓글의 총 좋아요 수
+
+---
+
 ## 에러 응답
 ```json
 {
@@ -170,4 +245,6 @@ curl -X DELETE "http://localhost:8080/api/promos/comments/1" \
 - **소프트 삭제**: 실제 삭제가 아닌 deletedAt 설정
 - **페이지네이션**: 기본 크기 20개, 생성 시간 오름차순 정렬
 - **자동 계산**: 댓글 생성/삭제 시 공연 홍보의 commentCount 자동 업데이트
-- **프로필 사진**: 댓글 작성자의 현재 프로필 사진 URL 포함 (없으면 null) 
+- **프로필 사진**: 댓글 작성자의 현재 프로필 사진 URL 포함 (없으면 null)
+- **좋아요**: 토글 방식으로 동작 (같은 API로 추가/취소), 중복 좋아요 방지
+- **좋아요 상태**: 댓글 목록 조회 시 `isLikedByUser` 필드로 현재 사용자의 좋아요 상태 포함 (true: 좋아요 누름, false: 좋아요 안 누름, null: 인증되지 않은 사용자) 

@@ -22,6 +22,7 @@ public class ClubDetailRespDTO {
     private String instagramId;
     private String photoUrl;
     private Integer memberCount;
+    private Integer representativeId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

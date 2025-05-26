@@ -124,10 +124,10 @@ public class TeamService {
     }
 
     /**
-     * 팀 정보 수정
+     * 팀 이름 수정
      */
     @Transactional
-    public TeamDetailRespDTO updateTeam(Integer teamId, TeamReqDTO teamReqDTO, Integer currentUserId) {
+    public TeamRespDTO updateTeam(Integer teamId, TeamReqDTO teamReqDTO, Integer currentUserId) {
         // 팀 존재 확인
         Team team = teamRepository.findByIdAndNotDeleted(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
@@ -135,15 +135,15 @@ public class TeamService {
         // 권한 확인 (팀 생성자 또는 동아리 대표자)
         validateTeamModificationPermission(team, currentUserId);
 
-        // 팀 정보 수정
+        // 팀 이름 수정
         team.setName(teamReqDTO.getName());
 
         Team updatedTeam = teamRepository.save(team);
 
-        // 팀 멤버 목록 조회
-        List<TeamMember> teamMembers = teamMemberRepository.findByTeamId(teamId);
+        // 팀 멤버 수 조회
+        Integer memberCount = teamMemberRepository.countByTeamId(teamId);
 
-        return createTeamDetailRespDTO(updatedTeam, teamMembers);
+        return createTeamRespDTO(updatedTeam, memberCount);
     }
 
     /**
@@ -298,7 +298,7 @@ public class TeamService {
         }
 
         if (!isCreator && !isRepresentative) {
-            throw new UnauthorizedClubAccessException("팀 생성자 또는 동아리 대표자만 팀 정보를 수정할 수 있습니다.");
+            throw new UnauthorizedClubAccessException("팀 생성자 또는 동아리 대표자만 팀 이름을 수정할 수 있습니다.");
         }
     }
 }

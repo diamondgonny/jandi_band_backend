@@ -62,16 +62,16 @@ public class TeamController {
         return ResponseEntity.ok(CommonResponse.success("곡 팀 정보를 성공적으로 조회했습니다.", result));
     }
 
-    @Operation(summary = "팀 정보 수정")
+    @Operation(summary = "팀 이름 수정")
     @PatchMapping("/teams/{teamId}")
-    public ResponseEntity<CommonResponse<TeamDetailRespDTO>> updateTeam(
+    public ResponseEntity<CommonResponse<TeamRespDTO>> updateTeam(
             @PathVariable Integer teamId,
             @Valid @RequestBody TeamReqDTO teamReqDTO,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Integer currentUserId = userDetails.getUserId();
-        TeamDetailRespDTO result = teamService.updateTeam(teamId, teamReqDTO, currentUserId);
-        return ResponseEntity.ok(CommonResponse.success("곡 팀 정보가 성공적으로 수정되었습니다.", result));
+        TeamRespDTO result = teamService.updateTeam(teamId, teamReqDTO, currentUserId);
+        return ResponseEntity.ok(CommonResponse.success("곡 팀 이름이 성공적으로 수정되었습니다.", result));
     }
 
     @Operation(summary = "팀 삭제")

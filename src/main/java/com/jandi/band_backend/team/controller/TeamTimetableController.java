@@ -35,8 +35,8 @@ public class TeamTimetableController {
                 .body(CommonResponse.success("스케줄 조율 모드가 시작되었습니다", result));
     }
 
-    @Operation(summary = "팀내 내 시간표 입력")
-    @PostMapping("/{teamId}/members/me/timetable")
+    @Operation(summary = "팀내 내 시간표 수정")
+    @PatchMapping("/{teamId}/members/me/timetable")
     public ResponseEntity<CommonResponse<TimetableRespDTO>> submitMyTimetable(
             @PathVariable Integer teamId,
             @Valid @RequestBody TimetableReqDTO reqDTO,
@@ -44,6 +44,6 @@ public class TeamTimetableController {
     ) {
         Integer currentUserId = userDetails.getUserId();
         TimetableRespDTO result = teamTimetableService.submitMyTimetable(teamId, reqDTO, currentUserId);
-        return ResponseEntity.ok(CommonResponse.success("팀 시간표 입력 성공", result));
+        return ResponseEntity.ok(CommonResponse.success("팀 시간표 수정 성공", result));
     }
 }

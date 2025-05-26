@@ -76,7 +76,7 @@ public class TeamTimetableService {
     }
 
     /**
-     * 팀내 내 시간표 입력
+     * 팀내 내 시간표 수정
      */
     @Transactional
     public TimetableRespDTO submitMyTimetable(Integer teamId, TimetableReqDTO reqDTO, Integer currentUserId) {

@@ -27,6 +27,7 @@ public class PromoRespDTO {
     private Integer viewCount;
     private Integer commentCount;
     private Integer likeCount;
+    private Boolean isLikedByUser; // 현재 사용자의 좋아요 상태
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<String> photoUrls;
@@ -48,11 +49,18 @@ public class PromoRespDTO {
         response.setViewCount(promo.getViewCount());
         response.setCommentCount(promo.getCommentCount());
         response.setLikeCount(promo.getLikeCount());
+        response.setIsLikedByUser(null); // 기본값은 null (인증되지 않은 사용자)
         response.setCreatedAt(promo.getCreatedAt());
         response.setUpdatedAt(promo.getUpdatedAt());
         response.setPhotoUrls(promo.getPhotos().stream()
                 .map(photo -> photo.getImageUrl())
                 .collect(Collectors.toList()));
+        return response;
+    }
+
+    public static PromoRespDTO from(Promo promo, Boolean isLikedByUser) {
+        PromoRespDTO response = from(promo);
+        response.setIsLikedByUser(isLikedByUser);
         return response;
     }
 } 

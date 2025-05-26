@@ -5,6 +5,7 @@ import com.jandi.band_backend.promo.dto.PromoReqDTO;
 import com.jandi.band_backend.promo.dto.PromoRespDTO;
 import com.jandi.band_backend.promo.entity.Promo;
 import com.jandi.band_backend.promo.service.PromoService;
+import com.jandi.band_backend.promo.service.PromoLikeService;
 import com.jandi.band_backend.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +30,7 @@ import java.time.LocalDateTime;
 public class PromoController {
 
     private final PromoService promoService;
+    private final PromoLikeService promoLikeService;
 
     @Operation(summary = "공연 홍보 목록 조회")
     @GetMapping
@@ -47,9 +49,12 @@ public class PromoController {
 
     @Operation(summary = "공연 홍보 상세 조회")
     @GetMapping("/{promoId}")
-    public ResponseEntity<CommonResponse<PromoRespDTO>> getPromo(@PathVariable Integer promoId) {
+    public ResponseEntity<CommonResponse<PromoRespDTO>> getPromo(
+            @PathVariable Integer promoId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails != null ? userDetails.getUserId() : null;
         return ResponseEntity.ok(CommonResponse.success("공연 홍보 상세 조회 성공",
-                promoService.getPromo(promoId)));
+                promoService.getPromo(promoId, userId)));
     }
 
     @Operation(summary = "공연 홍보 생성")
@@ -124,5 +129,30 @@ public class PromoController {
             Pageable pageable) {
         return ResponseEntity.ok(CommonResponse.success("공연 홍보 필터링 성공",
                 promoService.filterPromos(status, startDate, endDate, clubId, pageable)));
+    }
+
+    @Operation(summary = "공연 홍보 좋아요 추가/취소")
+    @PostMapping("/{promoId}/like")
+    public ResponseEntity<CommonResponse<String>> togglePromoLike(
+            @PathVariable Integer promoId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails.getUserId();
+        boolean isLiked = promoLikeService.togglePromoLike(promoId, userId);
+        
+        String message = isLiked ? "공연 홍보 좋아요가 추가되었습니다." : "공연 홍보 좋아요가 취소되었습니다.";
+        String result = isLiked ? "liked" : "unliked";
+        
+        return ResponseEntity.ok(CommonResponse.success(message, result));
+    }
+
+    @Operation(summary = "공연 홍보 좋아요 상태 확인")
+    @GetMapping("/{promoId}/like/status")
+    public ResponseEntity<CommonResponse<Boolean>> getPromoLikeStatus(
+            @PathVariable Integer promoId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails.getUserId();
+        boolean isLiked = promoLikeService.isLikedByUser(promoId, userId);
+        
+        return ResponseEntity.ok(CommonResponse.success("공연 홍보 좋아요 상태 조회 성공", isLiked));
     }
 } 

@@ -139,12 +139,16 @@ curl -X GET "http://localhost:8080/api/promos/1"
     "viewCount": 100,
     "commentCount": 5,
     "likeCount": 20,
+    "isLikedByUser": true,
     "createdAt": "2024-03-01T10:00:00",
     "updatedAt": "2024-03-01T10:00:00",
     "photoUrls": ["https://example.com/photo1.jpg"]
   }
 }
 ```
+
+#### 응답 필드
+- `isLikedByUser` (boolean): 현재 사용자의 좋아요 상태 (true: 좋아요 누름, false: 좋아요 안 누름, null: 인증되지 않은 사용자)
 
 ---
 
@@ -525,9 +529,63 @@ curl -X DELETE "http://localhost:8080/api/promos/comments/1" \
 
 ---
 
+## 15. 공연 홍보 좋아요 추가/취소
+### POST `/api/promos/{promoId}/like`
+
+#### 요청
+```bash
+curl -X POST "http://localhost:8080/api/promos/1/like" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+#### 응답 (200 OK) - 좋아요 추가 시
+```json
+{
+  "success": true,
+  "message": "공연 홍보 좋아요가 추가되었습니다.",
+  "data": "liked"
+}
+```
+
+#### 응답 (200 OK) - 좋아요 취소 시
+```json
+{
+  "success": true,
+  "message": "공연 홍보 좋아요가 취소되었습니다.",
+  "data": "unliked"
+}
+```
+
+---
+
+## 16. 공연 홍보 좋아요 상태 확인
+### GET `/api/promos/{promoId}/like/status`
+
+#### 요청
+```bash
+curl -X GET "http://localhost:8080/api/promos/1/like/status" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "공연 홍보 좋아요 상태 조회 성공",
+  "data": true
+}
+```
+
+#### 응답 필드
+- `data` (boolean): 사용자의 좋아요 상태 (true: 좋아요 누름, false: 좋아요 안 누름)
+
+---
+
 ## 참고사항
 - **권한**: 생성은 클럽 멤버만, 수정/삭제는 작성자만 가능
 - **이미지**: 여러 이미지 업로드 가능, 개별 삭제 가능
 - **자동 계산**: viewCount, commentCount, likeCount 자동 관리
 - **소프트 삭제**: 실제 삭제가 아닌 deletedAt 설정
 - **댓글**: 댓글 생성/삭제 시 공연 홍보의 commentCount 자동 업데이트
+- **좋아요**: 토글 방식으로 동작 (같은 API로 추가/취소), 중복 좋아요 방지
+- **좋아요 상태**: 공연 홍보 상세 조회 시 `isLikedByUser` 필드로 현재 사용자의 좋아요 상태 포함

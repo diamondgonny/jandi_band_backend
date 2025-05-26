@@ -35,6 +35,7 @@ public class PromoService {
     private final UserRepository userRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final S3Service s3Service;
+    private final PromoLikeService promoLikeService;
     private static final String PROMO_PHOTO_DIR = "promo-photo";
 
     // 공연 홍보 목록 조회
@@ -60,6 +61,23 @@ public class PromoService {
         // 조회수 증가
         promo.setViewCount(promo.getViewCount() + 1);
         return PromoRespDTO.from(promo);
+    }
+
+    // 공연 홍보 상세 조회 (사용자별 좋아요 상태 포함)
+    @Transactional
+    public PromoRespDTO getPromo(Integer promoId, Integer userId) {
+        Promo promo = promoRepository.findByIdAndNotDeleted(promoId);
+        if (promo == null) {
+            throw new ResourceNotFoundException("공연 홍보를 찾을 수 없습니다.");
+        }
+        
+        // 조회수 증가
+        promo.setViewCount(promo.getViewCount() + 1);
+        
+        // 사용자의 좋아요 상태 확인
+        Boolean isLikedByUser = userId != null ? promoLikeService.isLikedByUser(promoId, userId) : null;
+        
+        return PromoRespDTO.from(promo, isLikedByUser);
     }
 
     // 공연 홍보 생성

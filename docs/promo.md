@@ -44,6 +44,7 @@ curl -X GET "http://localhost:8080/api/promos?page=0&size=20"
         "viewCount": 100,
         "commentCount": 5,
         "likeCount": 20,
+        "isLikedByUser": true,
         "createdAt": "2024-03-01T10:00:00",
         "updatedAt": "2024-03-01T10:00:00",
         "photoUrls": ["https://example.com/photo1.jpg"]
@@ -95,6 +96,7 @@ curl -X GET "http://localhost:8080/api/promos/club/1?page=0&size=20"
         "viewCount": 100,
         "commentCount": 5,
         "likeCount": 20,
+        "isLikedByUser": true,
         "createdAt": "2024-03-01T10:00:00",
         "updatedAt": "2024-03-01T10:00:00",
         "photoUrls": ["https://example.com/photo1.jpg"]
@@ -358,6 +360,7 @@ curl -X GET "http://localhost:8080/api/promos/search?keyword=락밴드&page=0&si
         "viewCount": 100,
         "commentCount": 5,
         "likeCount": 20,
+        "isLikedByUser": true,
         "createdAt": "2024-03-01T10:00:00",
         "updatedAt": "2024-03-01T10:00:00",
         "photoUrls": ["https://example.com/photo1.jpg"]
@@ -411,6 +414,7 @@ curl -X GET "http://localhost:8080/api/promos/filter?status=UPCOMING&clubId=1&pa
         "viewCount": 100,
         "commentCount": 5,
         "likeCount": 20,
+        "isLikedByUser": true,
         "createdAt": "2024-03-01T10:00:00",
         "updatedAt": "2024-03-01T10:00:00",
         "photoUrls": ["https://example.com/photo1.jpg"]
@@ -581,6 +585,28 @@ curl -X GET "http://localhost:8080/api/promos/1/like/status" \
 
 ---
 
+## 17. 공연 홍보 좋아요 수 조회
+### GET `/api/promos/{promoId}/like/count`
+
+#### 요청
+```bash
+curl -X GET "http://localhost:8080/api/promos/1/like/count"
+```
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "공연 홍보 좋아요 수 조회 성공",
+  "data": 25
+}
+```
+
+#### 응답 필드
+- `data` (integer): 공연 홍보의 총 좋아요 수
+
+---
+
 ## 참고사항
 - **권한**: 생성은 클럽 멤버만, 수정/삭제는 작성자만 가능
 - **이미지**: 여러 이미지 업로드 가능, 개별 삭제 가능
@@ -588,4 +614,4 @@ curl -X GET "http://localhost:8080/api/promos/1/like/status" \
 - **소프트 삭제**: 실제 삭제가 아닌 deletedAt 설정
 - **댓글**: 댓글 생성/삭제 시 공연 홍보의 commentCount 자동 업데이트
 - **좋아요**: 토글 방식으로 동작 (같은 API로 추가/취소), 중복 좋아요 방지
-- **좋아요 상태**: 공연 홍보 상세 조회 시 `isLikedByUser` 필드로 현재 사용자의 좋아요 상태 포함
+- **좋아요 상태**: 공연 홍보 목록/상세 조회 시 `isLikedByUser` 필드로 현재 사용자의 좋아요 상태 포함 (true: 좋아요 누름, false: 좋아요 안 누름, null: 인증되지 않은 사용자)

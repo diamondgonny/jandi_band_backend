@@ -44,10 +44,30 @@ public class PromoService {
                 .map(PromoRespDTO::from);
     }
 
+    // 공연 홍보 목록 조회 (사용자별 좋아요 상태 포함)
+    public Page<PromoRespDTO> getPromos(Integer userId, Pageable pageable) {
+        return promoRepository.findAllNotDeleted(pageable)
+                .map(promo -> {
+                    Boolean isLikedByUser = userId != null ? 
+                            promoLikeService.isLikedByUser(promo.getId(), userId) : null;
+                    return PromoRespDTO.from(promo, isLikedByUser);
+                });
+    }
+
     // 클럽별 공연 홍보 목록 조회
     public Page<PromoRespDTO> getPromosByClub(Integer clubId, Pageable pageable) {
         return promoRepository.findAllByClubId(clubId, pageable)
                 .map(PromoRespDTO::from);
+    }
+
+    // 클럽별 공연 홍보 목록 조회 (사용자별 좋아요 상태 포함)
+    public Page<PromoRespDTO> getPromosByClub(Integer clubId, Integer userId, Pageable pageable) {
+        return promoRepository.findAllByClubId(clubId, pageable)
+                .map(promo -> {
+                    Boolean isLikedByUser = userId != null ? 
+                            promoLikeService.isLikedByUser(promo.getId(), userId) : null;
+                    return PromoRespDTO.from(promo, isLikedByUser);
+                });
     }
 
     // 공연 홍보 상세 조회
@@ -242,6 +262,16 @@ public class PromoService {
                 .map(PromoRespDTO::from);
     }
 
+    // 공연 홍보 검색 (사용자별 좋아요 상태 포함)
+    public Page<PromoRespDTO> searchPromos(String keyword, Integer userId, Pageable pageable) {
+        return promoRepository.searchByKeyword(keyword, pageable)
+                .map(promo -> {
+                    Boolean isLikedByUser = userId != null ? 
+                            promoLikeService.isLikedByUser(promo.getId(), userId) : null;
+                    return PromoRespDTO.from(promo, isLikedByUser);
+                });
+    }
+
     // 공연 홍보 필터링
     public Page<PromoRespDTO> filterPromos(
             Promo.PromoStatus status,
@@ -251,5 +281,21 @@ public class PromoService {
             Pageable pageable) {
         return promoRepository.filterPromos(status, startDate, endDate, clubId, pageable)
                 .map(PromoRespDTO::from);
+    }
+
+    // 공연 홍보 필터링 (사용자별 좋아요 상태 포함)
+    public Page<PromoRespDTO> filterPromos(
+            Promo.PromoStatus status,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Integer clubId,
+            Integer userId,
+            Pageable pageable) {
+        return promoRepository.filterPromos(status, startDate, endDate, clubId, pageable)
+                .map(promo -> {
+                    Boolean isLikedByUser = userId != null ? 
+                            promoLikeService.isLikedByUser(promo.getId(), userId) : null;
+                    return PromoRespDTO.from(promo, isLikedByUser);
+                });
     }
 } 

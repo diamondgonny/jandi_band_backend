@@ -34,17 +34,23 @@ public class PromoController {
 
     @Operation(summary = "공연 홍보 목록 조회")
     @GetMapping
-    public ResponseEntity<CommonResponse<Page<PromoRespDTO>>> getPromos(Pageable pageable) {
-        return ResponseEntity.ok(CommonResponse.success("공연 홍보 목록 조회 성공", promoService.getPromos(pageable)));
+    public ResponseEntity<CommonResponse<Page<PromoRespDTO>>> getPromos(
+            Pageable pageable,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails != null ? userDetails.getUserId() : null;
+        return ResponseEntity.ok(CommonResponse.success("공연 홍보 목록 조회 성공", 
+                promoService.getPromos(userId, pageable)));
     }
 
     @Operation(summary = "클럽별 공연 홍보 목록 조회")
     @GetMapping("/club/{clubId}")
     public ResponseEntity<CommonResponse<Page<PromoRespDTO>>> getPromosByClub(
             @PathVariable Integer clubId,
-            Pageable pageable) {
+            Pageable pageable,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails != null ? userDetails.getUserId() : null;
         return ResponseEntity.ok(CommonResponse.success("클럽별 공연 홍보 목록 조회 성공",
-                promoService.getPromosByClub(clubId, pageable)));
+                promoService.getPromosByClub(clubId, userId, pageable)));
     }
 
     @Operation(summary = "공연 홍보 상세 조회")
@@ -114,9 +120,11 @@ public class PromoController {
     @GetMapping("/search")
     public ResponseEntity<CommonResponse<Page<PromoRespDTO>>> searchPromos(
             @RequestParam String keyword,
-            Pageable pageable) {
+            Pageable pageable,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails != null ? userDetails.getUserId() : null;
         return ResponseEntity.ok(CommonResponse.success("공연 홍보 검색 성공",
-                promoService.searchPromos(keyword, pageable)));
+                promoService.searchPromos(keyword, userId, pageable)));
     }
 
     @Operation(summary = "공연 홍보 필터링")
@@ -126,9 +134,11 @@ public class PromoController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
             @RequestParam(required = false) Integer clubId,
-            Pageable pageable) {
+            Pageable pageable,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails != null ? userDetails.getUserId() : null;
         return ResponseEntity.ok(CommonResponse.success("공연 홍보 필터링 성공",
-                promoService.filterPromos(status, startDate, endDate, clubId, pageable)));
+                promoService.filterPromos(status, startDate, endDate, clubId, userId, pageable)));
     }
 
     @Operation(summary = "공연 홍보 좋아요 추가/취소")
@@ -154,5 +164,14 @@ public class PromoController {
         boolean isLiked = promoLikeService.isLikedByUser(promoId, userId);
         
         return ResponseEntity.ok(CommonResponse.success("공연 홍보 좋아요 상태 조회 성공", isLiked));
+    }
+
+    @Operation(summary = "공연 홍보 좋아요 수 조회")
+    @GetMapping("/{promoId}/like/count")
+    public ResponseEntity<CommonResponse<Integer>> getPromoLikeCount(
+            @PathVariable Integer promoId) {
+        Integer likeCount = promoLikeService.getLikeCount(promoId);
+        
+        return ResponseEntity.ok(CommonResponse.success("공연 홍보 좋아요 수 조회 성공", likeCount));
     }
 } 

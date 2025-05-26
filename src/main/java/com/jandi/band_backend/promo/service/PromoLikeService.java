@@ -80,4 +80,17 @@ public class PromoLikeService {
         
         return promoLikeRepository.existsByPromoAndUser(promo, user);
     }
+
+    /**
+     * 특정 공연 홍보의 좋아요 수 조회
+     */
+    @Transactional(readOnly = true)
+    public Integer getLikeCount(Integer promoId) {
+        Promo promo = promoRepository.findByIdAndNotDeleted(promoId);
+        if (promo == null) {
+            throw new ResourceNotFoundException("공연 홍보를 찾을 수 없습니다.");
+        }
+        
+        return promo.getLikeCount();
+    }
 } 

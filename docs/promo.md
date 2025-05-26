@@ -245,8 +245,89 @@ curl -X GET "http://localhost:8080/api/promos/filter?status=UPCOMING&clubId=1&pa
 - `403 Forbidden`: 권한 없음
 - `404 Not Found`: 리소스 없음
 
+---
+
+## 11. 공연 홍보 댓글 목록 조회
+### GET `/api/promos/{promoId}/comments`
+
+#### 요청
+```bash
+curl -X GET "http://localhost:8080/api/promos/1/comments?page=0&size=20"
+```
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "공연 홍보 댓글 목록을 조회했습니다.",
+  "data": {
+    "content": [
+      {
+        "id": 1,
+        "promoId": 1,
+        "description": "정말 기대되는 공연이네요!",
+        "creatorId": 1,
+        "creatorName": "홍길동",
+        "creatorProfilePhoto": "https://example.com/profile.jpg",
+        "likeCount": 5,
+        "createdAt": "2024-03-15T10:30:00",
+        "updatedAt": "2024-03-15T10:30:00"
+      }
+    ],
+    "totalElements": 1,
+    "totalPages": 1,
+    "first": true,
+    "last": true
+  }
+}
+```
+
+---
+
+## 12. 공연 홍보 댓글 생성
+### POST `/api/promos/{promoId}/comments`
+
+#### 요청
+```bash
+curl -X POST "http://localhost:8080/api/promos/1/comments" \
+  -H "Authorization: Bearer {JWT_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "정말 기대되는 공연이네요!"
+  }'
+```
+
+---
+
+## 13. 공연 홍보 댓글 수정
+### PATCH `/api/promos/comments/{commentId}`
+
+#### 요청
+```bash
+curl -X PATCH "http://localhost:8080/api/promos/comments/1" \
+  -H "Authorization: Bearer {JWT_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "수정된 댓글 내용입니다."
+  }'
+```
+
+---
+
+## 14. 공연 홍보 댓글 삭제
+### DELETE `/api/promos/comments/{commentId}`
+
+#### 요청
+```bash
+curl -X DELETE "http://localhost:8080/api/promos/comments/1" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+---
+
 ## 참고사항
 - **권한**: 생성은 클럽 멤버만, 수정/삭제는 작성자만 가능
 - **이미지**: 여러 이미지 업로드 가능, 개별 삭제 가능
 - **자동 계산**: viewCount, commentCount, likeCount 자동 관리
 - **소프트 삭제**: 실제 삭제가 아닌 deletedAt 설정
+- **댓글**: 댓글 생성/삭제 시 공연 홍보의 commentCount 자동 업데이트

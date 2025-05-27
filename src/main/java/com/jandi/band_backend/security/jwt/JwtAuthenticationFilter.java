@@ -46,13 +46,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Authentication auth = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(auth);
             
-            // userId를 요청 속성에 설정
-            if (auth.getPrincipal() instanceof CustomUserDetails) {
-                CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-                request.setAttribute("userId", userDetails.getUserId());
-                log.debug("Set userId in request attributes: {}", userDetails.getUserId());
-            }
-            
             filterChain.doFilter(request, response);
         } catch (InvalidTokenException e) {
             // 형식이 올바르지 않거나 미인가된 토큰일 시 SecurityContext 삭제

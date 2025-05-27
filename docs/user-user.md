@@ -4,7 +4,7 @@
 `/api/users`
 
 ## 인증
-JWT 인증 필요
+JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails)
 
 ---
 

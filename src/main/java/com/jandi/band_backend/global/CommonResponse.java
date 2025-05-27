@@ -1,15 +1,24 @@
 package com.jandi.band_backend.global;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL) // null 값인 아래의 최상위 필드는 JSON 응답에 포함하지 않음
+@Schema(description = "공통 API 응답 형식")
 public class CommonResponse<T> {
 
+    @Schema(description = "성공 여부", example = "true")
     private final boolean success;   // 성공 여부
+    
+    @Schema(description = "응답 메시지", example = "요청이 성공적으로 처리되었습니다.")
     private final String message;    // 응답 메시지
+    
+    @Schema(description = "실제 응답 데이터 (성공 시)")
     private final T data;            // 실제 응답 데이터 (성공 시)
+    
+    @Schema(description = "커스텀 에러 코드 (실패 시)", example = "RESOURCE_NOT_FOUND")
     private final String errorCode;  // 커스텀 에러 코드 (실패 시)
 
     // 성공 시 생성자 (데이터 포함)

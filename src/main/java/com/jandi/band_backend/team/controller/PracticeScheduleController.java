@@ -1,6 +1,7 @@
 package com.jandi.band_backend.team.controller;
 
 import com.jandi.band_backend.global.CommonResponse;
+import com.jandi.band_backend.security.CustomUserDetails;
 import com.jandi.band_backend.team.dto.PracticeScheduleReqDTO;
 import com.jandi.band_backend.team.dto.PracticeScheduleRespDTO;
 import com.jandi.band_backend.team.service.PracticeScheduleService;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Practice Schedule API")
@@ -42,9 +44,10 @@ public class PracticeScheduleController {
     public ResponseEntity<CommonResponse<PracticeScheduleRespDTO>> createPracticeSchedule(
             @PathVariable Integer teamId,
             @Valid @RequestBody PracticeScheduleReqDTO request,
-            @RequestAttribute("userId") Integer userId) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         // teamId를 request에 설정
         request.setTeamId(teamId);
+        Integer userId = userDetails.getUserId();
         
         return ResponseEntity.ok(CommonResponse.success("곡 연습 일정 생성 성공",
                 practiceScheduleService.createPracticeSchedule(request, userId)));
@@ -54,7 +57,8 @@ public class PracticeScheduleController {
     @DeleteMapping("/practice-schedules/{scheduleId}")
     public ResponseEntity<CommonResponse<Void>> deletePracticeSchedule(
             @PathVariable Integer scheduleId,
-            @RequestAttribute("userId") Integer userId) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails.getUserId();
         practiceScheduleService.deletePracticeSchedule(scheduleId, userId);
         return ResponseEntity.ok(CommonResponse.success("곡 연습 일정 삭제 성공"));
     }

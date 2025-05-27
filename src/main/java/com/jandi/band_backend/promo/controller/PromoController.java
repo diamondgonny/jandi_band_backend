@@ -29,7 +29,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 
 @Tag(name = "Promo API", description = "공연 홍보 관련 API")
@@ -222,7 +221,7 @@ public class PromoController {
     public ResponseEntity<CommonRespDTO<String>> uploadPromoImage(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
             @Parameter(description = "업로드할 이미지 파일 (JPG, PNG 등)") @RequestParam("image") MultipartFile image,
-            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) throws IOException {
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         String imageUrl = promoService.uploadPromoImage(promoId, image, userId);
         return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 이미지 업로드 성공", imageUrl));

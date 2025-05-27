@@ -10,7 +10,6 @@ import com.jandi.band_backend.promo.entity.Promo;
 import com.jandi.band_backend.promo.entity.PromoPhoto;
 import com.jandi.band_backend.promo.repository.PromoRepository;
 import com.jandi.band_backend.user.entity.Users;
-import com.jandi.band_backend.user.repository.UserRepository;
 import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.global.util.PermissionValidationUtil;
 import com.jandi.band_backend.global.util.UserValidationUtil;
@@ -23,9 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service

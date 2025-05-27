@@ -15,7 +15,6 @@ import com.jandi.band_backend.univ.dto.UniversityRespDTO;
 import com.jandi.band_backend.univ.entity.University;
 import com.jandi.band_backend.univ.repository.UniversityRepository;
 import com.jandi.band_backend.user.entity.Users;
-import com.jandi.band_backend.user.repository.UserRepository;
 import com.jandi.band_backend.global.exception.ClubNotFoundException;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
 import com.jandi.band_backend.global.exception.UniversityNotFoundException;
@@ -29,7 +28,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -136,7 +134,7 @@ public class ClubService {
         // 포지션별 카운트 계산
         Map<String, Long> positionCountMap = clubMembers.stream()
                 .map(member -> member.getUser().getPosition())
-                .filter(position -> position != null)
+                .filter(java.util.Objects::nonNull)
                 .collect(Collectors.groupingBy(
                         Enum::name,
                         Collectors.counting()

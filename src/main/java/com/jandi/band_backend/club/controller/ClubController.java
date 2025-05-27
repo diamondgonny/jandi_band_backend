@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
-import java.io.IOException;
 
 @Tag(name = "Club API")
 @RestController
@@ -91,7 +90,7 @@ public class ClubController {
     public ResponseEntity<CommonRespDTO<String>> uploadClubPhoto(
             @PathVariable Integer clubId,
             @RequestParam("image") MultipartFile image,
-            @AuthenticationPrincipal CustomUserDetails userDetails) throws IOException {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         String imageUrl = clubService.uploadClubPhoto(clubId, image, userId);
         return ResponseEntity.ok(CommonRespDTO.success("동아리 대표 사진이 성공적으로 업로드되었습니다", imageUrl));

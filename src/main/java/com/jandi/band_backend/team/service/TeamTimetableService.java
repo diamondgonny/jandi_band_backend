@@ -13,7 +13,6 @@ import com.jandi.band_backend.team.entity.Team;
 import com.jandi.band_backend.team.entity.TeamMember;
 import com.jandi.band_backend.team.repository.TeamMemberRepository;
 import com.jandi.band_backend.team.repository.TeamRepository;
-import com.jandi.band_backend.user.repository.UserRepository;
 import com.jandi.band_backend.user.service.UserTimetableService;
 import com.jandi.band_backend.user.dto.UserTimetableDetailsRespDTO;
 import com.jandi.band_backend.team.util.TeamTimetableUtil;

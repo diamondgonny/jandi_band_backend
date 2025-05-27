@@ -18,7 +18,7 @@ public class GlobalExceptionHandler {
     }
     // 기타 예외
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<CommonRespDTO<?>> handleException(Exception ex) {
+    public ResponseEntity<CommonRespDTO<?>> handleException(@SuppressWarnings("unused") Exception ex) {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(CommonRespDTO.error("서버 내부 오류가 발생했습니다", "INTERNAL_ERROR"));

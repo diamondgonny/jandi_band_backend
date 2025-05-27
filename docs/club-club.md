@@ -4,7 +4,7 @@
 `/api/clubs`
 
 ## 인증
-생성, 수정, 삭제는 JWT 인증 필요 (Spring Security + CustomUserDetails). 조회는 인증 불필요.
+생성, 수정, 삭제는 JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails). 조회는 인증 불필요.
 
 ---
 

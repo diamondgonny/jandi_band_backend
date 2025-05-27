@@ -4,7 +4,7 @@
 `/api/polls`
 
 ## 인증
-JWT 인증 필요 (투표 상세 조회는 선택적)
+JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails)
 
 ---
 

@@ -1,6 +1,6 @@
 package com.jandi.band_backend.team.controller;
 
-import com.jandi.band_backend.global.CommonResponse;
+import com.jandi.band_backend.global.dto.CommonRespDTO;
 import com.jandi.band_backend.security.CustomUserDetails;
 import com.jandi.band_backend.team.dto.PracticeScheduleReqDTO;
 import com.jandi.band_backend.team.dto.PracticeScheduleRespDTO;
@@ -25,23 +25,23 @@ public class PracticeScheduleController {
 
     @Operation(summary = "팀별 연습 일정 목록 조회")
     @GetMapping("/teams/{teamId}/practice-schedules")
-    public ResponseEntity<CommonResponse<Page<PracticeScheduleRespDTO>>> getPracticeSchedulesByTeam(
+    public ResponseEntity<CommonRespDTO<Page<PracticeScheduleRespDTO>>> getPracticeSchedulesByTeam(
             @PathVariable Integer teamId,
             Pageable pageable) {
-        return ResponseEntity.ok(CommonResponse.success("팀별 곡 연습 일정 목록 조회 성공",
+        return ResponseEntity.ok(CommonRespDTO.success("팀별 곡 연습 일정 목록 조회 성공",
                 practiceScheduleService.getPracticeSchedulesByTeam(teamId, pageable)));
     }
 
     @Operation(summary = "연습 일정 상세 조회")
     @GetMapping("/practice-schedules/{scheduleId}")
-    public ResponseEntity<CommonResponse<PracticeScheduleRespDTO>> getPracticeSchedule(@PathVariable Integer scheduleId) {
-        return ResponseEntity.ok(CommonResponse.success("곡 연습 일정 상세 조회 성공",
+    public ResponseEntity<CommonRespDTO<PracticeScheduleRespDTO>> getPracticeSchedule(@PathVariable Integer scheduleId) {
+        return ResponseEntity.ok(CommonRespDTO.success("곡 연습 일정 상세 조회 성공",
                 practiceScheduleService.getPracticeSchedule(scheduleId)));
     }
 
     @Operation(summary = "연습 일정 생성")
     @PostMapping("/teams/{teamId}/practice-schedules")
-    public ResponseEntity<CommonResponse<PracticeScheduleRespDTO>> createPracticeSchedule(
+    public ResponseEntity<CommonRespDTO<PracticeScheduleRespDTO>> createPracticeSchedule(
             @PathVariable Integer teamId,
             @Valid @RequestBody PracticeScheduleReqDTO request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -49,17 +49,17 @@ public class PracticeScheduleController {
         request.setTeamId(teamId);
         Integer userId = userDetails.getUserId();
         
-        return ResponseEntity.ok(CommonResponse.success("곡 연습 일정 생성 성공",
+        return ResponseEntity.ok(CommonRespDTO.success("곡 연습 일정 생성 성공",
                 practiceScheduleService.createPracticeSchedule(request, userId)));
     }
 
     @Operation(summary = "연습 일정 삭제")
     @DeleteMapping("/practice-schedules/{scheduleId}")
-    public ResponseEntity<CommonResponse<Void>> deletePracticeSchedule(
+    public ResponseEntity<CommonRespDTO<Void>> deletePracticeSchedule(
             @PathVariable Integer scheduleId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         practiceScheduleService.deletePracticeSchedule(scheduleId, userId);
-        return ResponseEntity.ok(CommonResponse.success("곡 연습 일정 삭제 성공"));
+        return ResponseEntity.ok(CommonRespDTO.success("곡 연습 일정 삭제 성공"));
     }
 }

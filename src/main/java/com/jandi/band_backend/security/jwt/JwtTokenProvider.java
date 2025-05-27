@@ -97,21 +97,15 @@ public class JwtTokenProvider {
     /// 토큰에서 유저 정보 추출
     // 토큰에서 유저의 kakaoOauthId를 추출함
     public String getKakaoOauthId(String token) {
-        // 토큰이 유효하지 않을 경우 InvalidTokenException 예외 던짐
-        if(!validateToken(token))
-            throw new InvalidTokenException();
-
         try {
-            if(!validateToken(token))
-                throw new InvalidTokenException();
-
+            // 토큰 파싱 시 유효성도 자동으로 검증됨
             Claims claims = parseClaims(token);
 
             log.debug("토큰에서 추출한 카카오 계정: {}", claims.getSubject());
             return claims.getSubject();
         } catch (JwtException | IllegalArgumentException e) {
             log.error("토큰에서 카카오 계정 추출 실패: {}", e.getMessage());
-            return null;
+            throw new InvalidTokenException();
         }
     }
 

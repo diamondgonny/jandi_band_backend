@@ -37,8 +37,8 @@ public class UserTimetableService {
 
     /// 특정 시간표 조회 (kakaoOauthId 버전 - AuthService에서 사용)
     @Transactional(readOnly = true)
-    public UserTimetableDetailsRespDTO getMyTimetableById(String kakaoOauthId, Integer timetableId) {
-        Users user = userService.getMyInfo(kakaoOauthId);
+    public UserTimetableDetailsRespDTO getMyTimetableByKakaoId(String kakaoOauthId, Integer timetableId) {
+        Users user = userService.getMyInfoByKakaoId(kakaoOauthId);
         return getMyTimetableById(user.getId(), timetableId);
     }
 
@@ -110,7 +110,7 @@ public class UserTimetableService {
         UserTimetable timetable = userTimetableRepository.findByIdAndDeletedAtIsNull(timetableId)
                 .orElseThrow(TimetableNotFoundException::new);
 
-        if(timetable.getUser() != user)
+        if(!timetable.getUser().getId().equals(user.getId()))
             throw new InvalidAccessException("권한이 없습니다: 본인의 시간표가 아닙니다");
         else
             return timetable;

@@ -1,6 +1,6 @@
 package com.jandi.band_backend.team.controller;
 
-import com.jandi.band_backend.global.CommonResponse;
+import com.jandi.band_backend.global.dto.CommonRespDTO;
 import com.jandi.band_backend.security.CustomUserDetails;
 import com.jandi.band_backend.team.dto.ScheduleSuggestionRespDTO;
 import com.jandi.band_backend.team.dto.TimetableReqDTO;
@@ -26,37 +26,37 @@ public class TeamTimetableController {
 
     @Operation(summary = "팀내 스케줄 조율 제안")
     @PostMapping("/{teamId}/schedule-suggestion")
-    public ResponseEntity<CommonResponse<ScheduleSuggestionRespDTO>> startScheduleSuggestion(
+    public ResponseEntity<CommonRespDTO<ScheduleSuggestionRespDTO>> startScheduleSuggestion(
             @PathVariable Integer teamId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Integer currentUserId = userDetails.getUserId();
         ScheduleSuggestionRespDTO result = teamTimetableService.startScheduleSuggestion(teamId, currentUserId);
         return ResponseEntity.status(HttpStatus.OK)
-                .body(CommonResponse.success("스케줄 조율 모드가 시작되었습니다", result));
+                .body(CommonRespDTO.success("스케줄 조율 모드가 시작되었습니다", result));
     }
 
     @Operation(summary = "팀내 내 시간표 등록")
     @PostMapping("/{teamId}/members/me/timetable")
-    public ResponseEntity<CommonResponse<TimetableRespDTO>> registerMyTimetable(
+    public ResponseEntity<CommonRespDTO<TimetableRespDTO>> registerMyTimetable(
             @PathVariable Integer teamId,
             @Valid @RequestBody TimetableReqDTO reqDTO,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Integer currentUserId = userDetails.getUserId();
         TimetableRespDTO result = teamTimetableService.registerMyTimetable(teamId, reqDTO, currentUserId);
-        return ResponseEntity.ok(CommonResponse.success("팀 시간표 등록 성공", result));
+        return ResponseEntity.ok(CommonRespDTO.success("팀 시간표 등록 성공", result));
     }
 
     @Operation(summary = "팀내 내 시간표 수정")
     @PatchMapping("/{teamId}/members/me/timetable")
-    public ResponseEntity<CommonResponse<TimetableRespDTO>> updateMyTimetable(
+    public ResponseEntity<CommonRespDTO<TimetableRespDTO>> updateMyTimetable(
             @PathVariable Integer teamId,
             @Valid @RequestBody TimetableUpdateReqDTO reqDTO,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Integer currentUserId = userDetails.getUserId();
         TimetableRespDTO result = teamTimetableService.updateMyTimetable(teamId, reqDTO, currentUserId);
-        return ResponseEntity.ok(CommonResponse.success("팀 시간표 수정 성공", result));
+        return ResponseEntity.ok(CommonRespDTO.success("팀 시간표 수정 성공", result));
     }
 }

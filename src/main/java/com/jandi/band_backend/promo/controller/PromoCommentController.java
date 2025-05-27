@@ -1,6 +1,6 @@
 package com.jandi.band_backend.promo.controller;
 
-import com.jandi.band_backend.global.CommonResponse;
+import com.jandi.band_backend.global.dto.CommonRespDTO;
 import com.jandi.band_backend.global.dto.PagedRespDTO;
 import com.jandi.band_backend.promo.dto.PromoCommentReqDTO;
 import com.jandi.band_backend.promo.dto.PromoCommentRespDTO;
@@ -44,7 +44,7 @@ public class PromoCommentController {
         @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
     })
     @GetMapping("/{promoId}/comments")
-    public ResponseEntity<CommonResponse<PagedRespDTO<PromoCommentRespDTO>>> getCommentsByPromo(
+    public ResponseEntity<CommonRespDTO<PagedRespDTO<PromoCommentRespDTO>>> getCommentsByPromo(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size,
@@ -54,7 +54,7 @@ public class PromoCommentController {
         Pageable pageable = createPageable(page, size, sort);
         Integer userId = userDetails != null ? userDetails.getUserId() : null;
         Page<PromoCommentRespDTO> commentPage = promoCommentService.getCommentsByPromo(promoId, userId, pageable);
-                return ResponseEntity.ok(CommonResponse.success("공연 홍보 댓글 목록을 조회했습니다.", 
+                return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 댓글 목록을 조회했습니다.",
                 PagedRespDTO.from(commentPage)));
     }
 
@@ -69,7 +69,7 @@ public class PromoCommentController {
         @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
     })
     @PostMapping("/{promoId}/comments")
-    public ResponseEntity<CommonResponse<PromoCommentRespDTO>> createComment(
+    public ResponseEntity<CommonRespDTO<PromoCommentRespDTO>> createComment(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                 description = "댓글 생성 정보",
@@ -90,7 +90,7 @@ public class PromoCommentController {
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(CommonResponse.success("공연 홍보 댓글이 성공적으로 생성되었습니다.",
+                .body(CommonRespDTO.success("공연 홍보 댓글이 성공적으로 생성되었습니다.",
                         promoCommentService.createComment(promoId, request, userId)));
     }
 
@@ -106,7 +106,7 @@ public class PromoCommentController {
         @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
     })
     @PatchMapping("/comments/{commentId}")
-    public ResponseEntity<CommonResponse<PromoCommentRespDTO>> updateComment(
+    public ResponseEntity<CommonRespDTO<PromoCommentRespDTO>> updateComment(
             @Parameter(description = "댓글 ID", example = "1") @PathVariable Integer commentId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                 description = "댓글 수정 정보",
@@ -126,7 +126,7 @@ public class PromoCommentController {
             @Valid @RequestBody PromoCommentReqDTO request,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
-        return ResponseEntity.ok(CommonResponse.success("공연 홍보 댓글이 성공적으로 수정되었습니다.",
+        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 댓글이 성공적으로 수정되었습니다.",
                 promoCommentService.updateComment(commentId, request, userId)));
     }
 
@@ -141,12 +141,12 @@ public class PromoCommentController {
         @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
     })
     @DeleteMapping("/comments/{commentId}")
-    public ResponseEntity<CommonResponse<Void>> deleteComment(
+    public ResponseEntity<CommonRespDTO<Void>> deleteComment(
             @Parameter(description = "댓글 ID", example = "1") @PathVariable Integer commentId,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         promoCommentService.deleteComment(commentId, userId);
-        return ResponseEntity.ok(CommonResponse.success("공연 홍보 댓글이 성공적으로 삭제되었습니다.", null));
+        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 댓글이 성공적으로 삭제되었습니다.", null));
     }
 
     @Operation(
@@ -159,7 +159,7 @@ public class PromoCommentController {
         @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
     })
     @PostMapping("/comments/{commentId}/like")
-    public ResponseEntity<CommonResponse<String>> toggleCommentLike(
+    public ResponseEntity<CommonRespDTO<String>> toggleCommentLike(
             @Parameter(description = "댓글 ID", example = "1") @PathVariable Integer commentId,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
@@ -168,7 +168,7 @@ public class PromoCommentController {
         String message = isLiked ? "댓글 좋아요가 추가되었습니다." : "댓글 좋아요가 취소되었습니다.";
         String result = isLiked ? "liked" : "unliked";
         
-        return ResponseEntity.ok(CommonResponse.success(message, result));
+        return ResponseEntity.ok(CommonRespDTO.success(message, result));
     }
 
     @Operation(
@@ -181,13 +181,13 @@ public class PromoCommentController {
         @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
     })
     @GetMapping("/comments/{commentId}/like/status")
-    public ResponseEntity<CommonResponse<Boolean>> getCommentLikeStatus(
+    public ResponseEntity<CommonRespDTO<Boolean>> getCommentLikeStatus(
             @Parameter(description = "댓글 ID", example = "1") @PathVariable Integer commentId,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         boolean isLiked = promoCommentLikeService.isLikedByUser(commentId, userId);
         
-        return ResponseEntity.ok(CommonResponse.success("댓글 좋아요 상태 조회 성공", isLiked));
+        return ResponseEntity.ok(CommonRespDTO.success("댓글 좋아요 상태 조회 성공", isLiked));
     }
 
     @Operation(
@@ -199,11 +199,11 @@ public class PromoCommentController {
         @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
     })
     @GetMapping("/comments/{commentId}/like/count")
-    public ResponseEntity<CommonResponse<Integer>> getCommentLikeCount(
+    public ResponseEntity<CommonRespDTO<Integer>> getCommentLikeCount(
             @Parameter(description = "댓글 ID", example = "1") @PathVariable Integer commentId) {
         Integer likeCount = promoCommentLikeService.getLikeCount(commentId);
         
-        return ResponseEntity.ok(CommonResponse.success("댓글 좋아요 수 조회 성공", likeCount));
+        return ResponseEntity.ok(CommonRespDTO.success("댓글 좋아요 수 조회 성공", likeCount));
     }
 
     // Pageable 생성 헬퍼 메서드

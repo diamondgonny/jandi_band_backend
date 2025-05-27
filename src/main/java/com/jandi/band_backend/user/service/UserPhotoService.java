@@ -1,10 +1,9 @@
 package com.jandi.band_backend.user.service;
 
-import com.jandi.band_backend.global.exception.UserNotFoundException;
-import com.jandi.band_backend.image.S3Service;
 import com.jandi.band_backend.user.entity.UserPhoto;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserPhotoRepository;
+import com.jandi.band_backend.global.util.S3FileManagementUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,9 +14,11 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @RequiredArgsConstructor
 public class UserPhotoService {
-    private final S3Service s3Service;
     private final UserService userService;
     private final UserPhotoRepository userPhotoRepository;
+    private final S3FileManagementUtil s3FileManagementUtil;
+    
+    private static final String USER_PHOTO_DIR = "user-photo";
 
     /// 유저 프로필 사진 조회
     @Transactional(readOnly = true)
@@ -25,7 +26,9 @@ public class UserPhotoService {
         Users user = userService.getMyInfo(userId);
         UserPhoto userProfile = userPhotoRepository.findByUser(user);
 
-        if (userProfile == null) throw new UserNotFoundException();
+        if (userProfile == null) {
+            throw new RuntimeException("프로필 사진이 등록되지 않았습니다.");
+        }
         return userProfile;
     }
 
@@ -33,40 +36,18 @@ public class UserPhotoService {
     @Transactional
     public void updateMyPhoto(Integer userId, MultipartFile newProfileFile) {
         // 프로필 사진이 없을 경우 수정하지 않음
-        if (newProfileFile == null || newProfileFile.isEmpty()) return;
+        if (newProfileFile == null || newProfileFile.isEmpty()) {
+            return;
+        }
 
         // 프로필 조회
         UserPhoto profile = getMyPhoto(userId);
         String originalUrl = profile.getImageUrl();
 
         // 새 이미지 업로드 및 이전 이미지 삭제
-        String newUrl = uploadNewProfileFile(newProfileFile);
-        deleteOriginalProfileFile(originalUrl);
+        String newUrl = s3FileManagementUtil.uploadFile(newProfileFile, USER_PHOTO_DIR, "프로필 사진 업로드 실패");
+        s3FileManagementUtil.deleteFileWithKakaoCheck(originalUrl);
         profile.setImageUrl(newUrl);
         userPhotoRepository.save(profile);
-    }
-
-    /// 내부 메서드
-    // S3에 새 프로필 이미지 업로드
-    private String uploadNewProfileFile(MultipartFile newProfileFile) {
-        try{
-            String s3DirName = "user-photo";
-            return s3Service.uploadImage(newProfileFile, s3DirName);
-        }catch (Exception e) {
-            throw new RuntimeException("프로필 사진 업로드 실패: " + e.getMessage());
-        }
-    }
-
-    // S3에서 이전 프로필 이미지 삭제
-    private void deleteOriginalProfileFile(String originalProfileUrl) {
-        // 카카오 기본 프로필인 경우 삭제 작업을 잔행하지 않음
-        String kakaoPrefix = "k.kakaocdn.net";
-        if(originalProfileUrl.contains(kakaoPrefix)) return;
-
-        try{
-            s3Service.deleteImage(originalProfileUrl);
-        }catch (Exception e) {
-            log.error("프로필 사진 삭제 실패: url={}", originalProfileUrl);
-        }
     }
 }

@@ -3,7 +3,7 @@ package com.jandi.band_backend.promo.service;
 import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.repository.ClubRepository;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
-import com.jandi.band_backend.image.S3Service;
+
 import com.jandi.band_backend.promo.dto.PromoReqDTO;
 import com.jandi.band_backend.promo.dto.PromoRespDTO;
 import com.jandi.band_backend.promo.entity.Promo;
@@ -12,6 +12,9 @@ import com.jandi.band_backend.promo.repository.PromoRepository;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserRepository;
 import com.jandi.band_backend.club.repository.ClubMemberRepository;
+import com.jandi.band_backend.global.util.PermissionValidationUtil;
+import com.jandi.band_backend.global.util.UserValidationUtil;
+import com.jandi.band_backend.global.util.S3FileManagementUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,8 +37,10 @@ public class PromoService {
     private final ClubRepository clubRepository;
     private final UserRepository userRepository;
     private final ClubMemberRepository clubMemberRepository;
-    private final S3Service s3Service;
     private final PromoLikeService promoLikeService;
+    private final PermissionValidationUtil permissionValidationUtil;
+    private final UserValidationUtil userValidationUtil;
+    private final S3FileManagementUtil s3FileManagementUtil;
     private static final String PROMO_PHOTO_DIR = "promo-photo";
 
     // 공연 홍보 목록 조회
@@ -106,8 +111,7 @@ public class PromoService {
         Club club = clubRepository.findById(request.getClubId())
                 .orElseThrow(() -> new ResourceNotFoundException("클럽을 찾을 수 없습니다."));
         
-        Users creator = userRepository.findById(creatorId)
-                .orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다."));
+        Users creator = userValidationUtil.getUserById(creatorId);
 
         // 클럽 멤버십 검증 추가
         if (!clubMemberRepository.existsByClubAndUser(club, creator)) {
@@ -137,9 +141,7 @@ public class PromoService {
         }
 
         // 권한 체크
-        if (!promo.getCreator().getId().equals(userId)) {
-            throw new IllegalStateException("공연 홍보를 수정할 권한이 없습니다.");
-        }
+        permissionValidationUtil.validateContentOwnership(promo.getCreator().getId(), userId, "공연 홍보를 수정할 권한이 없습니다.");
 
         // 클럽 변경 시 새로운 클럽 조회
         if (!promo.getClub().getId().equals(request.getClubId())) {
@@ -170,9 +172,7 @@ public class PromoService {
         }
 
         // 권한 체크
-        if (!promo.getCreator().getId().equals(userId)) {
-            throw new IllegalStateException("공연 홍보를 삭제할 권한이 없습니다.");
-        }
+        permissionValidationUtil.validateContentOwnership(promo.getCreator().getId(), userId, "공연 홍보를 삭제할 권한이 없습니다.");
 
         promo.setDeletedAt(LocalDateTime.now());
     }
@@ -186,12 +186,10 @@ public class PromoService {
         }
 
         // 권한 체크
-        if (!promo.getCreator().getId().equals(userId)) {
-            throw new IllegalStateException("공연 홍보 이미지를 업로드할 권한이 없습니다.");
-        }
+        permissionValidationUtil.validateContentOwnership(promo.getCreator().getId(), userId, "공연 홍보 이미지를 업로드할 권한이 없습니다.");
 
         // S3에 이미지 업로드
-        String imageUrl = s3Service.uploadImage(image, PROMO_PHOTO_DIR);
+        String imageUrl = s3FileManagementUtil.uploadFile(image, PROMO_PHOTO_DIR, "공연 홍보 이미지 업로드 실패");
 
         // PromoPhoto 엔티티 생성 및 저장
         PromoPhoto photo = new PromoPhoto();
@@ -218,9 +216,7 @@ public class PromoService {
         }
 
         // 권한 체크
-        if (!promo.getCreator().getId().equals(userId)) {
-            throw new IllegalStateException("공연 홍보 이미지를 삭제할 권한이 없습니다.");
-        }
+        permissionValidationUtil.validateContentOwnership(promo.getCreator().getId(), userId, "공연 홍보 이미지를 삭제할 권한이 없습니다.");
 
         // 이미지 찾기
         PromoPhoto photo = promo.getPhotos().stream()
@@ -229,7 +225,7 @@ public class PromoService {
                 .orElseThrow(() -> new ResourceNotFoundException("이미지를 찾을 수 없습니다."));
 
         // S3에서 이미지 삭제
-        s3Service.deleteImage(imageUrl);
+        s3FileManagementUtil.deleteFileSafely(imageUrl);
 
         // DB에서 이미지 정보 삭제 (소프트 삭제)
         photo.setDeletedAt(LocalDateTime.now());

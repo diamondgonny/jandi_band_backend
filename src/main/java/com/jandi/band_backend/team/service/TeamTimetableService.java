@@ -19,6 +19,8 @@ import com.jandi.band_backend.user.repository.UserRepository;
 import com.jandi.band_backend.user.service.UserTimetableService;
 import com.jandi.band_backend.user.dto.UserTimetableDetailsRespDTO;
 import com.jandi.band_backend.team.util.TeamTimetableUtil;
+import com.jandi.band_backend.global.util.PermissionValidationUtil;
+import com.jandi.band_backend.global.util.UserValidationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,6 +40,8 @@ public class TeamTimetableService {
     private final UserTimetableService userTimetableService;
     private final ObjectMapper objectMapper;
     private final TeamTimetableUtil teamTimetableUtil;
+    private final PermissionValidationUtil permissionValidationUtil;
+    private final UserValidationUtil userValidationUtil;
 
     /**
      * 팀내 스케줄 조율 제안 ('시간 언제 돼? 모드' 시작)
@@ -49,8 +53,7 @@ public class TeamTimetableService {
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
 
         // 팀원 권한 확인 (팀원만 스케줄 조율 제안 가능)
-        TeamMember teamMember = teamMemberRepository.findByTeamIdAndUserId(teamId, currentUserId)
-                .orElseThrow(() -> new UnauthorizedClubAccessException("팀원만 접근할 수 있습니다."));
+        TeamMember teamMember = permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "팀원만 접근할 수 있습니다.");
 
         // suggested_schedule_at을 현재 시간으로 설정
         LocalDateTime now = LocalDateTime.now();
@@ -108,17 +111,14 @@ public class TeamTimetableService {
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
 
         // 본인만 시간표 입력 가능하도록 권한 확인
-        return teamMemberRepository.findByTeamIdAndUserId(teamId, currentUserId)
-                .orElseThrow(() -> new InvalidAccessException("본인의 시간표만 입력할 수 있습니다."));
+        return permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "본인의 시간표만 입력할 수 있습니다.");
     }
 
     /**
      * 사용자의 카카오 OAuth ID 조회
      */
     private String getUserKakaoOauthId(Integer currentUserId) {
-        return userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다."))
-                .getKakaoOauthId();
+        return userValidationUtil.getUserById(currentUserId).getKakaoOauthId();
     }
 
     /**

@@ -21,7 +21,9 @@ import com.jandi.band_backend.global.exception.ResourceNotFoundException;
 import com.jandi.band_backend.global.exception.UnauthorizedClubAccessException;
 import com.jandi.band_backend.global.exception.UniversityNotFoundException;
 import com.jandi.band_backend.global.exception.UserNotFoundException;
-import com.jandi.band_backend.image.S3Service;
+import com.jandi.band_backend.global.util.S3FileManagementUtil;
+import com.jandi.band_backend.global.util.PermissionValidationUtil;
+import com.jandi.band_backend.global.util.UserValidationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,7 +46,9 @@ public class ClubService {
     private final ClubPhotoRepository clubPhotoRepository;
     private final UserRepository userRepository;
     private final UniversityRepository universityRepository;
-    private final S3Service s3Service;
+    private final S3FileManagementUtil s3FileManagementUtil;
+    private final PermissionValidationUtil permissionValidationUtil;
+    private final UserValidationUtil userValidationUtil;
 
     private static final String CLUB_PHOTO_DIR = "club-photo";
     private static final String DEFAULT_CLUB_PHOTO_URL = "https://jandi-rhythmeet.s3.ap-northeast-2.amazonaws.com/user-photo/31eef3b5-c915-4142-9b7f-1ff6a96a35a1.jpeg";
@@ -52,8 +56,7 @@ public class ClubService {
     @Transactional
     public ClubDetailRespDTO createClub(ClubReqDTO request, Integer userId) {
         // 사용자 확인
-        Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException());
+        Users user = userValidationUtil.getUserById(userId);
 
         // 동아리 생성
         Club club = new Club();
@@ -169,9 +172,7 @@ public class ClubService {
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
         // 권한 확인 (동아리 회원이면 수정 가능)
-        String updateAccessErrorMessage = "동아리 정보 수정 권한이 없습니다.";
-        clubMemberRepository.findByClubIdAndUserId(clubId, userId)
-                .orElseThrow(() -> new UnauthorizedClubAccessException(updateAccessErrorMessage));
+        permissionValidationUtil.validateClubMemberAccess(clubId, userId, "동아리 정보 수정 권한이 없습니다.");
 
         // 동아리 정보 수정
         if (request.getName() != null) {
@@ -203,10 +204,7 @@ public class ClubService {
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
         // 권한 확인 (대표자만 삭제 가능)
-        String deleteAccessErrorMessage = "동아리 삭제 권한이 없습니다.";
-        clubMemberRepository.findByClubIdAndUserId(clubId, userId)
-                .filter(member -> member.getRole() == ClubMember.MemberRole.REPRESENTATIVE)
-                .orElseThrow(() -> new UnauthorizedClubAccessException(deleteAccessErrorMessage));
+        permissionValidationUtil.validateClubRepresentativeAccess(clubId, userId, "동아리 삭제 권한이 없습니다.");
 
         // 동아리 대표 사진 S3 삭제
         deleteClubPhoto(clubId, userId);
@@ -231,9 +229,7 @@ public class ClubService {
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
         // 권한 확인 (동아리 회원이면 업로드 가능)
-        String uploadAccessErrorMessage = "동아리 사진 업로드 권한이 없습니다.";
-        clubMemberRepository.findByClubIdAndUserId(clubId, userId)
-                .orElseThrow(() -> new UnauthorizedClubAccessException(uploadAccessErrorMessage));
+        permissionValidationUtil.validateClubMemberAccess(clubId, userId, "동아리 사진 업로드 권한이 없습니다.");
 
         // 이전 사진 URL 조회
         ClubPhoto clubPhoto = clubPhotoRepository
@@ -242,11 +238,8 @@ public class ClubService {
         String originalUrl = clubPhoto.getImageUrl();
 
         // S3에서 이전 이미지 삭제 및 새로운 이미지 업로드 후 적용
-        // 단, 이전 이미지 != 기본 이미지인 경우에만 S3에서 이전 이미지 삭제
-        if (!originalUrl.equals(DEFAULT_CLUB_PHOTO_URL)) {
-            deleteOriginalClubPhotoFile(originalUrl);
-        }
-        String newUrl = uploadNewClubPhotoFile(image);
+        String newUrl = s3FileManagementUtil.uploadFile(image, CLUB_PHOTO_DIR, "동아리 사진 업로드 실패");
+        s3FileManagementUtil.deleteFileIfNotDefault(originalUrl, DEFAULT_CLUB_PHOTO_URL);
         clubPhoto.setImageUrl(newUrl);
         clubPhoto.setUploadedAt(LocalDateTime.now());
         clubPhotoRepository.save(clubPhoto);
@@ -260,9 +253,7 @@ public class ClubService {
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
         // 권한 확인 (동아리 회원이면 삭제 가능)
-        String deletePhotoAccessErrorMessage = "동아리 사진 삭제 권한이 없습니다.";
-        clubMemberRepository.findByClubIdAndUserId(clubId, userId)
-                .orElseThrow(() -> new UnauthorizedClubAccessException(deletePhotoAccessErrorMessage));
+        permissionValidationUtil.validateClubMemberAccess(clubId, userId, "동아리 사진 삭제 권한이 없습니다.");
 
         // 이전 사진 URL 조회
         ClubPhoto clubPhoto = clubPhotoRepository
@@ -271,10 +262,7 @@ public class ClubService {
         String originalUrl = clubPhoto.getImageUrl();
 
         // S3에서 이전 이미지 삭제 및 기본 이미지 적용
-        // 단, 이전 이미지 != 기본 이미지인 경우에만 S3에서 이전 이미지 삭제
-        if (!originalUrl.equals(DEFAULT_CLUB_PHOTO_URL)) {
-            deleteOriginalClubPhotoFile(originalUrl);
-        }
+        s3FileManagementUtil.deleteFileIfNotDefault(originalUrl, DEFAULT_CLUB_PHOTO_URL);
         clubPhoto.setImageUrl(DEFAULT_CLUB_PHOTO_URL);
         clubPhoto.setUploadedAt(LocalDateTime.now());
         clubPhotoRepository.save(clubPhoto);
@@ -352,23 +340,5 @@ public class ClubService {
                 .name(user.getNickname())
                 .position(position)
                 .build();
-    }
-
-    // S3에 새 동아리 사진 업로드하는 헬퍼 메서드
-    private String uploadNewClubPhotoFile(MultipartFile newPhotoFile) {
-        try{
-            return s3Service.uploadImage(newPhotoFile, CLUB_PHOTO_DIR);
-        }catch (Exception e) {
-            throw new RuntimeException("동아리 사진 업로드 실패: " + e.getMessage());
-        }
-    }
-
-    // S3에서 기존 동아리 사진 삭제하는 헬퍼 메서드
-    private void deleteOriginalClubPhotoFile(String originalPhotoUrl) {
-        try{
-            s3Service.deleteImage(originalPhotoUrl);
-        }catch (Exception e) {
-            throw new RuntimeException("동아리 사진 삭제 실패: " + e.getMessage());
-        }
     }
 }

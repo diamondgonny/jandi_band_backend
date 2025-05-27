@@ -9,6 +9,7 @@ import com.jandi.band_backend.promo.dto.PromoRespDTO;
 import com.jandi.band_backend.promo.entity.Promo;
 import com.jandi.band_backend.promo.entity.PromoPhoto;
 import com.jandi.band_backend.promo.repository.PromoRepository;
+import com.jandi.band_backend.promo.repository.PromoPhotoRepository;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.global.util.PermissionValidationUtil;
@@ -31,6 +32,7 @@ import java.util.List;
 public class PromoService {
 
     private final PromoRepository promoRepository;
+    private final PromoPhotoRepository promoPhotoRepository;
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final PromoLikeService promoLikeService;
@@ -187,6 +189,15 @@ public class PromoService {
         // S3에 이미지 업로드
         String imageUrl = s3FileManagementUtil.uploadFile(image, PROMO_PHOTO_DIR, "공연 홍보 이미지 업로드 실패");
 
+        // 기존 현재 이미지가 있다면 isCurrent를 false로 변경
+        List<PromoPhoto> existingPhotos = promoPhotoRepository.findByPromoIdAndNotDeleted(promoId);
+        existingPhotos.stream()
+                .filter(PromoPhoto::getIsCurrent)
+                .forEach(p -> {
+                    p.setIsCurrent(false);
+                    promoPhotoRepository.save(p);
+                });
+
         // PromoPhoto 엔티티 생성 및 저장
         PromoPhoto photo = new PromoPhoto();
         photo.setPromo(promo);
@@ -194,12 +205,9 @@ public class PromoService {
         photo.setImageUrl(imageUrl);
         photo.setIsCurrent(true);
 
-        // 기존 현재 이미지가 있다면 isCurrent를 false로 변경
-        promo.getPhotos().stream()
-                .filter(PromoPhoto::getIsCurrent)
-                .forEach(p -> p.setIsCurrent(false));
-
-        promo.getPhotos().add(photo);
+        // 데이터베이스에 저장
+        promoPhotoRepository.save(photo);
+        
         return imageUrl;
     }
 
@@ -215,16 +223,17 @@ public class PromoService {
         permissionValidationUtil.validateContentOwnership(promo.getCreator().getId(), userId, "공연 홍보 이미지를 삭제할 권한이 없습니다.");
 
         // 이미지 찾기
-        PromoPhoto photo = promo.getPhotos().stream()
-                .filter(p -> p.getImageUrl().equals(imageUrl))
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("이미지를 찾을 수 없습니다."));
+        PromoPhoto photo = promoPhotoRepository.findByPromoIdAndImageUrlAndNotDeleted(promoId, imageUrl);
+        if (photo == null) {
+            throw new ResourceNotFoundException("이미지를 찾을 수 없습니다.");
+        }
 
         // S3에서 이미지 삭제
         s3FileManagementUtil.deleteFileSafely(imageUrl);
 
         // DB에서 이미지 정보 삭제 (소프트 삭제)
         photo.setDeletedAt(LocalDateTime.now());
+        promoPhotoRepository.save(photo);
     }
 
     // 공연 상태 자동 업데이트 (스케줄러로 주기적 실행)

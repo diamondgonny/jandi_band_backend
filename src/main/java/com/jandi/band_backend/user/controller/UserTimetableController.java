@@ -2,6 +2,7 @@ package com.jandi.band_backend.user.controller;
 
 import com.jandi.band_backend.global.CommonResponse;
 import com.jandi.band_backend.security.CustomUserDetails;
+import com.jandi.band_backend.security.jwt.JwtTokenProvider;
 import com.jandi.band_backend.user.dto.UserTimetableRespDTO;
 import com.jandi.band_backend.user.dto.UserTimetableReqDTO;
 import com.jandi.band_backend.user.dto.UserTimetableDetailsRespDTO;
@@ -35,11 +36,10 @@ public class UserTimetableController {
     @Operation(summary = "내 특정 시간표 조회")
     @GetMapping("me/timetables/{timetableId}")
     public CommonResponse<UserTimetableDetailsRespDTO> getTimetableById(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Integer timetableId
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @PathVariable Integer timetableId
     ) {
         Integer userId = userDetails.getUserId();
-
         UserTimetableDetailsRespDTO myTimetable = userTimetableService.getMyTimetableById(userId, timetableId);
         return CommonResponse.success("내 시간표 조회 성공", myTimetable);
     }
@@ -47,8 +47,8 @@ public class UserTimetableController {
     @Operation(summary = "시간표 생성")
     @PostMapping("/me/timetables")
     public CommonResponse<UserTimetableDetailsRespDTO> createTimetable(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody UserTimetableReqDTO userTimetableReqDTO
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @RequestBody UserTimetableReqDTO userTimetableReqDTO
     ) {
         Integer userId = userDetails.getUserId();
 
@@ -59,9 +59,9 @@ public class UserTimetableController {
     @Operation(summary = "시간표 수정")
     @PatchMapping("/me/timetables/{timetableId}")
     public CommonResponse<UserTimetableDetailsRespDTO> updateTimetable(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Integer timetableId,
-            @RequestBody UserTimetableReqDTO userTimetableReqDTO
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @PathVariable Integer timetableId,
+        @RequestBody UserTimetableReqDTO userTimetableReqDTO
     ) {
         Integer userId = userDetails.getUserId();
 
@@ -72,8 +72,8 @@ public class UserTimetableController {
     @Operation(summary = "시간표 삭제")
     @DeleteMapping("/me/timetables/{timetableId}")
     public CommonResponse<Void> deleteTimetable(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Integer timetableId
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @PathVariable Integer timetableId
     ) {
         Integer userId = userDetails.getUserId();
 

@@ -4,7 +4,7 @@
 `/api`
 
 ## 인증
-생성, 삭제는 JWT 인증 필요. 조회는 인증 불필요.
+생성, 삭제는 JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails). 조회는 인증 불필요.
 
 ---
 
@@ -71,7 +71,36 @@ curl -X GET "http://localhost:8080/api/practice-schedules/1"
 ```
 
 #### 응답 (200 OK)
-목록 조회의 개별 항목과 동일한 구조
+```json
+{
+  "success": true,
+  "message": "곡 연습 일정 상세 조회 성공",
+  "data": {
+    "id": 1,
+    "teamId": 1,
+    "teamName": "락밴드 A팀",
+    "songName": "Bohemian Rhapsody",
+    "artistName": "Queen",
+    "youtubeUrl": "https://www.youtube.com/watch?v=fJ9rUzIMcZQ",
+    "startDatetime": "2024-03-15T19:00:00",
+    "endDatetime": "2024-03-15T21:00:00",
+    "location": "연습실 1",
+    "address": "서울시 강남구 테헤란로 123",
+    "additionalDescription": "보컬 파트 중점 연습",
+    "creatorId": 1,
+    "creatorName": "홍길동",
+    "createdAt": "2024-03-15T10:30:00",
+    "updatedAt": "2024-03-15T10:30:00",
+    "participants": [
+      {
+        "id": 1,
+        "userId": 1,
+        "userName": "홍길동"
+      }
+    ]
+  }
+}
+```
 
 ---
 
@@ -103,7 +132,7 @@ curl -X POST "http://localhost:8080/api/teams/1/practice-schedules" \
 - `endDatetime` (string, 필수): 연습 종료 일시 (ISO 8601)
 - `location` (string, 선택): 장소명 (최대 255자)
 - `address` (string, 선택): 상세 주소 (최대 255자)
-- `additionalDescription` (string, 선택): 추가 설명
+- `additionalDescription` (string, 선택): 추가 설명 (최대 길이 제한 없음)
 
 #### 응답 (200 OK)
 ```json
@@ -171,7 +200,9 @@ curl -X DELETE "http://localhost:8080/api/practice-schedules/1" \
 
 ## 참고사항
 - **권한**: 연습 일정 생성은 JWT 인증 필요, 삭제는 생성자만 가능
-- **데이터 저장**: 곡명과 아티스트명은 "곡명 - 아티스트명" 형태로 저장
-- **URL 파싱**: YouTube URL과 추가 설명을 description 필드에서 파싱
-- **페이지네이션**: 기본 크기 20개
+- **데이터 저장**: 곡명과 아티스트명은 "곡명 - 아티스트명" 형태로 name 필드에 저장
+- **URL 파싱**: YouTube URL과 추가 설명을 description 필드에 저장 후 응답 시 파싱
+- **페이지네이션**: 기본 크기 20개 (Spring Boot 기본값)
+- **정렬**: 연습 시작 일시(startDatetime) 오름차순 정렬
 - **소프트 삭제**: 실제 삭제가 아닌 deletedAt 설정
+- **연습 일정 구분**: TeamEvent의 name 필드에 " - "가 포함된 경우를 연습 일정으로 판별

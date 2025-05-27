@@ -56,6 +56,14 @@ public class GlobalExceptionHandler {
                 .body(CommonResponse.error(ex.getMessage(), "CLUB_NOT_FOUND"));
     }
 
+    // 팀 미존재
+    @ExceptionHandler(TeamNotFoundException.class)
+    public ResponseEntity<CommonResponse<?>> handleTeamNotFound(TeamNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(CommonResponse.error(ex.getMessage(), "TEAM_NOT_FOUND"));
+    }
+
     // 투표 미존재
     @ExceptionHandler(PollNotFoundException.class)
     public ResponseEntity<CommonResponse<?>> handlePollNotFound(PollNotFoundException ex) {
@@ -127,6 +135,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(CommonResponse.error(ex.getMessage(), "ILLEGAL_ARGUMENT"));
+    }
+
+    // 잘못된 요청 데이터
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<CommonResponse<?>> handleBadRequest(BadRequestException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(CommonResponse.error(ex.getMessage(), "BAD_REQUEST"));
     }
 
     /// 카카오 예외 처리

@@ -1,10 +1,7 @@
 package com.jandi.band_backend.auth.service;
 
 import com.jandi.band_backend.auth.dto.*;
-import com.jandi.band_backend.auth.dto.kakao.KakaoTokenRespDTO;
 import com.jandi.band_backend.auth.dto.kakao.KakaoUserInfoDTO;
-import com.jandi.band_backend.auth.service.kakao.KaKaoTokenService;
-import com.jandi.band_backend.auth.service.kakao.KakaoUserService;
 import com.jandi.band_backend.global.exception.InvalidAccessException;
 import com.jandi.band_backend.global.exception.InvalidTokenException;
 import com.jandi.band_backend.global.exception.UserNotFoundException;
@@ -25,19 +22,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    private final KaKaoTokenService kaKaoTokenService;
-    private final KakaoUserService kakaoUserService;
     private final UserRepository userRepository;
     private final UserPhotoRepository userPhotoRepository;
     private final UniversityRepository universityRepository;
     private final JwtTokenProvider jwtTokenProvider;
 
     /// 로그인
-    public TokenRespDTO login(String code){
-        // 카카오로부터 유저 정보 얻기
-        KakaoTokenRespDTO kakaoToken = kaKaoTokenService.getKakaoToken(code);
-        KakaoUserInfoDTO kakaoUserInfo = kakaoUserService.getKakaoUserInfo(kakaoToken.getAccessToken());
-
+    @Transactional
+    public TokenRespDTO login(KakaoUserInfoDTO kakaoUserInfo) {
         // DB에서 유저를 찾되, 없다면 임시 회원 가입 진행
         Users user = getOrCreateUser(kakaoUserInfo);
 
@@ -52,6 +44,14 @@ public class AuthService {
             jwtTokenProvider.generateRefreshToken(user.getKakaoOauthId()),
             user.getIsRegistered()
         );
+    }
+
+    /// 로그아웃
+    public void logout(String accessToken) {
+        // 멘토링 결과 별도의 블랙리스트 처리는 필요하지 않아 로깅만 하는 것으로 작업
+        // 카카오 토큰은 카카오 리소스 접근용이라 알림톡/메시지 공유에선 쓰이지 않아 굳이 카카오에게 로그아웃을 요청해 강제 만료처리할 필요가 없음
+        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
+        log.info("사용자: {}가 로그아웃했습니다", kakaoOauthId);
     }
 
     /// 정식 회원가입
@@ -100,8 +100,7 @@ public class AuthService {
 
     /// 내부 메서드
     // DB에서 유저를 찾되, 없다면 임시 회원 가입 진행. 만약 가입시 문제가 생기면 롤백
-    @Transactional
-    public Users getOrCreateUser(KakaoUserInfoDTO kakaoUserInfo) {
+    private Users getOrCreateUser(KakaoUserInfoDTO kakaoUserInfo) {
         String kakaoOauthId = kakaoUserInfo.getKakaoOauthId();
         return userRepository.findByKakaoOauthId(kakaoOauthId)
                 .orElseGet(() -> createTemporaryUser(kakaoUserInfo));

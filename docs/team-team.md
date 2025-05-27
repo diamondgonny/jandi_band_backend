@@ -4,7 +4,7 @@
 `/api`
 
 ## 인증
-JWT 인증 필요 (Spring Security + CustomUserDetails)
+JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails)
 
 ---
 
@@ -32,22 +32,25 @@ curl -X POST "http://localhost:8080/api/clubs/1/teams" \
   "data": {
     "id": 1,
     "name": "락밴드 A팀",
-    "club": {
-      "clubId": 1,
-      "name": "락밴드 동아리"
-    },
-    "creator": {
-      "userId": 1,
-      "name": "홍길동"
-    },
+    "clubId": 1,
+    "clubName": "락밴드 동아리",
+    "creatorId": 1,
+    "creatorName": "홍길동",
     "members": [
       {
         "userId": 1,
         "name": "홍길동",
-        "position": "GUITAR"
+        "position": "GUITAR",
+        "timetableUpdatedAt": null,
+        "isSubmitted": false,
+        "timetableData": null
       }
     ],
-    "memberCount": 1,
+    "suggestedScheduleAt": null,
+    "submissionProgress": {
+      "submittedMember": 0,
+      "totalMember": 1
+    },
     "createdAt": "2024-03-15T10:30:00",
     "updatedAt": "2024-03-15T10:30:00"
   }
@@ -79,6 +82,8 @@ curl -X GET "http://localhost:8080/api/clubs/1/teams?page=0&size=5" \
       {
         "id": 1,
         "name": "락밴드 A팀",
+        "clubId": 1,
+        "clubName": "락밴드 동아리",
         "creatorId": 1,
         "creatorName": "홍길동",
         "memberCount": 4,
@@ -95,7 +100,7 @@ curl -X GET "http://localhost:8080/api/clubs/1/teams?page=0&size=5" \
 
 ---
 
-## 3. 팀 상세 조회
+## 3. 팀 상세 정보 조회
 ### GET `/api/teams/{teamId}`
 
 #### 요청
@@ -105,11 +110,57 @@ curl -X GET "http://localhost:8080/api/teams/1" \
 ```
 
 #### 응답 (200 OK)
-팀 생성 응답과 동일한 구조
+```json
+{
+  "success": true,
+  "message": "곡 팀 정보를 성공적으로 조회했습니다.",
+  "data": {
+    "id": 1,
+    "name": "락밴드 A팀",
+    "clubId": 1,
+    "clubName": "락밴드 동아리",
+    "creatorId": 1,
+    "creatorName": "홍길동",
+    "members": [
+      {
+        "userId": 1,
+        "name": "홍길동",
+        "position": "GUITAR",
+        "timetableUpdatedAt": "2024-03-16T14:30:00",
+        "isSubmitted": true,
+        "timetableData": {
+          "Mon": ["14:00", "15:00"],
+          "Tue": ["18:00", "19:00"],
+          "Wed": ["14:00", "15:00"],
+          "Thu": [],
+          "Fri": ["17:00", "18:00"],
+          "Sat": ["10:00", "11:00"],
+          "Sun": []
+        }
+      },
+      {
+        "userId": 2,
+        "name": "김철수",
+        "position": "BASS",
+        "timetableUpdatedAt": null,
+        "isSubmitted": false,
+        "timetableData": null
+      }
+    ],
+    "suggestedScheduleAt": "2024-03-16T10:00:00",
+    "submissionProgress": {
+      "submittedMember": 1,
+      "totalMember": 2
+    },
+    "createdAt": "2024-03-15T10:30:00",
+    "updatedAt": "2024-03-15T10:30:00"
+  }
+}
+```
 
 ---
 
-## 4. 팀 정보 수정
+## 4. 팀 이름 수정
 ### PATCH `/api/teams/{teamId}`
 
 #### 요청
@@ -126,31 +177,21 @@ curl -X PATCH "http://localhost:8080/api/teams/1" \
 ```json
 {
   "success": true,
-  "message": "곡 팀 정보가 성공적으로 수정되었습니다.",
+  "message": "곡 팀 이름이 성공적으로 수정되었습니다.",
   "data": {
     "id": 1,
     "name": "수정된 락밴드 A팀",
-    "club": {
-      "clubId": 1,
-      "name": "락밴드 동아리"
-    },
-    "creator": {
-      "userId": 1,
-      "name": "홍길동"
-    },
-    "members": [
-      {
-        "userId": 1,
-        "name": "홍길동",
-        "position": "GUITAR"
-      }
-    ],
+    "clubId": 1,
+    "clubName": "락밴드 동아리",
+    "creatorId": 1,
+    "creatorName": "홍길동",
     "memberCount": 1,
-    "createdAt": "2024-03-15T10:30:00",
-    "updatedAt": "2024-03-15T11:00:00"
+    "createdAt": "2024-03-15T10:30:00"
   }
 }
 ```
+
+**참고**: 실제 응답은 `TeamRespDTO` 구조를 따름
 
 ---
 
@@ -195,5 +236,7 @@ curl -X DELETE "http://localhost:8080/api/teams/1" \
 - **권한**: 동아리 멤버만 팀 생성/조회 가능
 - **수정/삭제 권한**: 팀 생성자 또는 동아리 대표자만 가능
 - **자동 멤버 추가**: 팀 생성자는 자동으로 첫 번째 멤버 등록
-- **페이지네이션**: 기본 크기 5개
+- **페이지네이션**: 기본 크기 5개, 최신 생성순으로 정렬
 - **소프트 삭제**: 실제 삭제가 아닌 deletedAt 설정
+- **시간표 통합**: 팀 상세 조회 시 팀원들의 시간표 정보(`timetableData`, `isSubmitted` 등) 포함
+- **스케줄 조율**: 팀 상세 조회 시 `suggestedScheduleAt`과 `submissionProgress`로 시간표 제출 현황 추적

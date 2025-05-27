@@ -35,6 +35,7 @@ public class PromoService {
     private final UserRepository userRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final S3Service s3Service;
+    private final PromoLikeService promoLikeService;
     private static final String PROMO_PHOTO_DIR = "promo-photo";
 
     // 공연 홍보 목록 조회
@@ -43,10 +44,30 @@ public class PromoService {
                 .map(PromoRespDTO::from);
     }
 
+    // 공연 홍보 목록 조회 (사용자별 좋아요 상태 포함)
+    public Page<PromoRespDTO> getPromos(Integer userId, Pageable pageable) {
+        return promoRepository.findAllNotDeleted(pageable)
+                .map(promo -> {
+                    Boolean isLikedByUser = userId != null ? 
+                            promoLikeService.isLikedByUser(promo.getId(), userId) : null;
+                    return PromoRespDTO.from(promo, isLikedByUser);
+                });
+    }
+
     // 클럽별 공연 홍보 목록 조회
     public Page<PromoRespDTO> getPromosByClub(Integer clubId, Pageable pageable) {
         return promoRepository.findAllByClubId(clubId, pageable)
                 .map(PromoRespDTO::from);
+    }
+
+    // 클럽별 공연 홍보 목록 조회 (사용자별 좋아요 상태 포함)
+    public Page<PromoRespDTO> getPromosByClub(Integer clubId, Integer userId, Pageable pageable) {
+        return promoRepository.findAllByClubId(clubId, pageable)
+                .map(promo -> {
+                    Boolean isLikedByUser = userId != null ? 
+                            promoLikeService.isLikedByUser(promo.getId(), userId) : null;
+                    return PromoRespDTO.from(promo, isLikedByUser);
+                });
     }
 
     // 공연 홍보 상세 조회
@@ -60,6 +81,23 @@ public class PromoService {
         // 조회수 증가
         promo.setViewCount(promo.getViewCount() + 1);
         return PromoRespDTO.from(promo);
+    }
+
+    // 공연 홍보 상세 조회 (사용자별 좋아요 상태 포함)
+    @Transactional
+    public PromoRespDTO getPromo(Integer promoId, Integer userId) {
+        Promo promo = promoRepository.findByIdAndNotDeleted(promoId);
+        if (promo == null) {
+            throw new ResourceNotFoundException("공연 홍보를 찾을 수 없습니다.");
+        }
+        
+        // 조회수 증가
+        promo.setViewCount(promo.getViewCount() + 1);
+        
+        // 사용자의 좋아요 상태 확인
+        Boolean isLikedByUser = userId != null ? promoLikeService.isLikedByUser(promoId, userId) : null;
+        
+        return PromoRespDTO.from(promo, isLikedByUser);
     }
 
     // 공연 홍보 생성
@@ -224,6 +262,16 @@ public class PromoService {
                 .map(PromoRespDTO::from);
     }
 
+    // 공연 홍보 검색 (사용자별 좋아요 상태 포함)
+    public Page<PromoRespDTO> searchPromos(String keyword, Integer userId, Pageable pageable) {
+        return promoRepository.searchByKeyword(keyword, pageable)
+                .map(promo -> {
+                    Boolean isLikedByUser = userId != null ? 
+                            promoLikeService.isLikedByUser(promo.getId(), userId) : null;
+                    return PromoRespDTO.from(promo, isLikedByUser);
+                });
+    }
+
     // 공연 홍보 필터링
     public Page<PromoRespDTO> filterPromos(
             Promo.PromoStatus status,
@@ -233,5 +281,21 @@ public class PromoService {
             Pageable pageable) {
         return promoRepository.filterPromos(status, startDate, endDate, clubId, pageable)
                 .map(PromoRespDTO::from);
+    }
+
+    // 공연 홍보 필터링 (사용자별 좋아요 상태 포함)
+    public Page<PromoRespDTO> filterPromos(
+            Promo.PromoStatus status,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Integer clubId,
+            Integer userId,
+            Pageable pageable) {
+        return promoRepository.filterPromos(status, startDate, endDate, clubId, pageable)
+                .map(promo -> {
+                    Boolean isLikedByUser = userId != null ? 
+                            promoLikeService.isLikedByUser(promo.getId(), userId) : null;
+                    return PromoRespDTO.from(promo, isLikedByUser);
+                });
     }
 } 

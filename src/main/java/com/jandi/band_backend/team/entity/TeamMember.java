@@ -14,25 +14,31 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 public class TeamMember {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "team_member_id")
     private Integer id;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id", nullable = false)
     private Team team;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
-    
+
+    @Column(name = "timetable_data", columnDefinition = "JSON")
+    private String timetableData;
+
+    @Column(name = "updated_timetable_at")
+    private LocalDateTime updatedTimetableAt;
+
     @Column(name = "joined_at", nullable = false, updatable = false)
     private LocalDateTime joinedAt;
-    
+
     @PrePersist
     protected void onCreate() {
         joinedAt = LocalDateTime.now();
     }
-} 
+}

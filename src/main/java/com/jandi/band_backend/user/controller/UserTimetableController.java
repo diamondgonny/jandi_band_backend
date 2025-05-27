@@ -21,7 +21,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserTimetableController {
     private final UserTimetableService userTimetableService;
-    private final JwtTokenProvider jwtTokenProvider;
 
     @Operation(summary = "내 시간표 목록 조회")
     @GetMapping("/me/timetables")
@@ -29,6 +28,7 @@ public class UserTimetableController {
         @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Integer userId = userDetails.getUserId();
+
         List<UserTimetableRespDTO> myTimetables = userTimetableService.getMyTimetables(userId);
         return CommonResponse.success("내 시간표 목록 조회 성공", myTimetables);
     }
@@ -51,6 +51,7 @@ public class UserTimetableController {
         @RequestBody UserTimetableReqDTO userTimetableReqDTO
     ) {
         Integer userId = userDetails.getUserId();
+
         UserTimetableDetailsRespDTO createdTimetable = userTimetableService.createTimetable(userId, userTimetableReqDTO);
         return CommonResponse.success("시간표 생성 성공", createdTimetable);
     }
@@ -63,6 +64,7 @@ public class UserTimetableController {
         @RequestBody UserTimetableReqDTO userTimetableReqDTO
     ) {
         Integer userId = userDetails.getUserId();
+
         UserTimetableDetailsRespDTO updatedTimetable = userTimetableService.updateTimetable(userId, timetableId, userTimetableReqDTO);
         return CommonResponse.success("시간표 수정 성공", updatedTimetable);
     }
@@ -74,6 +76,7 @@ public class UserTimetableController {
         @PathVariable Integer timetableId
     ) {
         Integer userId = userDetails.getUserId();
+
         userTimetableService.deleteMyTimetable(userId, timetableId);
         return CommonResponse.success("시간표 삭제 성공");
     }

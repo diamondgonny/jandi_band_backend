@@ -25,7 +25,9 @@ public class UserPhotoService {
         Users user = userService.getMyInfo(userId);
         UserPhoto userProfile = userPhotoRepository.findByUser(user);
 
-        if (userProfile == null) throw new UserNotFoundException();
+        if (userProfile == null) {
+            throw new RuntimeException("프로필 사진이 등록되지 않았습니다.");
+        }
         return userProfile;
     }
 
@@ -33,7 +35,9 @@ public class UserPhotoService {
     @Transactional
     public void updateMyPhoto(Integer userId, MultipartFile newProfileFile) {
         // 프로필 사진이 없을 경우 수정하지 않음
-        if (newProfileFile == null || newProfileFile.isEmpty()) return;
+        if (newProfileFile == null || newProfileFile.isEmpty()) {
+            return;
+        }
 
         // 프로필 조회
         UserPhoto profile = getMyPhoto(userId);

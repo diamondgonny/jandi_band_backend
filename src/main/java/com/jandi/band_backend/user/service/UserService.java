@@ -18,7 +18,7 @@ public class UserService {
 
     /// 내 기본 정보 조회 (kakaoOauthId 버전 - AuthService에서 사용)
     @Transactional(readOnly = true)
-    public Users getMyInfo(String kakaoOauthId) {
+    public Users getMyInfoByKakaoId(String kakaoOauthId) {
         Users user = userRepository.findByKakaoOauthId(kakaoOauthId)
                 .orElseThrow(UserNotFoundException::new);
         return user;

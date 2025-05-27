@@ -31,10 +31,12 @@ public class UserTimetableUtil {
         String name = requestDTO.getName();
         JsonNode timetableData = requestDTO.getTimetableData();
 
-        if(name == null || name.isEmpty())
+        if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("제목은 공란이 될 수 없습니다.");
-        else if(timetableData == null || timetableData.isEmpty())
-            throw new IllegalArgumentException("시간표 데이터는 공란이 될 수 없습니다");
+        }
+        if (timetableData == null || timetableData.isEmpty()) {
+            throw new IllegalArgumentException("시간표 데이터는 공란이 될 수 없습니다.");
+        }
 
         // 시간표 형식 검증
         checkWeekFormIsValid(timetableData);

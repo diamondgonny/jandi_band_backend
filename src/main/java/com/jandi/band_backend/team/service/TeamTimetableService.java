@@ -78,7 +78,7 @@ public class TeamTimetableService {
 
         // 사용자의 특정 시간표 조회
         String kakaoOauthId = getUserKakaoOauthId(currentUserId);
-        UserTimetableDetailsRespDTO userTimetable = userTimetableService.getMyTimetableById(kakaoOauthId, reqDTO.getUserTimetableId());
+        UserTimetableDetailsRespDTO userTimetable = userTimetableService.getMyTimetableByKakaoId(kakaoOauthId, reqDTO.getUserTimetableId());
 
         // 시간표 데이터 저장 및 응답 반환
         return saveTeamMemberTimetableAndBuildResponse(teamMember, userTimetable.getTimetableData(), currentUserId, teamId);

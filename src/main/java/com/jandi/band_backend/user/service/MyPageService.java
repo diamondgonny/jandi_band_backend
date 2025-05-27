@@ -52,7 +52,7 @@ public class MyPageService {
         return teamMembers.stream()
                 .map(teamMember -> {
                     // 팀 멤버 수 조회
-                    Integer memberCount = teamMemberRepository.findByTeamId(teamMember.getTeam().getId()).size();
+                    Integer memberCount = teamMemberRepository.countByTeamId(teamMember.getTeam().getId());
                     
                     return MyTeamRespDTO.from(teamMember, memberCount);
                 })

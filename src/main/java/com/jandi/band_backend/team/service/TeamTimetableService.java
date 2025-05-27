@@ -4,9 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jandi.band_backend.global.exception.BadRequestException;
-import com.jandi.band_backend.global.exception.InvalidAccessException;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
-import com.jandi.band_backend.global.exception.UnauthorizedClubAccessException;
 import com.jandi.band_backend.team.dto.ScheduleSuggestionRespDTO;
 import com.jandi.band_backend.team.dto.TimetableReqDTO;
 import com.jandi.band_backend.team.dto.TimetableUpdateReqDTO;
@@ -15,10 +13,11 @@ import com.jandi.band_backend.team.entity.Team;
 import com.jandi.band_backend.team.entity.TeamMember;
 import com.jandi.band_backend.team.repository.TeamMemberRepository;
 import com.jandi.band_backend.team.repository.TeamRepository;
-import com.jandi.band_backend.user.repository.UserRepository;
 import com.jandi.band_backend.user.service.UserTimetableService;
 import com.jandi.band_backend.user.dto.UserTimetableDetailsRespDTO;
 import com.jandi.band_backend.team.util.TeamTimetableUtil;
+import com.jandi.band_backend.global.util.PermissionValidationUtil;
+import com.jandi.band_backend.global.util.UserValidationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,10 +33,11 @@ public class TeamTimetableService {
 
     private final TeamRepository teamRepository;
     private final TeamMemberRepository teamMemberRepository;
-    private final UserRepository userRepository;
     private final UserTimetableService userTimetableService;
     private final ObjectMapper objectMapper;
     private final TeamTimetableUtil teamTimetableUtil;
+    private final PermissionValidationUtil permissionValidationUtil;
+    private final UserValidationUtil userValidationUtil;
 
     /**
      * 팀내 스케줄 조율 제안 ('시간 언제 돼? 모드' 시작)
@@ -49,8 +49,7 @@ public class TeamTimetableService {
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
 
         // 팀원 권한 확인 (팀원만 스케줄 조율 제안 가능)
-        TeamMember teamMember = teamMemberRepository.findByTeamIdAndUserId(teamId, currentUserId)
-                .orElseThrow(() -> new UnauthorizedClubAccessException("팀원만 접근할 수 있습니다."));
+        TeamMember teamMember = permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "팀원만 접근할 수 있습니다.");
 
         // suggested_schedule_at을 현재 시간으로 설정
         LocalDateTime now = LocalDateTime.now();
@@ -78,7 +77,7 @@ public class TeamTimetableService {
 
         // 사용자의 특정 시간표 조회
         String kakaoOauthId = getUserKakaoOauthId(currentUserId);
-        UserTimetableDetailsRespDTO userTimetable = userTimetableService.getMyTimetableById(kakaoOauthId, reqDTO.getUserTimetableId());
+        UserTimetableDetailsRespDTO userTimetable = userTimetableService.getMyTimetableByKakaoId(kakaoOauthId, reqDTO.getUserTimetableId());
 
         // 시간표 데이터 저장 및 응답 반환
         return saveTeamMemberTimetableAndBuildResponse(teamMember, userTimetable.getTimetableData(), currentUserId, teamId);
@@ -108,17 +107,14 @@ public class TeamTimetableService {
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
 
         // 본인만 시간표 입력 가능하도록 권한 확인
-        return teamMemberRepository.findByTeamIdAndUserId(teamId, currentUserId)
-                .orElseThrow(() -> new InvalidAccessException("본인의 시간표만 입력할 수 있습니다."));
+        return permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "본인의 시간표만 입력할 수 있습니다.");
     }
 
     /**
      * 사용자의 카카오 OAuth ID 조회
      */
     private String getUserKakaoOauthId(Integer currentUserId) {
-        return userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다."))
-                .getKakaoOauthId();
+        return userValidationUtil.getUserById(currentUserId).getKakaoOauthId();
     }
 
     /**

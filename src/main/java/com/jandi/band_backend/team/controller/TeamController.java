@@ -1,6 +1,6 @@
 package com.jandi.band_backend.team.controller;
 
-import com.jandi.band_backend.global.CommonResponse;
+import com.jandi.band_backend.global.dto.CommonRespDTO;
 import com.jandi.band_backend.security.CustomUserDetails;
 import com.jandi.band_backend.team.dto.TeamDetailRespDTO;
 import com.jandi.band_backend.team.dto.TeamReqDTO;
@@ -28,7 +28,7 @@ public class TeamController {
 
     @Operation(summary = "팀 생성")
     @PostMapping("/clubs/{clubId}/teams")
-    public ResponseEntity<CommonResponse<TeamDetailRespDTO>> createTeam(
+    public ResponseEntity<CommonRespDTO<TeamDetailRespDTO>> createTeam(
             @PathVariable Integer clubId,
             @Valid @RequestBody TeamReqDTO teamReqDTO,
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -36,52 +36,52 @@ public class TeamController {
         Integer currentUserId = userDetails.getUserId();
         TeamDetailRespDTO result = teamService.createTeam(clubId, teamReqDTO, currentUserId);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(CommonResponse.success("곡 팀이 성공적으로 생성되었습니다.", result));
+                .body(CommonRespDTO.success("곡 팀이 성공적으로 생성되었습니다.", result));
     }
 
     @Operation(summary = "동아리 팀 목록 조회")
     @GetMapping("/clubs/{clubId}/teams")
-    public ResponseEntity<CommonResponse<Page<TeamRespDTO>>> getTeamsByClub(
+    public ResponseEntity<CommonRespDTO<Page<TeamRespDTO>>> getTeamsByClub(
             @PathVariable Integer clubId,
             @PageableDefault(size = 5) Pageable pageable,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Integer currentUserId = userDetails.getUserId();
         Page<TeamRespDTO> result = teamService.getTeamsByClub(clubId, pageable, currentUserId);
-        return ResponseEntity.ok(CommonResponse.success("곡 팀 목록을 성공적으로 조회했습니다.", result));
+        return ResponseEntity.ok(CommonRespDTO.success("곡 팀 목록을 성공적으로 조회했습니다.", result));
     }
 
     @Operation(summary = "팀 상세 정보 조회")
     @GetMapping("/teams/{teamId}")
-    public ResponseEntity<CommonResponse<TeamDetailRespDTO>> getTeamDetail(
+    public ResponseEntity<CommonRespDTO<TeamDetailRespDTO>> getTeamDetail(
             @PathVariable Integer teamId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Integer currentUserId = userDetails.getUserId();
         TeamDetailRespDTO result = teamService.getTeamDetail(teamId, currentUserId);
-        return ResponseEntity.ok(CommonResponse.success("곡 팀 정보를 성공적으로 조회했습니다.", result));
+        return ResponseEntity.ok(CommonRespDTO.success("곡 팀 정보를 성공적으로 조회했습니다.", result));
     }
 
     @Operation(summary = "팀 이름 수정")
     @PatchMapping("/teams/{teamId}")
-    public ResponseEntity<CommonResponse<TeamRespDTO>> updateTeam(
+    public ResponseEntity<CommonRespDTO<TeamRespDTO>> updateTeam(
             @PathVariable Integer teamId,
             @Valid @RequestBody TeamReqDTO teamReqDTO,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Integer currentUserId = userDetails.getUserId();
         TeamRespDTO result = teamService.updateTeam(teamId, teamReqDTO, currentUserId);
-        return ResponseEntity.ok(CommonResponse.success("곡 팀 이름이 성공적으로 수정되었습니다.", result));
+        return ResponseEntity.ok(CommonRespDTO.success("곡 팀 이름이 성공적으로 수정되었습니다.", result));
     }
 
     @Operation(summary = "팀 삭제")
     @DeleteMapping("/teams/{teamId}")
-    public ResponseEntity<CommonResponse<Void>> deleteTeam(
+    public ResponseEntity<CommonRespDTO<Void>> deleteTeam(
             @PathVariable Integer teamId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Integer currentUserId = userDetails.getUserId();
         teamService.deleteTeam(teamId, currentUserId);
-        return ResponseEntity.ok(CommonResponse.success("곡 팀이 성공적으로 삭제되었습니다."));
+        return ResponseEntity.ok(CommonRespDTO.success("곡 팀이 성공적으로 삭제되었습니다."));
     }
 }

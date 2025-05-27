@@ -4,7 +4,7 @@
 `/api/clubs`
 
 ## 인증
-생성, 수정, 삭제는 JWT 인증 필요 (Spring Security + CustomUserDetails). 조회는 인증 불필요.
+생성, 수정, 삭제는 JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails). 조회는 인증 불필요.
 
 ---
 
@@ -50,6 +50,7 @@ curl -X POST "http://localhost:8080/api/clubs" \
     "instagramId": "rockband_club",
     "photoUrl": null,
     "memberCount": 1,
+    "representativeId": 1,
     "createdAt": "2024-03-15T10:30:00",
     "updatedAt": "2024-03-15T10:30:00"
   }
@@ -122,6 +123,7 @@ curl -X GET "http://localhost:8080/api/clubs/1"
     "instagramId": "rockband_club",
     "photoUrl": null,
     "memberCount": 5,
+    "representativeId": 1,
     "createdAt": "2024-03-15T10:30:00",
     "updatedAt": "2024-03-15T10:30:00"
   }
@@ -210,6 +212,7 @@ curl -X PATCH "http://localhost:8080/api/clubs/1" \
     "instagramId": "new_instagram_id",
     "photoUrl": null,
     "memberCount": 5,
+    "representativeId": 1,
     "createdAt": "2024-03-15T10:30:00",
     "updatedAt": "2024-03-15T11:00:00"
   }

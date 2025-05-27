@@ -28,7 +28,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of("http://localhost:5173", "https://rhythmeetdevelop.netlify.app"));
+                    config.setAllowedOrigins(List.of("http://localhost:3000", "https://rhythmeetdevelop.netlify.app"));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setExposedHeaders(List.of("Authorization"));
@@ -46,6 +46,7 @@ public class SecurityConfig {
                                 "/api/promos/{promoId}", // 공연 홍보 상세 조회
                                 "/api/promos/search",    // 공연 홍보 검색
                                 "/api/promos/filter",    // 공연 홍보 필터링
+                                "/api/promos/*/comments", // 공연 홍보 댓글 목록 조회
                                 // Swagger UI 관련 경로
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",

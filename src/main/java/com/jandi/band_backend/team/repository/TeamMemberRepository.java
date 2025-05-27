@@ -21,6 +21,8 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, Integer>
     @Query("SELECT COUNT(tm) FROM TeamMember tm WHERE tm.team.id = :teamId")
     Integer countByTeamId(@Param("teamId") Integer teamId);
 
+    Optional<TeamMember> findByTeamIdAndUser_Id(Integer teamId, Integer userId);
+  
     @Query("SELECT tm FROM TeamMember tm WHERE tm.team.id = :teamId AND tm.user.id = :userId")
     Optional<TeamMember> findByTeamIdAndUserId(@Param("teamId") Integer teamId, @Param("userId") Integer userId);
 }

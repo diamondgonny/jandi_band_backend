@@ -4,7 +4,9 @@
 `/api/teams`
 
 ## 인증
-JWT 인증 필요 + 팀내 스케줄 조율 제안 API는 팀원 권한 필요 (팀내 내 시간표 관련 API는 본인만 사용 가능)
+JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails)
+- 팀내 스케줄 조율 제안 API는 팀원 권한 필요
+- 팀내 내 시간표 관련 API는 본인만 사용 가능
 
 ---
 

@@ -2,13 +2,9 @@ package com.jandi.band_backend.team.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.jandi.band_backend.club.entity.Club;
-import com.jandi.band_backend.club.entity.ClubMember;
-import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.club.repository.ClubRepository;
 import com.jandi.band_backend.global.exception.ClubNotFoundException;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
-import com.jandi.band_backend.global.exception.UnauthorizedClubAccessException;
-import com.jandi.band_backend.global.exception.UserNotFoundException;
 import com.jandi.band_backend.team.dto.TeamDetailRespDTO;
 import com.jandi.band_backend.team.dto.TeamReqDTO;
 import com.jandi.band_backend.team.dto.TeamRespDTO;
@@ -41,8 +37,6 @@ public class TeamService {
     private final TeamRepository teamRepository;
     private final TeamMemberRepository teamMemberRepository;
     private final ClubRepository clubRepository;
-    private final ClubMemberRepository clubMemberRepository;
-    private final UserRepository userRepository;
     private final TeamTimetableUtil teamTimetableUtil;
     private final PermissionValidationUtil permissionValidationUtil;
     private final UserValidationUtil userValidationUtil;

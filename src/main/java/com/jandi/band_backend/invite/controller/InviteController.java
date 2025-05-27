@@ -1,6 +1,6 @@
 package com.jandi.band_backend.invite.controller;
 
-import com.jandi.band_backend.global.CommonResponse;
+import com.jandi.band_backend.global.dto.CommonRespDTO;
 import com.jandi.band_backend.invite.dto.InviteLinkRespDTO;
 import com.jandi.band_backend.invite.service.InviteService;
 import com.jandi.band_backend.security.CustomUserDetails;
@@ -22,23 +22,23 @@ public class InviteController {
 
     @Operation(summary = "동아리 초대 링크 생성")
     @PostMapping("/clubs/{clubId}")
-    public CommonResponse<InviteLinkRespDTO> inviteClub(
+    public CommonRespDTO<InviteLinkRespDTO> inviteClub(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable("clubId") Integer clubId
     ) {
         Integer userId = userDetails.getUserId();
         InviteLinkRespDTO inviteLinkRespDTO = inviteService.generateInviteClubLink(userId, clubId);
-        return CommonResponse.success("동아리 초대 링크 생성 성공", inviteLinkRespDTO);
+        return CommonRespDTO.success("동아리 초대 링크 생성 성공", inviteLinkRespDTO);
     }
 
     @Operation(summary = "팀 초대 링크 생성")
     @PostMapping("/teams/{teamId}")
-    public CommonResponse<InviteLinkRespDTO> inviteTeam(
+    public CommonRespDTO<InviteLinkRespDTO> inviteTeam(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable("teamId") Integer teamId
     ) {
         Integer userId = userDetails.getUserId();
         InviteLinkRespDTO inviteLinkRespDTO = inviteService.generateInviteTeamLink(userId, teamId);
-        return CommonResponse.success("팀 초대 링크 생성 성공", inviteLinkRespDTO);
+        return CommonRespDTO.success("팀 초대 링크 생성 성공", inviteLinkRespDTO);
     }
 }

@@ -4,9 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jandi.band_backend.global.exception.BadRequestException;
-import com.jandi.band_backend.global.exception.InvalidAccessException;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
-import com.jandi.band_backend.global.exception.UnauthorizedClubAccessException;
 import com.jandi.band_backend.team.dto.ScheduleSuggestionRespDTO;
 import com.jandi.band_backend.team.dto.TimetableReqDTO;
 import com.jandi.band_backend.team.dto.TimetableUpdateReqDTO;
@@ -36,7 +34,6 @@ public class TeamTimetableService {
 
     private final TeamRepository teamRepository;
     private final TeamMemberRepository teamMemberRepository;
-    private final UserRepository userRepository;
     private final UserTimetableService userTimetableService;
     private final ObjectMapper objectMapper;
     private final TeamTimetableUtil teamTimetableUtil;

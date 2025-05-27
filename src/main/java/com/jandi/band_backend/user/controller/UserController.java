@@ -1,6 +1,6 @@
 package com.jandi.band_backend.user.controller;
 
-import com.jandi.band_backend.global.CommonResponse;
+import com.jandi.band_backend.global.dto.CommonRespDTO;
 import com.jandi.band_backend.security.CustomUserDetails;
 import com.jandi.band_backend.user.dto.UpdateUserInfoReqDTO;
 import com.jandi.band_backend.user.dto.UserInfoDTO;
@@ -23,7 +23,7 @@ public class UserController {
 
     @Operation(summary = "내 정보 조회")
     @GetMapping("/me/info")
-    public CommonResponse<UserInfoDTO> getMyInfo(
+    public CommonRespDTO<UserInfoDTO> getMyInfo(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Integer userId = userDetails.getUserId();
@@ -33,12 +33,12 @@ public class UserController {
                 userService.getMyInfo(userId),
                 userPhotoService.getMyPhoto(userId)
         );
-        return CommonResponse.success("내 정보 조회 성공", userInfo);
+        return CommonRespDTO.success("내 정보 조회 성공", userInfo);
     }
 
     @Operation(summary = "내 정보 수정")
     @PatchMapping("/me/info")
-    public CommonResponse<UserInfoDTO> updateMyInfo(
+    public CommonRespDTO<UserInfoDTO> updateMyInfo(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @ModelAttribute UpdateUserInfoReqDTO updateDTO,
             @RequestPart(value = "profilePhoto", required = false) MultipartFile profilePhoto
@@ -49,6 +49,6 @@ public class UserController {
         // 유저 기본 정보 및 프로필 사진 수정
         userService.updateMyInfo(userId, updateDTO);
         userPhotoService.updateMyPhoto(userId, profilePhoto);
-        return CommonResponse.success("내 정보 수정 성공");
+        return CommonRespDTO.success("내 정보 수정 성공");
     }
 }

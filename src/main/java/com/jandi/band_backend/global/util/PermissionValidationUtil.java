@@ -1,6 +1,5 @@
 package com.jandi.band_backend.global.util;
 
-import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.global.exception.UnauthorizedClubAccessException;

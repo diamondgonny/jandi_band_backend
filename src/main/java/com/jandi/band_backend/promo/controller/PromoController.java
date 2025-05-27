@@ -1,6 +1,6 @@
 package com.jandi.band_backend.promo.controller;
 
-import com.jandi.band_backend.global.CommonResponse;
+import com.jandi.band_backend.global.dto.CommonRespDTO;
 import com.jandi.band_backend.global.dto.PagedRespDTO;
 import com.jandi.band_backend.promo.dto.PromoReqDTO;
 import com.jandi.band_backend.promo.dto.PromoRespDTO;
@@ -50,7 +50,7 @@ public class PromoController {
         @ApiResponse(responseCode = "400", description = "잘못된 요청")
     })
     @GetMapping
-    public ResponseEntity<CommonResponse<PagedRespDTO<PromoRespDTO>>> getPromos(
+    public ResponseEntity<CommonRespDTO<PagedRespDTO<PromoRespDTO>>> getPromos(
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "정렬 기준 (예: createdAt,desc)", example = "createdAt,desc") @RequestParam(defaultValue = "createdAt,desc") String sort,
@@ -59,7 +59,7 @@ public class PromoController {
         Pageable pageable = createPageable(page, size, sort);
         Integer userId = userDetails != null ? userDetails.getUserId() : null;
         Page<PromoRespDTO> promoPage = promoService.getPromos(userId, pageable);
-        return ResponseEntity.ok(CommonResponse.success("공연 홍보 목록 조회 성공", 
+        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 목록 조회 성공",
                 PagedRespDTO.from(promoPage)));
     }
 
@@ -72,7 +72,7 @@ public class PromoController {
         @ApiResponse(responseCode = "404", description = "클럽을 찾을 수 없음")
     })
     @GetMapping("/club/{clubId}")
-    public ResponseEntity<CommonResponse<PagedRespDTO<PromoRespDTO>>> getPromosByClub(
+    public ResponseEntity<CommonRespDTO<PagedRespDTO<PromoRespDTO>>> getPromosByClub(
             @Parameter(description = "클럽 ID", example = "1") @PathVariable Integer clubId,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size,
@@ -82,7 +82,7 @@ public class PromoController {
         Pageable pageable = createPageable(page, size, sort);
         Integer userId = userDetails != null ? userDetails.getUserId() : null;
         Page<PromoRespDTO> promoPage = promoService.getPromosByClub(clubId, userId, pageable);
-        return ResponseEntity.ok(CommonResponse.success("클럽별 공연 홍보 목록 조회 성공",
+        return ResponseEntity.ok(CommonRespDTO.success("클럽별 공연 홍보 목록 조회 성공",
                 PagedRespDTO.from(promoPage)));
     }
 
@@ -95,11 +95,11 @@ public class PromoController {
         @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
     })
     @GetMapping("/{promoId}")
-    public ResponseEntity<CommonResponse<PromoRespDTO>> getPromo(
+    public ResponseEntity<CommonRespDTO<PromoRespDTO>> getPromo(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails != null ? userDetails.getUserId() : null;
-        return ResponseEntity.ok(CommonResponse.success("공연 홍보 상세 조회 성공",
+        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 상세 조회 성공",
                 promoService.getPromo(promoId, userId)));
     }
 
@@ -115,7 +115,7 @@ public class PromoController {
         @ApiResponse(responseCode = "404", description = "클럽을 찾을 수 없음")
     })
     @PostMapping
-    public ResponseEntity<CommonResponse<PromoRespDTO>> createPromo(
+    public ResponseEntity<CommonRespDTO<PromoRespDTO>> createPromo(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                 description = "공연 홍보 생성 정보",
                 content = @Content(
@@ -141,7 +141,7 @@ public class PromoController {
             @Valid @RequestBody PromoReqDTO request,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
-        return ResponseEntity.ok(CommonResponse.success("공연 홍보 생성 성공",
+        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 생성 성공",
                 promoService.createPromo(request, userId)));
     }
 
@@ -157,7 +157,7 @@ public class PromoController {
         @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
     })
     @PutMapping("/{promoId}")
-    public ResponseEntity<CommonResponse<PromoRespDTO>> updatePromo(
+    public ResponseEntity<CommonRespDTO<PromoRespDTO>> updatePromo(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                 description = "공연 홍보 수정 정보",
@@ -184,7 +184,7 @@ public class PromoController {
             @Valid @RequestBody PromoReqDTO request,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
-        return ResponseEntity.ok(CommonResponse.success("공연 홍보 수정 성공",
+        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 수정 성공",
                 promoService.updatePromo(promoId, request, userId)));
     }
 
@@ -199,12 +199,12 @@ public class PromoController {
         @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
     })
     @DeleteMapping("/{promoId}")
-    public ResponseEntity<CommonResponse<Void>> deletePromo(
+    public ResponseEntity<CommonRespDTO<Void>> deletePromo(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         promoService.deletePromo(promoId, userId);
-        return ResponseEntity.ok(CommonResponse.success("공연 홍보 삭제 성공", null));
+        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 삭제 성공", null));
     }
 
     @Operation(
@@ -219,13 +219,13 @@ public class PromoController {
         @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
     })
     @PostMapping(value = "/{promoId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<CommonResponse<String>> uploadPromoImage(
+    public ResponseEntity<CommonRespDTO<String>> uploadPromoImage(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
             @Parameter(description = "업로드할 이미지 파일 (JPG, PNG 등)") @RequestParam("image") MultipartFile image,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) throws IOException {
         Integer userId = userDetails.getUserId();
         String imageUrl = promoService.uploadPromoImage(promoId, image, userId);
-        return ResponseEntity.ok(CommonResponse.success("공연 홍보 이미지 업로드 성공", imageUrl));
+        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 이미지 업로드 성공", imageUrl));
     }
 
     @Operation(
@@ -239,13 +239,13 @@ public class PromoController {
         @ApiResponse(responseCode = "404", description = "공연 홍보 또는 이미지를 찾을 수 없음")
     })
     @DeleteMapping("/{promoId}/images")
-    public ResponseEntity<CommonResponse<Void>> deletePromoImage(
+    public ResponseEntity<CommonRespDTO<Void>> deletePromoImage(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
             @Parameter(description = "삭제할 이미지 URL", example = "https://example.com/image.jpg") @RequestParam String imageUrl,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         promoService.deletePromoImage(promoId, imageUrl, userId);
-        return ResponseEntity.ok(CommonResponse.success("공연 홍보 이미지 삭제 성공", null));
+        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 이미지 삭제 성공", null));
     }
 
     @Operation(
@@ -257,7 +257,7 @@ public class PromoController {
         @ApiResponse(responseCode = "400", description = "잘못된 검색 키워드")
     })
     @GetMapping("/search")
-    public ResponseEntity<CommonResponse<PagedRespDTO<PromoRespDTO>>> searchPromos(
+    public ResponseEntity<CommonRespDTO<PagedRespDTO<PromoRespDTO>>> searchPromos(
             @Parameter(description = "검색 키워드", example = "락밴드") @RequestParam String keyword,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size,
@@ -267,7 +267,7 @@ public class PromoController {
         Pageable pageable = createPageable(page, size, sort);
         Integer userId = userDetails != null ? userDetails.getUserId() : null;
         Page<PromoRespDTO> promoPage = promoService.searchPromos(keyword, userId, pageable);
-        return ResponseEntity.ok(CommonResponse.success("공연 홍보 검색 성공",
+        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 검색 성공",
                 PagedRespDTO.from(promoPage)));
     }
 
@@ -280,7 +280,7 @@ public class PromoController {
         @ApiResponse(responseCode = "400", description = "잘못된 필터 조건")
     })
     @GetMapping("/filter")
-    public ResponseEntity<CommonResponse<PagedRespDTO<PromoRespDTO>>> filterPromos(
+    public ResponseEntity<CommonRespDTO<PagedRespDTO<PromoRespDTO>>> filterPromos(
             @Parameter(description = "공연 상태", example = "UPCOMING") @RequestParam(required = false) Promo.PromoStatus status,
             @Parameter(description = "시작 날짜", example = "2024-03-01T00:00:00") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @Parameter(description = "종료 날짜", example = "2024-03-31T23:59:59") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
@@ -293,7 +293,7 @@ public class PromoController {
         Pageable pageable = createPageable(page, size, sort);
         Integer userId = userDetails != null ? userDetails.getUserId() : null;
         Page<PromoRespDTO> promoPage = promoService.filterPromos(status, startDate, endDate, clubId, userId, pageable);
-        return ResponseEntity.ok(CommonResponse.success("공연 홍보 필터링 성공",
+        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 필터링 성공",
                 PagedRespDTO.from(promoPage)));
     }
 
@@ -307,7 +307,7 @@ public class PromoController {
         @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
     })
     @PostMapping("/{promoId}/like")
-    public ResponseEntity<CommonResponse<String>> togglePromoLike(
+    public ResponseEntity<CommonRespDTO<String>> togglePromoLike(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
@@ -316,7 +316,7 @@ public class PromoController {
         String message = isLiked ? "공연 홍보 좋아요가 추가되었습니다." : "공연 홍보 좋아요가 취소되었습니다.";
         String result = isLiked ? "liked" : "unliked";
         
-        return ResponseEntity.ok(CommonResponse.success(message, result));
+        return ResponseEntity.ok(CommonRespDTO.success(message, result));
     }
 
     @Operation(
@@ -329,13 +329,13 @@ public class PromoController {
         @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
     })
     @GetMapping("/{promoId}/like/status")
-    public ResponseEntity<CommonResponse<Boolean>> getPromoLikeStatus(
+    public ResponseEntity<CommonRespDTO<Boolean>> getPromoLikeStatus(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         boolean isLiked = promoLikeService.isLikedByUser(promoId, userId);
         
-        return ResponseEntity.ok(CommonResponse.success("공연 홍보 좋아요 상태 조회 성공", isLiked));
+        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 좋아요 상태 조회 성공", isLiked));
     }
 
     @Operation(
@@ -347,11 +347,11 @@ public class PromoController {
         @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
     })
     @GetMapping("/{promoId}/like/count")
-    public ResponseEntity<CommonResponse<Integer>> getPromoLikeCount(
+    public ResponseEntity<CommonRespDTO<Integer>> getPromoLikeCount(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId) {
         Integer likeCount = promoLikeService.getLikeCount(promoId);
         
-        return ResponseEntity.ok(CommonResponse.success("공연 홍보 좋아요 수 조회 성공", likeCount));
+        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 좋아요 수 조회 성공", likeCount));
     }
 
     // Pageable 생성 헬퍼 메서드

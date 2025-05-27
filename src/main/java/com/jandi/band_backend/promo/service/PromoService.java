@@ -35,7 +35,6 @@ public class PromoService {
 
     private final PromoRepository promoRepository;
     private final ClubRepository clubRepository;
-    private final UserRepository userRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final PromoLikeService promoLikeService;
     private final PermissionValidationUtil permissionValidationUtil;
@@ -179,7 +178,7 @@ public class PromoService {
 
     // 공연 홍보 이미지 업로드
     @Transactional
-    public String uploadPromoImage(Integer promoId, MultipartFile image, Integer userId) throws IOException {
+    public String uploadPromoImage(Integer promoId, MultipartFile image, Integer userId) {
         Promo promo = promoRepository.findByIdAndNotDeleted(promoId);
         if (promo == null) {
             throw new ResourceNotFoundException("공연 홍보를 찾을 수 없습니다.");
@@ -200,7 +199,7 @@ public class PromoService {
 
         // 기존 현재 이미지가 있다면 isCurrent를 false로 변경
         promo.getPhotos().stream()
-                .filter(p -> p.getIsCurrent())
+                .filter(PromoPhoto::getIsCurrent)
                 .forEach(p -> p.setIsCurrent(false));
 
         promo.getPhotos().add(photo);
@@ -246,7 +245,7 @@ public class PromoService {
         
         // 완료된 공연 업데이트 (공연 종료 후 3시간 경과)
         List<Promo> completedPromos = promoRepository.findByStatusAndEventDatetimeBefore(
-            Promo.PromoStatus.ONGOING, now.minus(3, ChronoUnit.HOURS));
+            Promo.PromoStatus.ONGOING, now.minusHours(3));
         for (Promo promo : completedPromos) {
             promo.setStatus(Promo.PromoStatus.COMPLETED);
         }

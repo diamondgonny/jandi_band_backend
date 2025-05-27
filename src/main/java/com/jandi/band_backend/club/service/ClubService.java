@@ -18,9 +18,7 @@ import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserRepository;
 import com.jandi.band_backend.global.exception.ClubNotFoundException;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
-import com.jandi.band_backend.global.exception.UnauthorizedClubAccessException;
 import com.jandi.band_backend.global.exception.UniversityNotFoundException;
-import com.jandi.band_backend.global.exception.UserNotFoundException;
 import com.jandi.band_backend.global.util.S3FileManagementUtil;
 import com.jandi.band_backend.global.util.PermissionValidationUtil;
 import com.jandi.band_backend.global.util.UserValidationUtil;
@@ -44,7 +42,6 @@ public class ClubService {
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final ClubPhotoRepository clubPhotoRepository;
-    private final UserRepository userRepository;
     private final UniversityRepository universityRepository;
     private final S3FileManagementUtil s3FileManagementUtil;
     private final PermissionValidationUtil permissionValidationUtil;
@@ -133,7 +130,7 @@ public class ClubService {
 
         // 멤버 정보 변환
         List<ClubMembersRespDTO.MemberInfoDTO> memberInfos = clubMembers.stream()
-            .map(member -> this.convertToMemberInfoDTO(member))
+            .map(this::convertToMemberInfoDTO)
             .toList();
 
         // 포지션별 카운트 계산
@@ -141,7 +138,7 @@ public class ClubService {
                 .map(member -> member.getUser().getPosition())
                 .filter(position -> position != null)
                 .collect(Collectors.groupingBy(
-                        position -> position.name(),
+                        Enum::name,
                         Collectors.counting()
                 ));
 
@@ -224,8 +221,8 @@ public class ClubService {
     }
 
     @Transactional
-    public String uploadClubPhoto(Integer clubId, MultipartFile image, Integer userId) throws IOException {
-        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
+    public String uploadClubPhoto(Integer clubId, MultipartFile image, Integer userId) {
+        clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
         // 권한 확인 (동아리 회원이면 업로드 가능)
@@ -249,7 +246,7 @@ public class ClubService {
 
     @Transactional
     public void deleteClubPhoto(Integer clubId, Integer userId) {
-        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
+        clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
         // 권한 확인 (동아리 회원이면 삭제 가능)
@@ -317,7 +314,7 @@ public class ClubService {
     // 동아리 대표 사진 URL 조회 헬퍼 메서드
     private String getClubMainPhotoUrl(Integer clubId) {
         return clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
-                .map(clubPhoto -> clubPhoto.getImageUrl())
+                .map(ClubPhoto::getImageUrl)
                 .orElse(null);
     }
 

@@ -25,9 +25,5 @@ public class TeamTimetableUtil {
         timetableValidationUtil.validateTimetableData(timetableData);
     }
 
-    // JsonNode 시간표 데이터 직접 검사 (Team 도메인 전용)
-    public void validateTimetableData(JsonNode timetableData) {
-        // 시간표 형식 검증 (공통 유틸리티 사용)
-        timetableValidationUtil.validateTimetableData(timetableData);
-    }
+
 } 

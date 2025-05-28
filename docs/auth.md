@@ -29,8 +29,7 @@ curl -X GET "http://localhost:8080/api/auth/login?code={KAKAO_AUTH_CODE}"
   "data": {
     "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "accessTokenExpiresIn": 3600000,
-    "refreshTokenExpiresIn": 604800000
+    "isRegistered": true
   }
 }
 ```
@@ -38,8 +37,7 @@ curl -X GET "http://localhost:8080/api/auth/login?code={KAKAO_AUTH_CODE}"
 #### 응답 필드
 - `accessToken`: JWT 액세스 토큰
 - `refreshToken`: JWT 리프레시 토큰
-- `accessTokenExpiresIn`: 액세스 토큰 만료 시간 (밀리초)
-- `refreshTokenExpiresIn`: 리프레시 토큰 만료 시간 (밀리초)
+- `isRegistered`: 정식 회원가입 완료 여부 (false이면 회원가입 필요)
 
 ---
 
@@ -52,9 +50,8 @@ curl -X POST "http://localhost:8080/api/auth/signup" \
   -H "Authorization: Bearer {TEMP_JWT_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
-    "nickname": "홍길동",
     "position": "GUITAR",
-    "universityId": 1
+    "university": "서울대학교"
   }'
 ```
 
@@ -62,9 +59,8 @@ curl -X POST "http://localhost:8080/api/auth/signup" \
 - `Authorization`: 카카오 로그인 후 발급받은 임시 JWT 토큰
 
 #### 요청 필드
-- `nickname` (string, 필수): 닉네임 (최대 100자)
 - `position` (string, 필수): 음악 포지션 (VOCAL/GUITAR/KEYBOARD/BASS/DRUM/OTHER)
-- `universityId` (integer, 필수): 대학교 ID
+- `university` (string, 필수): 대학교 이름
 
 #### 응답 (200 OK)
 ```json
@@ -105,10 +101,26 @@ curl -X POST "http://localhost:8080/api/auth/refresh" \
   "message": "토큰 재발급 성공",
   "data": {
     "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "accessTokenExpiresIn": 3600000,
-    "refreshTokenExpiresIn": 604800000
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
+}
+```
+
+## 4. 로그아웃
+### POST `/api/auth/logout`
+
+#### 요청
+```bash
+curl -X POST "http://localhost:8080/api/auth/logout" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "로그아웃 완료",
+  "data": null
 }
 ```
 
@@ -140,13 +152,12 @@ curl -X POST "http://localhost:8080/api/auth/refresh" \
 - `404 Not Found`: 리소스 없음
 
 ### 주요 에러 케이스
-- **잘못된 카카오 코드**: `InvalidKakaoCodeException` - 유효하지 않은 카카오 인증 코드입니다
-- **만료된 토큰**: `ExpiredJwtException` - 토큰이 만료되었습니다
-- **잘못된 토큰**: `InvalidTokenException` - 유효하지 않은 토큰입니다
-- **중복 닉네임**: `DuplicateNicknameException` - 이미 사용 중인 닉네임입니다
+- **잘못된 카카오 코드**: `FailKakaoLoginException` - 카카오 로그인에 실패했습니다
+- **만료된 토큰**: `InvalidTokenException` - 유효하지 않은 토큰입니다
+- **중복 회원가입**: `InvalidAccessException` - 이미 회원 가입이 완료된 계정입니다
 
 ## 참고사항
 - **카카오 OAuth**: 카카오 개발자 콘솔에서 발급받은 인증 코드 사용
-- **임시 토큰**: 회원가입 시 사용하는 토큰은 카카오 로그인 후 발급받은 임시 토큰
-- **토큰 만료**: 액세스 토큰은 1시간, 리프레시 토큰은 7일 후 만료
-- **자동 로그인**: 기존 사용자는 카카오 로그인 시 자동으로 JWT 토큰 발급 
+- **임시 토큰**: 회원가입 시 사용하는 토큰은 카카오 로그인 후 발급받은 임시 토큰 (isRegistered=false)
+- **자동 로그인**: 기존 사용자는 카카오 로그인 시 자동으로 JWT 토큰 발급
+- **탈퇴 회원**: 탈퇴 후 7일간 서비스 이용 불가 

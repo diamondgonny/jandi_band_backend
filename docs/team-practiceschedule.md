@@ -6,6 +6,28 @@
 ## 인증
 생성, 삭제는 JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails). 조회는 인증 불필요.
 
+## 페이지네이션 응답 구조
+연습 일정 목록 조회 API는 다음과 같은 페이지네이션 구조를 사용합니다:
+
+```json
+{
+  "success": true,
+  "message": "응답 메시지",
+  "data": {
+    "content": [...],  // 실제 연습 일정 데이터 배열
+    "pageInfo": {
+      "page": 0,           // 현재 페이지 번호 (0부터 시작)
+      "size": 20,          // 페이지 크기
+      "totalElements": 100, // 총 연습 일정 수
+      "totalPages": 5,     // 총 페이지 수
+      "first": true,       // 첫 번째 페이지 여부
+      "last": false,       // 마지막 페이지 여부
+      "empty": false       // 비어있는 페이지 여부
+    }
+  }
+}
+```
+
 ---
 
 ## 1. 팀별 연습 일정 목록 조회
@@ -52,10 +74,15 @@ curl -X GET "http://localhost:8080/api/teams/1/practice-schedules?page=0&size=20
         ]
       }
     ],
-    "totalElements": 1,
-    "totalPages": 1,
-    "first": true,
-    "last": true
+    "pageInfo": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 1,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "empty": false
+    }
   }
 }
 ```
@@ -202,7 +229,7 @@ curl -X DELETE "http://localhost:8080/api/practice-schedules/1" \
 - **권한**: 연습 일정 생성은 JWT 인증 필요, 삭제는 생성자만 가능
 - **데이터 저장**: 곡명과 아티스트명은 "곡명 - 아티스트명" 형태로 name 필드에 저장
 - **URL 파싱**: YouTube URL과 추가 설명을 description 필드에 저장 후 응답 시 파싱
-- **페이지네이션**: 기본 크기 20개 (Spring Boot 기본값)
+- **페이지네이션**: 기본 크기 20개, PagedRespDTO 구조 사용
 - **정렬**: 연습 시작 일시(startDatetime) 오름차순 정렬
 - **소프트 삭제**: 실제 삭제가 아닌 deletedAt 설정
 - **연습 일정 구분**: TeamEvent의 name 필드에 " - "가 포함된 경우를 연습 일정으로 판별

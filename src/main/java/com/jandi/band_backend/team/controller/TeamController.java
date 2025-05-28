@@ -1,6 +1,7 @@
 package com.jandi.band_backend.team.controller;
 
 import com.jandi.band_backend.global.dto.CommonRespDTO;
+import com.jandi.band_backend.global.dto.PagedRespDTO;
 import com.jandi.band_backend.security.CustomUserDetails;
 import com.jandi.band_backend.team.dto.TeamDetailRespDTO;
 import com.jandi.band_backend.team.dto.TeamReqDTO;
@@ -41,14 +42,14 @@ public class TeamController {
 
     @Operation(summary = "동아리 팀 목록 조회")
     @GetMapping("/clubs/{clubId}/teams")
-    public ResponseEntity<CommonRespDTO<Page<TeamRespDTO>>> getTeamsByClub(
+    public ResponseEntity<CommonRespDTO<PagedRespDTO<TeamRespDTO>>> getTeamsByClub(
             @PathVariable Integer clubId,
             @PageableDefault(size = 5) Pageable pageable,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Integer currentUserId = userDetails.getUserId();
         Page<TeamRespDTO> result = teamService.getTeamsByClub(clubId, pageable, currentUserId);
-        return ResponseEntity.ok(CommonRespDTO.success("곡 팀 목록을 성공적으로 조회했습니다.", result));
+        return ResponseEntity.ok(CommonRespDTO.success("곡 팀 목록을 성공적으로 조회했습니다.", PagedRespDTO.from(result)));
     }
 
     @Operation(summary = "팀 상세 정보 조회")

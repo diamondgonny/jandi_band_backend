@@ -1,6 +1,7 @@
 package com.jandi.band_backend.team.controller;
 
 import com.jandi.band_backend.global.dto.CommonRespDTO;
+import com.jandi.band_backend.global.dto.PagedRespDTO;
 import com.jandi.band_backend.security.CustomUserDetails;
 import com.jandi.band_backend.team.dto.PracticeScheduleReqDTO;
 import com.jandi.band_backend.team.dto.PracticeScheduleRespDTO;
@@ -25,11 +26,11 @@ public class PracticeScheduleController {
 
     @Operation(summary = "팀별 연습 일정 목록 조회")
     @GetMapping("/teams/{teamId}/practice-schedules")
-    public ResponseEntity<CommonRespDTO<Page<PracticeScheduleRespDTO>>> getPracticeSchedulesByTeam(
+    public ResponseEntity<CommonRespDTO<PagedRespDTO<PracticeScheduleRespDTO>>> getPracticeSchedulesByTeam(
             @PathVariable Integer teamId,
             Pageable pageable) {
-        return ResponseEntity.ok(CommonRespDTO.success("팀별 곡 연습 일정 목록 조회 성공",
-                practiceScheduleService.getPracticeSchedulesByTeam(teamId, pageable)));
+        Page<PracticeScheduleRespDTO> result = practiceScheduleService.getPracticeSchedulesByTeam(teamId, pageable);
+        return ResponseEntity.ok(CommonRespDTO.success("팀별 곡 연습 일정 목록 조회 성공", PagedRespDTO.from(result)));
     }
 
     @Operation(summary = "연습 일정 상세 조회")

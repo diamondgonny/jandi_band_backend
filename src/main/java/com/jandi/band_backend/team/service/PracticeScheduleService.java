@@ -1,6 +1,7 @@
 package com.jandi.band_backend.team.service;
 
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
+import com.jandi.band_backend.global.util.UserValidationUtil;
 import com.jandi.band_backend.team.dto.PracticeScheduleReqDTO;
 import com.jandi.band_backend.team.dto.PracticeScheduleRespDTO;
 import com.jandi.band_backend.team.entity.Team;
@@ -25,6 +26,15 @@ public class PracticeScheduleService {
     private final TeamEventRepository teamEventRepository;
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
+    private final UserValidationUtil userValidationUtil;
+
+    /**
+     * ADMIN 권한 확인
+     */
+    private boolean isAdmin(Integer userId) {
+        Users user = userValidationUtil.getUserById(userId);
+        return user.getAdminRole() == Users.AdminRole.ADMIN;
+    }
 
     // 팀별 곡 연습 일정 목록 조회
     public Page<PracticeScheduleRespDTO> getPracticeSchedulesByTeam(Integer teamId, Pageable pageable) {
@@ -87,7 +97,7 @@ public class PracticeScheduleService {
         return PracticeScheduleRespDTO.from(teamEventRepository.save(teamEvent));
     }
 
-    // 곡 연습 일정 삭제 (소프트 삭제)
+    // 곡 연습 일정 삭제 (소프트 삭제, ADMIN은 모든 일정 삭제 가능)
     @Transactional
     public void deletePracticeSchedule(Integer scheduleId, Integer userId) {
         TeamEvent teamEvent = teamEventRepository.findByIdAndNotDeleted(scheduleId)
@@ -98,8 +108,8 @@ public class PracticeScheduleService {
             throw new ResourceNotFoundException("곡 연습 일정이 아닙니다.");
         }
 
-        // 권한 체크
-        if (!teamEvent.getCreator().getId().equals(userId)) {
+        // 권한 체크 (작성자 또는 ADMIN)
+        if (!isAdmin(userId) && !teamEvent.getCreator().getId().equals(userId)) {
             throw new IllegalStateException("연습 일정을 삭제할 권한이 없습니다.");
         }
 

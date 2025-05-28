@@ -2,6 +2,7 @@ package com.jandi.band_backend.user.service;
 
 import com.jandi.band_backend.global.exception.InvalidAccessException;
 import com.jandi.band_backend.global.exception.TimetableNotFoundException;
+import com.jandi.band_backend.global.util.UserValidationUtil;
 import com.jandi.band_backend.user.dto.UserTimetableRespDTO;
 import com.jandi.band_backend.user.dto.UserTimetableReqDTO;
 import com.jandi.band_backend.user.dto.UserTimetableDetailsRespDTO;
@@ -23,8 +24,17 @@ public class UserTimetableService {
     private final UserService userService;
     private final UserTimetableRepository userTimetableRepository;
     private final UserTimetableUtil userTimetableUtil;
+    private final UserValidationUtil userValidationUtil;
 
-    /// 내 시간표 목록 조회
+    /**
+     * ADMIN 권한 확인
+     */
+    private boolean isAdmin(Integer userId) {
+        Users user = userValidationUtil.getUserById(userId);
+        return user.getAdminRole() == Users.AdminRole.ADMIN;
+    }
+
+    /// 내 시간표 목록 조회 (userId 기반)
     @Transactional(readOnly = true)
     public List<UserTimetableRespDTO> getMyTimetables(Integer userId) {
         Users user = userService.getMyInfo(userId);
@@ -35,14 +45,7 @@ public class UserTimetableService {
                 .map(UserTimetableRespDTO::new).collect(Collectors.toList());
     }
 
-    /// 특정 시간표 조회 (kakaoOauthId 버전 - AuthService에서 사용)
-    @Transactional(readOnly = true)
-    public UserTimetableDetailsRespDTO getMyTimetableByKakaoId(String kakaoOauthId, Integer timetableId) {
-        Users user = userService.getMyInfoByKakaoId(kakaoOauthId);
-        return getMyTimetableById(user.getId(), timetableId);
-    }
-
-    /// 특정 시간표 조회 (userId 버전 - 일반 컨트롤러에서 사용)
+    /// 특정 시간표 조회 (userId 기반)
     @Transactional(readOnly = true)
     public UserTimetableDetailsRespDTO getMyTimetableById(Integer userId, Integer timetableId) {
         UserTimetable myTimetable = getIfMyTimetable(userId, timetableId);
@@ -54,7 +57,7 @@ public class UserTimetableService {
         );
     }
 
-    /// 새 시간표 생성 (userId 버전 - 일반 컨트롤러에서 사용)
+    /// 새 시간표 생성 (userId 기반)
     @Transactional
     public UserTimetableDetailsRespDTO createTimetable(Integer userId, UserTimetableReqDTO requestDTO) {
         Users user = userService.getMyInfo(userId);
@@ -75,10 +78,10 @@ public class UserTimetableService {
         );
     }
 
-    /// 내 시간표 수정 (userId 버전 - 일반 컨트롤러에서 사용)
+    /// 내 시간표 수정 (userId 기반, ADMIN은 모든 시간표 수정 가능)
     @Transactional
     public UserTimetableDetailsRespDTO updateTimetable(Integer userId, Integer timetableId, UserTimetableReqDTO requestDTO) {
-        UserTimetable myTimetable = getIfMyTimetable(userId, timetableId); // 본인의 시간표일 때만 GET
+        UserTimetable myTimetable = getIfMyTimetable(userId, timetableId); // 본인의 시간표일 때만 GET (ADMIN은 모든 시간표 가능)
         userTimetableUtil.validateTimetableRequest(requestDTO); // DTO 형식 검사
 
         // 시간표 수정
@@ -94,25 +97,27 @@ public class UserTimetableService {
         );
     }
 
-    /// 내 시간표 삭제 (userId 버전 - 일반 컨트롤러에서 사용)
+    /// 내 시간표 삭제 (userId 기반, ADMIN은 모든 시간표 삭제 가능)
     @Transactional
     public void deleteMyTimetable(Integer userId, Integer timetableId) {
-        UserTimetable myTimetable = getIfMyTimetable(userId, timetableId); // 본인의 시간표일 때만 GET
+        UserTimetable myTimetable = getIfMyTimetable(userId, timetableId); // 본인의 시간표일 때만 GET (ADMIN은 모든 시간표 가능)
 
         myTimetable.setDeletedAt(LocalDateTime.now());
         userTimetableRepository.save(myTimetable);
     }
 
     /// 내부 메서드
-    // 시간표 검색 후 본인의 시간표일때만 반환
+    // 시간표 검색 후 본인의 시간표일때만 반환 (ADMIN은 모든 시간표 접근 가능)
     private UserTimetable getIfMyTimetable(Integer userId, Integer timetableId) {
         Users user = userService.getMyInfo(userId);
         UserTimetable timetable = userTimetableRepository.findByIdAndDeletedAtIsNull(timetableId)
                 .orElseThrow(TimetableNotFoundException::new);
 
-        if(!timetable.getUser().getId().equals(user.getId()))
+        // ADMIN이면 모든 시간표 접근 가능, 아니면 본인 시간표만
+        if (!isAdmin(userId) && !timetable.getUser().getId().equals(user.getId())) {
             throw new InvalidAccessException("권한이 없습니다: 본인의 시간표가 아닙니다");
-        else
-            return timetable;
+        }
+        
+        return timetable;
     }
 }

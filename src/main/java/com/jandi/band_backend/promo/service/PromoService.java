@@ -103,7 +103,7 @@ public class PromoService {
         return PromoRespDTO.from(promo, isLikedByUser);
     }
 
-    // 공연 홍보 생성
+    // 공연 홍보 생성 (ADMIN은 모든 클럽에 대해 생성 가능)
     @Transactional
     public PromoRespDTO createPromo(PromoReqDTO request, Integer creatorId) {
         Club club = clubRepository.findById(request.getClubId())
@@ -111,8 +111,9 @@ public class PromoService {
         
         Users creator = userValidationUtil.getUserById(creatorId);
 
-        // 클럽 멤버십 검증 추가
-        if (!clubMemberRepository.existsByClubAndUser(club, creator)) {
+        // 클럽 멤버십 검증 (ADMIN은 제외)
+        if (creator.getAdminRole() != Users.AdminRole.ADMIN 
+            && !clubMemberRepository.existsByClubAndUser(club, creator)) {
             throw new IllegalStateException("클럽 멤버만 공연 홍보를 생성할 수 있습니다.");
         }
 

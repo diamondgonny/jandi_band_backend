@@ -7,6 +7,7 @@ import com.jandi.band_backend.club.dto.ClubUpdateReqDTO;
 import com.jandi.band_backend.club.dto.ClubMembersRespDTO;
 import com.jandi.band_backend.club.service.ClubService;
 import com.jandi.band_backend.global.dto.CommonRespDTO;
+import com.jandi.band_backend.global.dto.PagedRespDTO;
 import com.jandi.band_backend.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -44,10 +45,10 @@ public class ClubController {
 
     @Operation(summary = "동아리 목록 조회")
     @GetMapping
-    public ResponseEntity<CommonRespDTO<Page<ClubRespDTO>>> getClubList(
+    public ResponseEntity<CommonRespDTO<PagedRespDTO<ClubRespDTO>>> getClubList(
             @PageableDefault(size = 5) Pageable pageable) {
         Page<ClubRespDTO> response = clubService.getClubList(pageable);
-        return ResponseEntity.ok(CommonRespDTO.success("동아리 목록 조회 성공", response));
+        return ResponseEntity.ok(CommonRespDTO.success("동아리 목록 조회 성공", PagedRespDTO.from(response)));
     }
 
     @Operation(summary = "동아리 상세 조회")

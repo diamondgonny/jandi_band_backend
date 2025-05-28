@@ -1,6 +1,7 @@
 package com.jandi.band_backend.poll.controller;
 
 import com.jandi.band_backend.global.dto.CommonRespDTO;
+import com.jandi.band_backend.global.dto.PagedRespDTO;
 import com.jandi.band_backend.poll.dto.*;
 import com.jandi.band_backend.poll.service.PollService;
 import com.jandi.band_backend.security.CustomUserDetails;
@@ -36,11 +37,11 @@ public class PollController {
 
     @Operation(summary = "클럽별 투표 목록 조회")
     @GetMapping("/clubs/{clubId}")
-    public ResponseEntity<CommonRespDTO<Page<PollRespDTO>>> getPollList(
+    public ResponseEntity<CommonRespDTO<PagedRespDTO<PollRespDTO>>> getPollList(
             @PathVariable Integer clubId,
             @PageableDefault(size = 5) Pageable pageable) {
         Page<PollRespDTO> polls = pollService.getPollsByClub(clubId, pageable);
-        return ResponseEntity.ok(CommonRespDTO.success("투표 목록을 조회했습니다.", polls));
+        return ResponseEntity.ok(CommonRespDTO.success("투표 목록을 조회했습니다.", PagedRespDTO.from(polls)));
     }
 
     @Operation(summary = "투표 상세 조회")

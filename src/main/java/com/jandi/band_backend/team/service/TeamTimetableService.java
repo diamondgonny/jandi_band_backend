@@ -75,9 +75,8 @@ public class TeamTimetableService {
         // 팀 및 팀멤버 검증
         TeamMember teamMember = validateTeamAndGetTeamMember(teamId, currentUserId);
 
-        // 사용자의 특정 시간표 조회
-        String kakaoOauthId = getUserKakaoOauthId(currentUserId);
-        UserTimetableDetailsRespDTO userTimetable = userTimetableService.getMyTimetableByKakaoId(kakaoOauthId, reqDTO.getUserTimetableId());
+        // 사용자의 특정 시간표 조회 (userId 사용)
+        UserTimetableDetailsRespDTO userTimetable = userTimetableService.getMyTimetableById(currentUserId, reqDTO.getUserTimetableId());
 
         // 시간표 데이터 저장 및 응답 반환
         return saveTeamMemberTimetableAndBuildResponse(teamMember, userTimetable.getTimetableData(), currentUserId, teamId);
@@ -108,13 +107,6 @@ public class TeamTimetableService {
 
         // 본인만 시간표 입력 가능하도록 권한 확인
         return permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "본인의 시간표만 입력할 수 있습니다.");
-    }
-
-    /**
-     * 사용자의 카카오 OAuth ID 조회
-     */
-    private String getUserKakaoOauthId(Integer currentUserId) {
-        return userValidationUtil.getUserById(currentUserId).getKakaoOauthId();
     }
 
     /**

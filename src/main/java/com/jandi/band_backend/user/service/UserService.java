@@ -16,21 +16,21 @@ public class UserService {
     private final UserRepository userRepository;
     private final UniversityRepository universityRepository;
 
-    /// 내 기본 정보 조회 (kakaoOauthId 버전 - AuthService에서 사용)
+    /// 사용자 조회 (카카오 ID 기반) - 인증/로그인 시 사용자 찾기 전용
     @Transactional(readOnly = true)
     public Users getMyInfoByKakaoId(String kakaoOauthId) {
         return userRepository.findByKakaoOauthId(kakaoOauthId)
                 .orElseThrow(UserNotFoundException::new);
     }
 
-    /// 내 기본 정보 조회 (userId 버전 - 일반 컨트롤러에서 사용)
+    /// 사용자 조회 (userId 기반) - 내부 비즈니스 로직에서 사용
     @Transactional(readOnly = true)
     public Users getMyInfo(Integer userId) {
         return userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
     }
 
-    /// 내 기본 정보 수정
+    /// 내 기본 정보 수정 (userId 기반)
     @Transactional
     public void updateMyInfo(Integer userId, UpdateUserInfoReqDTO updateDTO) {
         Users user = getMyInfo(userId);

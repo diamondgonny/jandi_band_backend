@@ -18,12 +18,4 @@ public class UserValidationUtil {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
     }
-
-    /**
-     * 카카오 OAuth ID로 사용자 조회 (존재하지 않으면 예외 발생)
-     */
-    public Users getUserByKakaoOauthId(String kakaoOauthId) {
-        return userRepository.findByKakaoOauthId(kakaoOauthId)
-                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
-    }
 } 

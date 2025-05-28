@@ -24,7 +24,7 @@ public class UserTimetableService {
     private final UserTimetableRepository userTimetableRepository;
     private final UserTimetableUtil userTimetableUtil;
 
-    /// 내 시간표 목록 조회
+    /// 내 시간표 목록 조회 (userId 기반)
     @Transactional(readOnly = true)
     public List<UserTimetableRespDTO> getMyTimetables(Integer userId) {
         Users user = userService.getMyInfo(userId);
@@ -35,14 +35,7 @@ public class UserTimetableService {
                 .map(UserTimetableRespDTO::new).collect(Collectors.toList());
     }
 
-    /// 특정 시간표 조회 (kakaoOauthId 버전 - AuthService에서 사용)
-    @Transactional(readOnly = true)
-    public UserTimetableDetailsRespDTO getMyTimetableByKakaoId(String kakaoOauthId, Integer timetableId) {
-        Users user = userService.getMyInfoByKakaoId(kakaoOauthId);
-        return getMyTimetableById(user.getId(), timetableId);
-    }
-
-    /// 특정 시간표 조회 (userId 버전 - 일반 컨트롤러에서 사용)
+    /// 특정 시간표 조회 (userId 기반)
     @Transactional(readOnly = true)
     public UserTimetableDetailsRespDTO getMyTimetableById(Integer userId, Integer timetableId) {
         UserTimetable myTimetable = getIfMyTimetable(userId, timetableId);
@@ -54,7 +47,7 @@ public class UserTimetableService {
         );
     }
 
-    /// 새 시간표 생성 (userId 버전 - 일반 컨트롤러에서 사용)
+    /// 새 시간표 생성 (userId 기반)
     @Transactional
     public UserTimetableDetailsRespDTO createTimetable(Integer userId, UserTimetableReqDTO requestDTO) {
         Users user = userService.getMyInfo(userId);
@@ -75,7 +68,7 @@ public class UserTimetableService {
         );
     }
 
-    /// 내 시간표 수정 (userId 버전 - 일반 컨트롤러에서 사용)
+    /// 내 시간표 수정 (userId 기반)
     @Transactional
     public UserTimetableDetailsRespDTO updateTimetable(Integer userId, Integer timetableId, UserTimetableReqDTO requestDTO) {
         UserTimetable myTimetable = getIfMyTimetable(userId, timetableId); // 본인의 시간표일 때만 GET
@@ -94,7 +87,7 @@ public class UserTimetableService {
         );
     }
 
-    /// 내 시간표 삭제 (userId 버전 - 일반 컨트롤러에서 사용)
+    /// 내 시간표 삭제 (userId 기반)
     @Transactional
     public void deleteMyTimetable(Integer userId, Integer timetableId) {
         UserTimetable myTimetable = getIfMyTimetable(userId, timetableId); // 본인의 시간표일 때만 GET

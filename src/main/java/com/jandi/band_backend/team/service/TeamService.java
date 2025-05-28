@@ -3,8 +3,10 @@ package com.jandi.band_backend.team.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.repository.ClubRepository;
+import com.jandi.band_backend.global.exception.BadRequestException;
 import com.jandi.band_backend.global.exception.ClubNotFoundException;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
+import com.jandi.band_backend.global.exception.TeamLeaveNotAllowedException;
 import com.jandi.band_backend.team.dto.TeamDetailRespDTO;
 import com.jandi.band_backend.team.dto.TeamReqDTO;
 import com.jandi.band_backend.team.dto.TeamRespDTO;
@@ -151,6 +153,28 @@ public class TeamService {
         // 소프트 삭제
         team.setDeletedAt(LocalDateTime.now());
         teamRepository.save(team);
+    }
+
+    /**
+     * 팀 탈퇴
+     */
+    @Transactional
+    public void leaveTeam(Integer teamId, Integer currentUserId) {
+        // 팀 존재 확인
+        Team team = teamRepository.findByIdAndNotDeleted(teamId)
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
+
+        // 팀 멤버 확인
+        TeamMember teamMember = teamMemberRepository.findByTeamIdAndUserId(teamId, currentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("해당 팀의 멤버가 아닙니다."));
+
+        // 팀원이 한명인 경우?
+        if (teamMemberRepository.countByTeamId(teamId) == 1) {
+            throw new TeamLeaveNotAllowedException("마지막 남은 팀원은 탈퇴할 수 없습니다. 팀을 삭제해주세요.");
+        }
+
+        // 팀 멤버에서 제거
+        teamMemberRepository.delete(teamMember);
     }
 
     /**

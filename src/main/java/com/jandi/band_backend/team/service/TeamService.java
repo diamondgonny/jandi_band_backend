@@ -124,8 +124,8 @@ public class TeamService {
         Team team = teamRepository.findByIdAndDeletedAtIsNull(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
 
-        // 권한 확인 (팀 생성자 또는 동아리 대표자)
-        permissionValidationUtil.validateTeamModificationPermission(team, currentUserId);
+        // 팀 멤버 권한 확인
+        permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "팀 멤버만 팀 이름을 수정할 수 있습니다.");
 
         // 팀 이름 수정
         team.setName(teamReqDTO.getName());
@@ -147,8 +147,8 @@ public class TeamService {
         Team team = teamRepository.findByIdAndDeletedAtIsNull(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
 
-        // 권한 확인 (팀 생성자 또는 동아리 대표자)
-        permissionValidationUtil.validateTeamModificationPermission(team, currentUserId);
+        // 팀 멤버 권한 확인
+        permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "팀 멤버만 팀을 삭제할 수 있습니다.");
 
         // 소프트 삭제
         team.setDeletedAt(LocalDateTime.now());
@@ -164,9 +164,8 @@ public class TeamService {
         Team team = teamRepository.findByIdAndNotDeleted(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
 
-        // 팀 멤버 확인
-        TeamMember teamMember = teamMemberRepository.findByTeamIdAndUserId(teamId, currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("해당 팀의 멤버가 아닙니다."));
+        // 팀 멤버 권한 확인
+        TeamMember teamMember = permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "해당 팀의 멤버가 아닙니다.");
 
         // 팀원이 한명인 경우?
         if (teamMemberRepository.countByTeamId(teamId) == 1) {

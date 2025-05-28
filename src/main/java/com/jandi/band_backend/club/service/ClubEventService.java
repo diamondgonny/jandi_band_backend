@@ -6,6 +6,7 @@ import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.entity.ClubEvent;
 import com.jandi.band_backend.club.repository.ClubEventRepository;
 import com.jandi.band_backend.club.repository.ClubRepository;
+import com.jandi.band_backend.global.util.UserValidationUtil;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,15 @@ public class ClubEventService {
     private final ClubRepository clubRepository;
     private final UserRepository userRepository;
     private final ClubEventRepository clubEventRepository;
+    private final UserValidationUtil userValidationUtil;
+
+    /**
+     * ADMIN 권한 확인
+     */
+    private boolean isAdmin(Integer userId) {
+        Users user = userValidationUtil.getUserById(userId);
+        return user.getAdminRole() == Users.AdminRole.ADMIN;
+    }
 
     @Transactional
     public ClubEventRespDTO createClubEvent(Integer clubId, Integer userId, ClubEventReqDTO dto) {
@@ -77,6 +87,7 @@ public class ClubEventService {
                 .toList();
     }
 
+    // 클럽 이벤트 삭제 (ADMIN은 모든 이벤트 삭제 가능)
     @Transactional
     public void deleteClubEvent(Integer clubId, Integer eventId, Integer userId) {
         Users user = userRepository.findById(userId)
@@ -85,7 +96,8 @@ public class ClubEventService {
         ClubEvent event = clubEventRepository.findByIdAndClubIdAndDeletedAtIsNull(eventId, clubId)
                 .orElseThrow(() -> new IllegalArgumentException("일정을 찾을 수 없습니다."));
 
-        if (!event.getCreator().getId().equals(user.getId())) {
+        // 권한 체크 (작성자 또는 ADMIN)
+        if (!isAdmin(userId) && !event.getCreator().getId().equals(user.getId())) {
             throw new IllegalArgumentException("일정을 삭제할 권한이 없습니다.");
         }
 

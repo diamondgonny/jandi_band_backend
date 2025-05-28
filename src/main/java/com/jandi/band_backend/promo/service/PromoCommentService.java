@@ -1,6 +1,7 @@
 package com.jandi.band_backend.promo.service;
 
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
+import com.jandi.band_backend.global.util.UserValidationUtil;
 import com.jandi.band_backend.promo.dto.PromoCommentReqDTO;
 import com.jandi.band_backend.promo.dto.PromoCommentRespDTO;
 import com.jandi.band_backend.promo.entity.Promo;
@@ -26,6 +27,15 @@ public class PromoCommentService {
     private final PromoRepository promoRepository;
     private final UserRepository userRepository;
     private final PromoCommentLikeService promoCommentLikeService;
+    private final UserValidationUtil userValidationUtil;
+
+    /**
+     * ADMIN 권한 확인
+     */
+    private boolean isAdmin(Integer userId) {
+        Users user = userValidationUtil.getUserById(userId);
+        return user.getAdminRole() == Users.AdminRole.ADMIN;
+    }
 
     // 공연 홍보 댓글 목록 조회
     public Page<PromoCommentRespDTO> getCommentsByPromo(Integer promoId, Pageable pageable) {
@@ -77,14 +87,14 @@ public class PromoCommentService {
         return PromoCommentRespDTO.from(savedComment);
     }
 
-    // 공연 홍보 댓글 수정
+    // 공연 홍보 댓글 수정 (ADMIN은 모든 댓글 수정 가능)
     @Transactional
     public PromoCommentRespDTO updateComment(Integer commentId, PromoCommentReqDTO request, Integer userId) {
         PromoComment comment = promoCommentRepository.findByIdAndNotDeleted(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("댓글을 찾을 수 없습니다."));
 
-        // 권한 체크
-        if (!comment.getCreator().getId().equals(userId)) {
+        // 권한 체크 (작성자 또는 ADMIN)
+        if (!isAdmin(userId) && !comment.getCreator().getId().equals(userId)) {
             throw new IllegalStateException("댓글을 수정할 권한이 없습니다.");
         }
 
@@ -93,14 +103,14 @@ public class PromoCommentService {
         return PromoCommentRespDTO.from(comment);
     }
 
-    // 공연 홍보 댓글 삭제 (소프트 삭제)
+    // 공연 홍보 댓글 삭제 (소프트 삭제, ADMIN은 모든 댓글 삭제 가능)
     @Transactional
     public void deleteComment(Integer commentId, Integer userId) {
         PromoComment comment = promoCommentRepository.findByIdAndNotDeleted(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("댓글을 찾을 수 없습니다."));
 
-        // 권한 체크
-        if (!comment.getCreator().getId().equals(userId)) {
+        // 권한 체크 (작성자 또는 ADMIN)
+        if (!isAdmin(userId) && !comment.getCreator().getId().equals(userId)) {
             throw new IllegalStateException("댓글을 삭제할 권한이 없습니다.");
         }
 

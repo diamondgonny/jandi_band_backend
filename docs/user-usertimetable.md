@@ -63,6 +63,8 @@ curl -X GET "http://localhost:8080/api/users/me/timetables/1" \
 }
 ```
 
+**참고**: 실제 컨트롤러에서는 `/api/users/me/timetables/{timetableId}` 경로를 사용합니다 (슬래시 주의).
+
 ---
 
 ## 3. 시간표 생성

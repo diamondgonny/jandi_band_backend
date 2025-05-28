@@ -9,7 +9,7 @@ JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails)
 ## 권한 관리
 - **조회**: 로그인한 모든 사용자
 - **생성**: 로그인한 모든 사용자  
-- **삭제**: 일정을 생성한 사용자만 가능
+- **삭제**: 일정을 생성한 사용자 또는 ADMIN 권한 사용자
 
 ---
 
@@ -160,7 +160,7 @@ curl -X DELETE "http://localhost:8080/api/clubs/1/events/15" \
 ```
 
 #### 접근 권한
-- 일정을 생성한 사용자만 삭제 가능
+- 일정을 생성한 사용자 또는 ADMIN 권한 사용자만 삭제 가능
 - 권한이 없는 경우 403 Forbidden 응답
 
 ---
@@ -195,7 +195,7 @@ curl -X DELETE "http://localhost:8080/api/clubs/1/events/15" \
   "errorCode": "FORBIDDEN"
 }
 ```
-**발생 케이스**: 일정 삭제 시 생성자가 아닌 경우
+**발생 케이스**: 일정 삭제 시 생성자나 ADMIN이 아닌 경우
 
 ### 404 Not Found - 리소스 없음
 ```json
@@ -241,6 +241,10 @@ interface ClubEventRespDTO {
 ### 소프트 삭제
 - 삭제된 일정은 DB에서 물리적으로 제거되지 않고 `deletedAt` 필드로 관리
 - 조회 시 삭제된 일정은 자동으로 제외됨
+
+### 권한 관리
+- **ADMIN 권한**: Users 테이블의 admin_role이 'ADMIN'인 사용자는 모든 일정 삭제 가능
+- **일반 사용자**: 본인이 생성한 일정만 삭제 가능
 
 ### 데이터 타입
 - **ID**: Entity는 Integer, 응답 DTO는 Long으로 변환

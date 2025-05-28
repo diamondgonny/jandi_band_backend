@@ -80,10 +80,14 @@ curl -X GET "http://localhost:8080/api/polls/clubs/1?page=0&size=5"
         "createdAt": "2024-03-15T10:30:00"
       }
     ],
-    "totalElements": 1,
-    "totalPages": 1,
-    "first": true,
-    "last": true
+    "pageInfo": {
+      "totalElements": 1,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "size": 5,
+      "number": 0
+    }
   }
 }
 ```
@@ -325,6 +329,6 @@ curl -X DELETE "http://localhost:8080/api/polls/1/songs/1/votes/LIKE" \
 ## 참고사항
 - **투표 교체**: 다른 타입의 기존 투표가 있으면 새로운 타입으로 덮어씀
 - **같은 타입 재투표**: 에러 응답 후 DELETE로 취소 후 다시 투표해야 함
-- **페이지네이션**: 기본 크기 5개
+- **페이지네이션**: 기본 크기 5개, PagedRespDTO 구조 사용
 - **인증**: 투표 상세 조회는 인증 없이도 가능하지만 사용자 투표 상태(`userVoteType`)는 보이지 않음
 - **투표 타입**: 영어명과 한국어명 모두 지원 (대소문자 구분 없음)

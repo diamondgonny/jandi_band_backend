@@ -6,6 +6,11 @@
 ## 인증
 생성, 수정, 삭제는 JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails). 조회는 인증 불필요.
 
+## 권한 관리
+- **생성**: 로그인한 모든 사용자 (생성자가 자동으로 대표자가 됨)
+- **수정**: 동아리 멤버 또는 ADMIN 권한 사용자
+- **삭제**: 동아리 대표자 또는 ADMIN 권한 사용자
+
 ---
 
 ## 1. 동아리 생성
@@ -87,10 +92,14 @@ curl -X GET "http://localhost:8080/api/clubs?page=0&size=5"
         "memberCount": 5
       }
     ],
-    "totalElements": 1,
-    "totalPages": 1,
-    "first": true,
-    "last": true
+    "pageInfo": {
+      "totalElements": 1,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "size": 5,
+      "number": 0
+    }
   }
 }
 ```
@@ -305,8 +314,8 @@ curl -X DELETE "http://localhost:8080/api/clubs/1/main-image" \
 
 ## 참고사항
 - **연합동아리**: `universityId`가 null이면 연합동아리 (`isUnionClub: true`)
-- **권한**: 생성은 모든 인증된 사용자, 수정/삭제는 동아리 대표자만
+- **권한**: 생성은 모든 인증된 사용자, 수정은 동아리 멤버, 삭제는 동아리 대표자만 (ADMIN 권한은 모든 작업 가능)
 - **자동 멤버 추가**: 동아리 생성자는 자동으로 대표자(REPRESENTATIVE)로 등록
 - **소프트 삭제**: 실제 삭제가 아닌 deletedAt 설정
-- **페이지네이션**: 기본 크기 5개
+- **페이지네이션**: 기본 크기 5개, PagedRespDTO 구조 사용
 - **이미지 업로드**: 별도의 multipart/form-data 엔드포인트 사용

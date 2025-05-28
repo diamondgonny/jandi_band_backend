@@ -6,6 +6,28 @@
 ## 인증
 JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails)
 
+## 페이지네이션 응답 구조
+팀 목록 조회 API는 다음과 같은 페이지네이션 구조를 사용합니다:
+
+```json
+{
+  "success": true,
+  "message": "응답 메시지",
+  "data": {
+    "content": [...],  // 실제 팀 데이터 배열
+    "pageInfo": {
+      "page": 0,           // 현재 페이지 번호 (0부터 시작)
+      "size": 5,           // 페이지 크기
+      "totalElements": 100, // 총 팀 수
+      "totalPages": 20,    // 총 페이지 수
+      "first": true,       // 첫 번째 페이지 여부
+      "last": false,       // 마지막 페이지 여부
+      "empty": false       // 비어있는 페이지 여부
+    }
+  }
+}
+```
+
 ---
 
 ## 1. 팀 생성
@@ -90,10 +112,15 @@ curl -X GET "http://localhost:8080/api/clubs/1/teams?page=0&size=5" \
         "createdAt": "2024-03-15T10:30:00"
       }
     ],
-    "totalElements": 1,
-    "totalPages": 1,
-    "first": true,
-    "last": true
+    "pageInfo": {
+      "page": 0,
+      "size": 5,
+      "totalElements": 1,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "empty": false
+    }
   }
 }
 ```
@@ -236,7 +263,7 @@ curl -X DELETE "http://localhost:8080/api/teams/1" \
 - **권한**: 동아리 멤버만 팀 생성/조회 가능
 - **수정/삭제 권한**: 팀 생성자 또는 동아리 대표자만 가능
 - **자동 멤버 추가**: 팀 생성자는 자동으로 첫 번째 멤버 등록
-- **페이지네이션**: 기본 크기 5개, 최신 생성순으로 정렬
+- **페이지네이션**: 기본 크기 5개, PagedRespDTO 구조 사용, 최신 생성순으로 정렬
 - **소프트 삭제**: 실제 삭제가 아닌 deletedAt 설정
 - **시간표 통합**: 팀 상세 조회 시 팀원들의 시간표 정보(`timetableData`, `isSubmitted` 등) 포함
 - **스케줄 조율**: 팀 상세 조회 시 `suggestedScheduleAt`과 `submissionProgress`로 시간표 제출 현황 추적

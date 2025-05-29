@@ -33,7 +33,7 @@ public class InviteUtilService {
 
     // 동아리 부원인지 확인
     protected boolean isMemberOfClub(Integer clubId, Integer userId) {
-        Optional<ClubMember> Optional = clubMemberRepository.findByClubIdAndUserId(clubId, userId);
+        Optional<ClubMember> Optional = clubMemberRepository.findByClubIdAndUserIdAndDeletedAtIsNull(clubId, userId);
         return Optional.isPresent();
     }
 

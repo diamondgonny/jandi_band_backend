@@ -99,7 +99,7 @@ public class ClubService {
 
         return clubPage.map(club -> {
             String photoUrl = getClubMainPhotoUrl(club.getId());
-            int memberCount = clubMemberRepository.countByClubId(club.getId());
+            int memberCount = clubMemberRepository.countByClubIdAndDeletedAtIsNull(club.getId());
 
             return convertToClubRespDTO(club, photoUrl, memberCount);
         });
@@ -112,7 +112,7 @@ public class ClubService {
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
         String photoUrl = getClubMainPhotoUrl(club.getId());
-        int memberCount = clubMemberRepository.countByClubId(clubId);
+        int memberCount = clubMemberRepository.countByClubIdAndDeletedAtIsNull(clubId);
         Integer representativeId = getClubRepresentativeId(clubId);
 
         return convertToClubDetailRespDTO(club, photoUrl, memberCount, representativeId);
@@ -124,7 +124,7 @@ public class ClubService {
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
         // 동아리 멤버 목록 조회
-        List<ClubMember> clubMembers = clubMemberRepository.findByClubId(clubId);
+        List<ClubMember> clubMembers = clubMemberRepository.findByClubIdAndDeletedAtIsNull(clubId);
 
         // 멤버 정보 변환
         List<ClubMembersRespDTO.MemberInfoDTO> memberInfos = clubMembers.stream()
@@ -187,7 +187,7 @@ public class ClubService {
 
         Club updatedClub = clubRepository.save(club);
         String photoUrl = getClubMainPhotoUrl(clubId);
-        int memberCount = clubMemberRepository.countByClubId(clubId);
+        int memberCount = clubMemberRepository.countByClubIdAndDeletedAtIsNull(clubId);
         Integer representativeId = getClubRepresentativeId(clubId);
 
         return convertToClubDetailRespDTO(updatedClub, photoUrl, memberCount, representativeId);
@@ -318,7 +318,7 @@ public class ClubService {
 
     // 동아리 대표자 ID 조회 헬퍼 메서드
     private Integer getClubRepresentativeId(Integer clubId) {
-        return clubMemberRepository.findByClubId(clubId).stream()
+        return clubMemberRepository.findByClubIdAndDeletedAtIsNull(clubId).stream()
                 .filter(member -> member.getRole() == ClubMember.MemberRole.REPRESENTATIVE)
                 .map(member -> member.getUser().getId())
                 .findFirst()

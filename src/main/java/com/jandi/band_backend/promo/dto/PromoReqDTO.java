@@ -1,6 +1,5 @@
 package com.jandi.band_backend.promo.dto;
 
-import com.jandi.band_backend.promo.entity.Promo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -44,7 +43,4 @@ public class PromoReqDTO {
 
     @Schema(description = "공연 설명", example = "락밴드 동아리의 정기 공연입니다. 다양한 장르의 음악을 선보일 예정입니다.")
     private String description;
-
-    @Schema(description = "공연 상태", example = "UPCOMING", allowableValues = {"UPCOMING", "ONGOING", "COMPLETED"})
-    private Promo.PromoStatus status;
 } 

@@ -53,10 +53,6 @@ public class Promo {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
     
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private PromoStatus status = PromoStatus.UPCOMING;
-    
     @Column(name = "view_count", nullable = false)
     private Integer viewCount = 0;
     
@@ -96,11 +92,5 @@ public class Promo {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-    
-    public enum PromoStatus {
-        UPCOMING, 
-        ONGOING, 
-        COMPLETED
     }
 } 

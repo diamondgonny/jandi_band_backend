@@ -129,8 +129,7 @@ public class PromoController {
                           "eventDatetime": "2024-03-15T19:00:00",
                           "location": "홍대 클럽",
                           "address": "서울시 마포구 홍익로 123",
-                          "description": "락밴드 동아리의 정기 공연입니다. 다양한 장르의 음악을 선보일 예정입니다.",
-                          "status": "UPCOMING"
+                          "description": "락밴드 동아리의 정기 공연입니다. 다양한 장르의 음악을 선보일 예정입니다."
                         }
                         """
                     )
@@ -173,8 +172,7 @@ public class PromoController {
                           "eventDatetime": "2024-03-15T19:30:00",
                           "location": "새로운 장소",
                           "address": "새로운 주소",
-                          "description": "수정된 공연 설명",
-                          "status": "ONGOING"
+                          "description": "수정된 공연 설명"
                         }
                         """
                     )
@@ -280,7 +278,6 @@ public class PromoController {
     })
     @GetMapping("/filter")
     public ResponseEntity<CommonRespDTO<PagedRespDTO<PromoRespDTO>>> filterPromos(
-            @Parameter(description = "공연 상태", example = "UPCOMING") @RequestParam(required = false) Promo.PromoStatus status,
             @Parameter(description = "시작 날짜", example = "2024-03-01T00:00:00") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @Parameter(description = "종료 날짜", example = "2024-03-31T23:59:59") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
             @Parameter(description = "팀명", example = "락밴드") @RequestParam(required = false) String teamName,
@@ -291,7 +288,7 @@ public class PromoController {
         
         Pageable pageable = createPageable(page, size, sort);
         Integer userId = userDetails != null ? userDetails.getUserId() : null;
-        Page<PromoRespDTO> promoPage = promoService.filterPromos(status, startDate, endDate, teamName, userId, pageable);
+        Page<PromoRespDTO> promoPage = promoService.filterPromos(startDate, endDate, teamName, userId, pageable);
         return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 필터링 성공",
                 PagedRespDTO.from(promoPage)));
     }

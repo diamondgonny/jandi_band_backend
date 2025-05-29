@@ -51,9 +51,6 @@ public class PromoRespDTO {
     @Schema(description = "공연 설명", example = "락밴드 동아리의 정기 공연입니다.")
     private String description;
     
-    @Schema(description = "공연 상태", example = "UPCOMING", allowableValues = {"UPCOMING", "ONGOING", "COMPLETED"})
-    private Promo.PromoStatus status;
-    
     @Schema(description = "조회수", example = "100")
     private Integer viewCount;
     
@@ -94,7 +91,6 @@ public class PromoRespDTO {
         response.setLocation(promo.getLocation());
         response.setAddress(promo.getAddress());
         response.setDescription(promo.getDescription());
-        response.setStatus(promo.getStatus());
         response.setViewCount(promo.getViewCount());
         response.setCommentCount(promo.getCommentCount());
         response.setLikeCount(promo.getLikeCount());

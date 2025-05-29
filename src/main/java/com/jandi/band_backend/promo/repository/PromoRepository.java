@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Repository
 public interface PromoRepository extends JpaRepository<Promo, Integer> {
@@ -29,12 +28,6 @@ public interface PromoRepository extends JpaRepository<Promo, Integer> {
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.id = :id")
     Promo findByIdAndNotDeleted(@Param("id") Integer id);
 
-    // 상태와 시간 기준으로 공연 조회
-    @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.status = :status AND p.eventDatetime <= :datetime")
-    List<Promo> findByStatusAndEventDatetimeBefore(
-        @Param("status") Promo.PromoStatus status,
-        @Param("datetime") LocalDateTime datetime);
-
     // 키워드 검색
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND " +
            "(LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
@@ -45,13 +38,11 @@ public interface PromoRepository extends JpaRepository<Promo, Integer> {
 
     // 필터링 (팀명과 클럽ID 모두 지원)
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL " +
-           "AND (:status IS NULL OR p.status = :status) " +
            "AND (:startDate IS NULL OR p.eventDatetime >= :startDate) " +
            "AND (:endDate IS NULL OR p.eventDatetime <= :endDate) " +
            "AND (:teamName IS NULL OR LOWER(p.teamName) LIKE LOWER(CONCAT('%', :teamName, '%'))) " +
            "AND (:clubId IS NULL OR p.club.id = :clubId)")
     Page<Promo> filterPromos(
-        @Param("status") Promo.PromoStatus status,
         @Param("startDate") LocalDateTime startDate,
         @Param("endDate") LocalDateTime endDate,
         @Param("teamName") String teamName,
@@ -60,12 +51,10 @@ public interface PromoRepository extends JpaRepository<Promo, Integer> {
 
     // 팀명만으로 필터링 (기존 호환성)
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL " +
-           "AND (:status IS NULL OR p.status = :status) " +
            "AND (:startDate IS NULL OR p.eventDatetime >= :startDate) " +
            "AND (:endDate IS NULL OR p.eventDatetime <= :endDate) " +
            "AND (:teamName IS NULL OR LOWER(p.teamName) LIKE LOWER(CONCAT('%', :teamName, '%')))")
     Page<Promo> filterPromosByTeamName(
-        @Param("status") Promo.PromoStatus status,
         @Param("startDate") LocalDateTime startDate,
         @Param("endDate") LocalDateTime endDate,
         @Param("teamName") String teamName,

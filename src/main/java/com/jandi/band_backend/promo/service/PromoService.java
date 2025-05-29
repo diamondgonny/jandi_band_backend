@@ -107,7 +107,6 @@ public class PromoService {
         promo.setLocation(request.getLocation());
         promo.setAddress(request.getAddress());
         promo.setDescription(request.getDescription());
-        promo.setStatus(request.getStatus() != null ? request.getStatus() : Promo.PromoStatus.UPCOMING);
 
         return PromoRespDTO.from(promoRepository.save(promo));
     }
@@ -139,9 +138,6 @@ public class PromoService {
         promo.setLocation(request.getLocation());
         promo.setAddress(request.getAddress());
         promo.setDescription(request.getDescription());
-        if (request.getStatus() != null) {
-            promo.setStatus(request.getStatus());
-        }
 
         return PromoRespDTO.from(promo);
     }
@@ -221,27 +217,6 @@ public class PromoService {
         promoPhotoRepository.save(photo);
     }
 
-    // 공연 상태 자동 업데이트 (스케줄러로 주기적 실행)
-    @Scheduled(cron = "0 0 * * * *")  // 매시 정각에 실행
-    @Transactional
-    public void updatePromoStatuses() {
-        LocalDateTime now = LocalDateTime.now();
-        
-        // 진행 중인 공연 업데이트
-        List<Promo> ongoingPromos = promoRepository.findByStatusAndEventDatetimeBefore(
-            Promo.PromoStatus.UPCOMING, now);
-        for (Promo promo : ongoingPromos) {
-            promo.setStatus(Promo.PromoStatus.ONGOING);
-        }
-        
-        // 완료된 공연 업데이트 (공연 종료 후 3시간 경과)
-        List<Promo> completedPromos = promoRepository.findByStatusAndEventDatetimeBefore(
-            Promo.PromoStatus.ONGOING, now.minusHours(3));
-        for (Promo promo : completedPromos) {
-            promo.setStatus(Promo.PromoStatus.COMPLETED);
-        }
-    }
-
     // 공연 홍보 검색
     public Page<PromoRespDTO> searchPromos(String keyword, Pageable pageable) {
         return promoRepository.searchByKeyword(keyword, pageable)
@@ -260,24 +235,22 @@ public class PromoService {
 
     // 공연 홍보 필터링
     public Page<PromoRespDTO> filterPromos(
-            Promo.PromoStatus status,
             LocalDateTime startDate,
             LocalDateTime endDate,
             String teamName,
             Pageable pageable) {
-        return promoRepository.filterPromosByTeamName(status, startDate, endDate, teamName, pageable)
+        return promoRepository.filterPromosByTeamName(startDate, endDate, teamName, pageable)
                 .map(PromoRespDTO::from);
     }
 
     // 공연 홍보 필터링 (사용자별 좋아요 상태 포함)
     public Page<PromoRespDTO> filterPromos(
-            Promo.PromoStatus status,
             LocalDateTime startDate,
             LocalDateTime endDate,
             String teamName,
             Integer userId,
             Pageable pageable) {
-        return promoRepository.filterPromosByTeamName(status, startDate, endDate, teamName, pageable)
+        return promoRepository.filterPromosByTeamName(startDate, endDate, teamName, pageable)
                 .map(promo -> {
                     Boolean isLikedByUser = userId != null ? 
                             promoLikeService.isLikedByUser(promo.getId(), userId) : null;

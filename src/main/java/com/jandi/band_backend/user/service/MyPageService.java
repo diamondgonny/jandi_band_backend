@@ -28,16 +28,16 @@ public class MyPageService {
      * 내가 참가한 동아리 목록 조회
      */
     public List<MyClubRespDTO> getMyClubs(Integer userId) {
-        List<ClubMember> clubMembers = clubMemberRepository.findByUserId(userId);
-        
+        List<ClubMember> clubMembers = clubMemberRepository.findByUserIdAndClubDeletedAtIsNullAndDeletedAtIsNullOrderByJoinedAtDesc(userId);
+
         return clubMembers.stream()
                 .map(clubMember -> {
                     // 동아리 대표 사진 URL 조회
                     String photoUrl = getClubMainPhotoUrl(clubMember.getClub().getId());
-                    
+
                     // 동아리 멤버 수 조회
-                    Integer memberCount = clubMemberRepository.countByClubId(clubMember.getClub().getId());
-                    
+                    Integer memberCount = clubMemberRepository.countByClubIdAndDeletedAtIsNull(clubMember.getClub().getId());
+
                     return MyClubRespDTO.from(clubMember, photoUrl, memberCount);
                 })
                 .collect(Collectors.toList());

@@ -4,19 +4,12 @@ import com.jandi.band_backend.global.dto.CommonRespDTO;
 import com.jandi.band_backend.global.dto.PagedRespDTO;
 import com.jandi.band_backend.promo.dto.PromoReqDTO;
 import com.jandi.band_backend.promo.dto.PromoRespDTO;
-import com.jandi.band_backend.promo.entity.Promo;
 import com.jandi.band_backend.promo.service.PromoService;
 import com.jandi.band_backend.promo.service.PromoLikeService;
 import com.jandi.band_backend.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +22,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Tag(name = "Promo API", description = "공연 홍보 관련 API")
@@ -44,10 +38,6 @@ public class PromoController {
         summary = "공연 홍보 목록 조회", 
         description = "모든 공연 홍보 목록을 페이지네이션으로 조회합니다. 로그인한 사용자의 경우 좋아요 상태도 함께 반환됩니다."
     )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "조회 성공"),
-        @ApiResponse(responseCode = "400", description = "잘못된 요청")
-    })
     @GetMapping
     public ResponseEntity<CommonRespDTO<PagedRespDTO<PromoRespDTO>>> getPromos(
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
@@ -66,10 +56,6 @@ public class PromoController {
         summary = "공연 홍보 상세 조회", 
         description = "특정 공연 홍보의 상세 정보를 조회합니다. 조회 시 조회수가 1 증가합니다."
     )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "조회 성공"),
-        @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
-    })
     @GetMapping("/{promoId}")
     public ResponseEntity<CommonRespDTO<PromoRespDTO>> getPromo(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
@@ -81,38 +67,31 @@ public class PromoController {
 
     @Operation(
         summary = "공연 홍보 생성", 
-        description = "새로운 공연 홍보를 생성합니다. teamName은 필수입니다."
+        description = "새로운 공연 홍보를 생성합니다. teamName은 필수이고, 이미지는 1개까지 업로드할 수 있습니다."
     )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "생성 성공"),
-        @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
-        @ApiResponse(responseCode = "401", description = "인증 필요")
-    })
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CommonRespDTO<PromoRespDTO>> createPromo(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                description = "공연 홍보 생성 정보",
-                content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = PromoReqDTO.class),
-                    examples = @ExampleObject(
-                        name = "공연 홍보 생성 예시",
-                        value = """
-                        {
-                          "teamName": "락밴드 팀",
-                          "title": "락밴드 정기공연",
-                          "admissionFee": 10000,
-                          "eventDatetime": "2024-03-15T19:00:00",
-                          "location": "홍대 클럽",
-                          "address": "서울시 마포구 홍익로 123",
-                          "description": "락밴드 팀의 정기 공연입니다. 다양한 장르의 음악을 선보일 예정입니다."
-                        }
-                        """
-                    )
-                )
-            )
-            @Valid @RequestBody PromoReqDTO request,
+            @Parameter(description = "팀명", example = "락밴드 팀", required = true) @RequestParam String teamName,
+            @Parameter(description = "공연 제목", example = "락밴드 정기공연", required = true) @RequestParam String title,
+            @Parameter(description = "입장료", example = "10000") @RequestParam(required = false) Integer admissionFee,
+            @Parameter(description = "공연 일시 (ISO 8601)", example = "2024-03-15T19:00:00") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime eventDatetime,
+            @Parameter(description = "공연 장소", example = "홍대 클럽") @RequestParam(required = false) String location,
+            @Parameter(description = "상세 주소", example = "서울시 마포구 홍익로 123") @RequestParam(required = false) String address,
+            @Parameter(description = "공연 설명", example = "락밴드 팀의 정기 공연입니다.") @RequestParam(required = false) String description,
+            @Parameter(description = "공연 이미지 파일") @RequestParam(value = "image", required = false) MultipartFile image,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
+        
+        // DTO 객체 생성
+        PromoReqDTO request = new PromoReqDTO();
+        request.setTeamName(teamName);
+        request.setTitle(title);
+        request.setAdmissionFee(admissionFee != null ? new BigDecimal(admissionFee) : null);
+        request.setEventDatetime(eventDatetime);
+        request.setLocation(location);
+        request.setAddress(address);
+        request.setDescription(description);
+        request.setImage(image);
+        
         Integer userId = userDetails.getUserId();
         return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 생성 성공",
                 promoService.createPromo(request, userId)));
@@ -120,41 +99,34 @@ public class PromoController {
 
     @Operation(
         summary = "공연 홍보 수정", 
-        description = "기존 공연 홍보를 수정합니다. 작성자만 수정할 수 있습니다."
+        description = "기존 공연 홍보를 수정합니다. 작성자만 수정할 수 있습니다. 전송된 필드만 수정되고 나머지는 기존 값을 유지합니다."
     )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "수정 성공"),
-        @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
-        @ApiResponse(responseCode = "401", description = "인증 필요"),
-        @ApiResponse(responseCode = "403", description = "수정 권한 없음"),
-        @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
-    })
-    @PutMapping("/{promoId}")
+    @PatchMapping(value = "/{promoId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CommonRespDTO<PromoRespDTO>> updatePromo(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                description = "공연 홍보 수정 정보",
-                content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = PromoReqDTO.class),
-                    examples = @ExampleObject(
-                        name = "공연 홍보 수정 예시",
-                        value = """
-                        {
-                          "teamName": "수정된 팀명",
-                          "title": "수정된 공연 제목",
-                          "admissionFee": 12000,
-                          "eventDatetime": "2024-03-15T19:30:00",
-                          "location": "새로운 장소",
-                          "address": "새로운 주소",
-                          "description": "수정된 공연 설명"
-                        }
-                        """
-                    )
-                )
-            )
-            @Valid @RequestBody PromoReqDTO request,
+            @Parameter(description = "팀명", example = "수정된 팀명") @RequestParam(required = false) String teamName,
+            @Parameter(description = "공연 제목", example = "수정된 공연 제목") @RequestParam(required = false) String title,
+            @Parameter(description = "입장료", example = "12000") @RequestParam(required = false) Integer admissionFee,
+            @Parameter(description = "공연 일시 (ISO 8601)", example = "2024-03-15T19:30:00") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime eventDatetime,
+            @Parameter(description = "공연 장소", example = "새로운 장소") @RequestParam(required = false) String location,
+            @Parameter(description = "상세 주소", example = "새로운 주소") @RequestParam(required = false) String address,
+            @Parameter(description = "공연 설명", example = "수정된 공연 설명") @RequestParam(required = false) String description,
+            @Parameter(description = "새 이미지 파일 (기존 이미지 교체)") @RequestParam(value = "image", required = false) MultipartFile image,
+            @Parameter(description = "삭제할 이미지 URL") @RequestParam(value = "deleteImageUrl", required = false) String deleteImageUrl,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
+        
+        // DTO 객체 생성
+        PromoReqDTO request = new PromoReqDTO();
+        request.setTeamName(teamName);
+        request.setTitle(title);
+        request.setAdmissionFee(admissionFee != null ? new BigDecimal(admissionFee) : null);
+        request.setEventDatetime(eventDatetime);
+        request.setLocation(location);
+        request.setAddress(address);
+        request.setDescription(description);
+        request.setImage(image);
+        request.setDeleteImageUrl(deleteImageUrl);
+        
         Integer userId = userDetails.getUserId();
         return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 수정 성공",
                 promoService.updatePromo(promoId, request, userId)));
@@ -164,12 +136,6 @@ public class PromoController {
         summary = "공연 홍보 삭제", 
         description = "공연 홍보를 삭제합니다. 작성자만 삭제할 수 있습니다. (소프트 삭제)"
     )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "삭제 성공"),
-        @ApiResponse(responseCode = "401", description = "인증 필요"),
-        @ApiResponse(responseCode = "403", description = "삭제 권한 없음"),
-        @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
-    })
     @DeleteMapping("/{promoId}")
     public ResponseEntity<CommonRespDTO<Void>> deletePromo(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
@@ -180,54 +146,9 @@ public class PromoController {
     }
 
     @Operation(
-        summary = "공연 홍보 이미지 업로드", 
-        description = "공연 홍보에 이미지를 업로드합니다. 작성자만 업로드할 수 있습니다."
-    )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "업로드 성공"),
-        @ApiResponse(responseCode = "400", description = "잘못된 파일 형식"),
-        @ApiResponse(responseCode = "401", description = "인증 필요"),
-        @ApiResponse(responseCode = "403", description = "업로드 권한 없음"),
-        @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
-    })
-    @PostMapping(value = "/{promoId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<CommonRespDTO<String>> uploadPromoImage(
-            @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
-            @Parameter(description = "업로드할 이미지 파일 (JPG, PNG 등)") @RequestParam("image") MultipartFile image,
-            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
-        Integer userId = userDetails.getUserId();
-        String imageUrl = promoService.uploadPromoImage(promoId, image, userId);
-        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 이미지 업로드 성공", imageUrl));
-    }
-
-    @Operation(
-        summary = "공연 홍보 이미지 삭제", 
-        description = "공연 홍보의 특정 이미지를 삭제합니다. 작성자만 삭제할 수 있습니다."
-    )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "삭제 성공"),
-        @ApiResponse(responseCode = "401", description = "인증 필요"),
-        @ApiResponse(responseCode = "403", description = "삭제 권한 없음"),
-        @ApiResponse(responseCode = "404", description = "공연 홍보 또는 이미지를 찾을 수 없음")
-    })
-    @DeleteMapping("/{promoId}/images")
-    public ResponseEntity<CommonRespDTO<Void>> deletePromoImage(
-            @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
-            @Parameter(description = "삭제할 이미지 URL", example = "https://example.com/image.jpg") @RequestParam String imageUrl,
-            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
-        Integer userId = userDetails.getUserId();
-        promoService.deletePromoImage(promoId, imageUrl, userId);
-        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 이미지 삭제 성공", null));
-    }
-
-    @Operation(
         summary = "공연 홍보 검색", 
         description = "키워드로 공연 홍보를 검색합니다. 제목, 설명, 장소 등에서 검색됩니다."
     )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "검색 성공"),
-        @ApiResponse(responseCode = "400", description = "잘못된 검색 키워드")
-    })
     @GetMapping("/search")
     public ResponseEntity<CommonRespDTO<PagedRespDTO<PromoRespDTO>>> searchPromos(
             @Parameter(description = "검색 키워드", example = "락밴드") @RequestParam String keyword,
@@ -247,10 +168,6 @@ public class PromoController {
         summary = "공연 홍보 필터링", 
         description = "다양한 조건으로 공연 홍보를 필터링합니다."
     )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "필터링 성공"),
-        @ApiResponse(responseCode = "400", description = "잘못된 필터 조건")
-    })
     @GetMapping("/filter")
     public ResponseEntity<CommonRespDTO<PagedRespDTO<PromoRespDTO>>> filterPromos(
             @Parameter(description = "시작 날짜", example = "2024-03-01T00:00:00") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
@@ -272,11 +189,6 @@ public class PromoController {
         summary = "공연 홍보 좋아요 추가/취소", 
         description = "공연 홍보에 좋아요를 추가하거나 취소합니다. 토글 방식으로 동작합니다."
     )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "좋아요 처리 성공"),
-        @ApiResponse(responseCode = "401", description = "인증 필요"),
-        @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
-    })
     @PostMapping("/{promoId}/like")
     public ResponseEntity<CommonRespDTO<String>> togglePromoLike(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
@@ -294,11 +206,6 @@ public class PromoController {
         summary = "공연 홍보 좋아요 상태 확인", 
         description = "현재 사용자가 해당 공연 홍보에 좋아요를 눌렀는지 확인합니다."
     )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "상태 조회 성공"),
-        @ApiResponse(responseCode = "401", description = "인증 필요"),
-        @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
-    })
     @GetMapping("/{promoId}/like/status")
     public ResponseEntity<CommonRespDTO<Boolean>> getPromoLikeStatus(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
@@ -313,10 +220,6 @@ public class PromoController {
         summary = "공연 홍보 좋아요 수 조회", 
         description = "해당 공연 홍보의 총 좋아요 수를 조회합니다."
     )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "좋아요 수 조회 성공"),
-        @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
-    })
     @GetMapping("/{promoId}/like/count")
     public ResponseEntity<CommonRespDTO<Integer>> getPromoLikeCount(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId) {

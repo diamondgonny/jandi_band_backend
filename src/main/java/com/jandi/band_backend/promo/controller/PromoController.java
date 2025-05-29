@@ -63,29 +63,6 @@ public class PromoController {
     }
 
     @Operation(
-        summary = "클럽별 공연 홍보 목록 조회", 
-        description = "특정 클럽의 공연 홍보 목록을 조회합니다."
-    )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "조회 성공"),
-        @ApiResponse(responseCode = "404", description = "클럽을 찾을 수 없음")
-    })
-    @GetMapping("/club/{clubId}")
-    public ResponseEntity<CommonRespDTO<PagedRespDTO<PromoRespDTO>>> getPromosByClub(
-            @Parameter(description = "클럽 ID", example = "1") @PathVariable Integer clubId,
-            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "정렬 기준 (예: createdAt,desc)", example = "createdAt,desc") @RequestParam(defaultValue = "createdAt,desc") String sort,
-            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
-        Pageable pageable = createPageable(page, size, sort);
-        Integer userId = userDetails != null ? userDetails.getUserId() : null;
-        Page<PromoRespDTO> promoPage = promoService.getPromosByClub(clubId, userId, pageable);
-        return ResponseEntity.ok(CommonRespDTO.success("클럽별 공연 홍보 목록 조회 성공",
-                PagedRespDTO.from(promoPage)));
-    }
-
-    @Operation(
         summary = "공연 홍보 상세 조회", 
         description = "특정 공연 홍보의 상세 정보를 조회합니다. 조회 시 조회수가 1 증가합니다."
     )
@@ -104,7 +81,7 @@ public class PromoController {
 
     @Operation(
         summary = "공연 홍보 생성", 
-        description = "새로운 공연 홍보를 생성합니다. teamName은 필수이고 clubId는 선택사항입니다."
+        description = "새로운 공연 홍보를 생성합니다. teamName은 필수입니다."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "생성 성공"),
@@ -122,14 +99,13 @@ public class PromoController {
                         name = "공연 홍보 생성 예시",
                         value = """
                         {
-                          "clubId": 1,
-                          "teamName": "락밴드 동아리",
-                          "title": "락밴드 동아리 정기공연",
+                          "teamName": "락밴드 팀",
+                          "title": "락밴드 정기공연",
                           "admissionFee": 10000,
                           "eventDatetime": "2024-03-15T19:00:00",
                           "location": "홍대 클럽",
                           "address": "서울시 마포구 홍익로 123",
-                          "description": "락밴드 동아리의 정기 공연입니다. 다양한 장르의 음악을 선보일 예정입니다."
+                          "description": "락밴드 팀의 정기 공연입니다. 다양한 장르의 음악을 선보일 예정입니다."
                         }
                         """
                     )
@@ -165,8 +141,7 @@ public class PromoController {
                         name = "공연 홍보 수정 예시",
                         value = """
                         {
-                          "clubId": null,
-                          "teamName": "독립 밴드",
+                          "teamName": "수정된 팀명",
                           "title": "수정된 공연 제목",
                           "admissionFee": 12000,
                           "eventDatetime": "2024-03-15T19:30:00",

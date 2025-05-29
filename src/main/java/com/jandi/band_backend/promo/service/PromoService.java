@@ -1,8 +1,5 @@
 package com.jandi.band_backend.promo.service;
 
-import com.jandi.band_backend.club.entity.Club;
-import com.jandi.band_backend.club.repository.ClubRepository;
-import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
 
 import com.jandi.band_backend.promo.dto.PromoReqDTO;
@@ -32,8 +29,6 @@ public class PromoService {
 
     private final PromoRepository promoRepository;
     private final PromoPhotoRepository promoPhotoRepository;
-    private final ClubRepository clubRepository;
-    private final ClubMemberRepository clubMemberRepository;
     private final PromoLikeService promoLikeService;
     private final PermissionValidationUtil permissionValidationUtil;
     private final UserValidationUtil userValidationUtil;
@@ -92,21 +87,6 @@ public class PromoService {
         Users creator = userValidationUtil.getUserById(creatorId);
 
         Promo promo = new Promo();
-        
-        // clubId가 있으면 Club 엔티티 설정 및 멤버십 검증
-        if (request.getClubId() != null) {
-            Club club = clubRepository.findById(request.getClubId())
-                    .orElseThrow(() -> new ResourceNotFoundException("클럽을 찾을 수 없습니다."));
-            
-            // 클럽 멤버십 검증 (ADMIN은 제외)
-            if (creator.getAdminRole() != Users.AdminRole.ADMIN
-                && !clubMemberRepository.existsByClubAndUserAndDeletedAtIsNull(club, creator)) {
-                throw new IllegalStateException("클럽 멤버만 해당 클럽의 공연 홍보를 생성할 수 있습니다.");
-            }
-            
-            promo.setClub(club);
-        }
-        
         promo.setTeamName(request.getTeamName());
         promo.setCreator(creator);
         promo.setTitle(request.getTitle());
@@ -130,15 +110,6 @@ public class PromoService {
         // 권한 체크
         permissionValidationUtil.validateContentOwnership(promo.getCreator().getId(), userId, "공연 홍보를 수정할 권한이 없습니다.");
 
-        // clubId 처리 (있으면 설정, 없으면 null로 설정)
-        if (request.getClubId() != null) {
-            Club club = clubRepository.findById(request.getClubId())
-                    .orElseThrow(() -> new ResourceNotFoundException("클럽을 찾을 수 없습니다."));
-            promo.setClub(club);
-        } else {
-            promo.setClub(null);
-        }
-        
         promo.setTeamName(request.getTeamName());
         promo.setTitle(request.getTitle());
         promo.setAdmissionFee(request.getAdmissionFee());
@@ -259,22 +230,6 @@ public class PromoService {
             Integer userId,
             Pageable pageable) {
         return promoRepository.filterPromosByTeamName(startDate, endDate, teamName, pageable)
-                .map(promo -> {
-                    Boolean isLikedByUser = userId != null ? 
-                            promoLikeService.isLikedByUser(promo.getId(), userId) : null;
-                    return PromoRespDTO.from(promo, isLikedByUser);
-                });
-    }
-
-    // 클럽별 공연 홍보 목록 조회
-    public Page<PromoRespDTO> getPromosByClub(Integer clubId, Pageable pageable) {
-        return promoRepository.findAllByClubId(clubId, pageable)
-                .map(PromoRespDTO::from);
-    }
-
-    // 클럽별 공연 홍보 목록 조회 (사용자별 좋아요 상태 포함)
-    public Page<PromoRespDTO> getPromosByClub(Integer clubId, Integer userId, Pageable pageable) {
-        return promoRepository.findAllByClubId(clubId, pageable)
                 .map(promo -> {
                     Boolean isLikedByUser = userId != null ? 
                             promoLikeService.isLikedByUser(promo.getId(), userId) : null;

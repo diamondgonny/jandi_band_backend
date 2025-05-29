@@ -53,7 +53,7 @@ public class InviteUtilService {
 
     // 팀원인지 확인
     public boolean isMemberOfTeam(Integer userId, Integer teamId) {
-        Optional<TeamMember> Optional = teamMemberRepository.findByTeamIdAndUser_Id(teamId, userId);
+        Optional<TeamMember> Optional = teamMemberRepository.findByTeamIdAndUserIdAndDeletedAtIsNull(teamId, userId);
         return Optional.isPresent();
     }
 

@@ -64,7 +64,7 @@ public class PermissionValidationUtil {
             return adminTeamMember;
         }
 
-        return teamMemberRepository.findByTeamIdAndUserId(teamId, userId)
+        return teamMemberRepository.findByTeamIdAndUserIdAndDeletedAtIsNull(teamId, userId)
                 .orElseThrow(() -> new UnauthorizedClubAccessException(errorMessage));
     }
 

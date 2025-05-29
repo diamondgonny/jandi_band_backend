@@ -34,7 +34,7 @@ public class PermissionValidationUtil {
             return;
         }
 
-        clubMemberRepository.findByClubIdAndUserId(clubId, userId)
+        clubMemberRepository.findByClubIdAndUserIdAndDeletedAtIsNull(clubId, userId)
                 .orElseThrow(() -> new UnauthorizedClubAccessException(errorMessage));
     }
 
@@ -47,7 +47,7 @@ public class PermissionValidationUtil {
             return;
         }
 
-        clubMemberRepository.findByClubIdAndUserId(clubId, userId)
+        clubMemberRepository.findByClubIdAndUserIdAndDeletedAtIsNull(clubId, userId)
                 .filter(member -> member.getRole() == ClubMember.MemberRole.REPRESENTATIVE)
                 .orElseThrow(() -> new UnauthorizedClubAccessException(errorMessage));
     }

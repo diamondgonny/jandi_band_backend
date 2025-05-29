@@ -10,6 +10,9 @@
 - **생성**: 로그인한 모든 사용자 (생성자가 자동으로 대표자가 됨)
 - **수정**: 동아리 멤버 또는 ADMIN 권한 사용자
 - **삭제**: 동아리 대표자 또는 ADMIN 권한 사용자
+- **대표자 위임**: 동아리 대표자 또는 ADMIN 권한 사용자
+- **부원 강퇴**: 동아리 대표자 또는 ADMIN 권한 사용자
+- **동아리 탈퇴**: 동아리 멤버 (단, 대표자는 탈퇴 불가)
 
 ---
 
@@ -230,7 +233,96 @@ curl -X PATCH "http://localhost:8080/api/clubs/1" \
 
 ---
 
-## 6. 동아리 삭제
+## 6. 동아리 대표자 위임
+### PATCH `/api/clubs/{clubId}/representative`
+
+#### 요청
+```bash
+curl -X PATCH "http://localhost:8080/api/clubs/1/representative" \
+  -H "Authorization: Bearer {JWT_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "newRepresentativeUserId": 2
+  }'
+```
+
+#### 요청 필드
+- `newRepresentativeUserId` (integer, 필수): 새로운 대표자로 지정할 사용자 ID
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "동아리 대표자 권한이 성공적으로 위임되었습니다",
+  "data": null
+}
+```
+
+#### 권한별 동작 방식
+- **대표자가 실행**: 본인 사임 → 새 대표자 선임
+- **ADMIN이 실행**: 기존 대표자 해임 → 새 대표자 선임 (ADMIN이 동아리 멤버가 아니어도 가능)
+
+#### 에러 케이스
+- 자기 자신에게 위임하는 경우: `400 Bad Request`
+- 위임할 사용자가 동아리 멤버가 아닌 경우: `404 Not Found`
+- 대표자나 ADMIN이 아닌 사용자가 요청하는 경우: `403 Forbidden`
+
+---
+
+## 7. 동아리 탈퇴
+### DELETE `/api/clubs/{clubId}/members/me`
+
+#### 요청
+```bash
+curl -X DELETE "http://localhost:8080/api/clubs/1/members/me" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "동아리에서 성공적으로 탈퇴했습니다",
+  "data": null
+}
+```
+
+#### 에러 케이스
+- 동아리 멤버가 아닌 경우: `404 Not Found`
+- 대표자가 탈퇴하려는 경우: `400 Bad Request` - "동아리 대표자는 탈퇴할 수 없습니다. 먼저 다른 멤버에게 대표자 권한을 위임해주세요."
+
+---
+
+## 8. 동아리 부원 강퇴
+### DELETE `/api/clubs/{clubId}/members/{userId}`
+
+#### 요청
+```bash
+curl -X DELETE "http://localhost:8080/api/clubs/1/members/2" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+#### 경로 파라미터
+- `clubId` (integer): 동아리 ID
+- `userId` (integer): 강퇴할 사용자 ID
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "해당 부원이 성공적으로 강퇴되었습니다",
+  "data": null
+}
+```
+
+#### 에러 케이스
+- 대표자가 아닌 사용자가 요청하는 경우: `403 Forbidden`
+- 강퇴할 사용자가 동아리 멤버가 아닌 경우: `404 Not Found`
+- 대표자를 강퇴하려는 경우: `400 Bad Request` - "동아리 대표자를 강퇴할 수 없습니다. 먼저 권한을 위임해주세요."
+
+---
+
+## 9. 동아리 삭제
 ### DELETE `/api/clubs/{clubId}`
 
 #### 요청
@@ -250,7 +342,7 @@ curl -X DELETE "http://localhost:8080/api/clubs/1" \
 
 ---
 
-## 7. 동아리 대표 사진 업로드
+## 10. 동아리 대표 사진 업로드
 ### POST `/api/clubs/{clubId}/main-image`
 
 #### 요청
@@ -275,7 +367,7 @@ curl -X POST "http://localhost:8080/api/clubs/1/main-image" \
 
 ---
 
-## 8. 동아리 대표 사진 삭제
+## 11. 동아리 대표 사진 삭제
 ### DELETE `/api/clubs/{clubId}/main-image`
 
 #### 요청
@@ -311,11 +403,24 @@ curl -X DELETE "http://localhost:8080/api/clubs/1/main-image" \
 - `401 Unauthorized`: 인증 실패
 - `403 Forbidden`: 권한 없음
 - `404 Not Found`: 리소스 없음
+- `409 Conflict`: 리소스 충돌
 
 ## 참고사항
 - **연합동아리**: `universityId`가 null이면 연합동아리 (`isUnionClub: true`)
 - **권한**: 생성은 모든 인증된 사용자, 수정은 동아리 멤버, 삭제는 동아리 대표자만 (ADMIN 권한은 모든 작업 가능)
 - **자동 멤버 추가**: 동아리 생성자는 자동으로 대표자(REPRESENTATIVE)로 등록
-- **소프트 삭제**: 실제 삭제가 아닌 deletedAt 설정
+- **소프트 삭제**: 실제 삭제가 아닌 deletedAt 설정 (동아리 탈퇴, 강퇴 포함)
 - **페이지네이션**: 기본 크기 5개, PagedRespDTO 구조 사용
 - **이미지 업로드**: 별도의 multipart/form-data 엔드포인트 사용
+- **대표자 특징1**: 항상 동아리당 대표자 1명만 존재 (위임 시 기존 대표자 자동 해임)
+- **대표자 특징2**: 대표자는 탈퇴 불가, 강퇴 안당함 (먼저 권한 위임 필요)
+- **대표자 권한 위임**: 자기 자신에게는 위임 불가, 동아리 멤버에게만 위임 가능
+- **ADMIN 특권**: 동아리 멤버가 아니어도 모든 관리 작업 가능 (시스템 관리 목적)
+
+### ADMIN이 할 수 있는 기능
+- ✅ **동아리 정보 수정**: 동아리 멤버가 아니어도 수정 가능
+- ✅ **동아리 삭제**: 동아리 대표자가 아니어도 삭제 가능
+- ✅ **대표자 위임**: 동아리 대표자가 아니어도 위임 가능 (기존 대표자 자동 해임)
+- ✅ **부원 강퇴**: 동아리 대표자가 아니어도 강퇴 가능 (단, 존재하는 멤버만)
+- ✅ **동아리 사진 업로드/삭제**: 동아리 멤버가 아니어도 가능
+- ❌ **동아리 탈퇴**: ADMIN도 동아리 멤버인 경우에만 탈퇴 가능

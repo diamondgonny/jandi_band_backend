@@ -5,6 +5,7 @@ import com.jandi.band_backend.club.dto.ClubDetailRespDTO;
 import com.jandi.band_backend.club.dto.ClubRespDTO;
 import com.jandi.band_backend.club.dto.ClubUpdateReqDTO;
 import com.jandi.band_backend.club.dto.ClubMembersRespDTO;
+import com.jandi.band_backend.club.dto.TransferRepresentativeReqDTO;
 import com.jandi.band_backend.club.service.ClubService;
 import com.jandi.band_backend.global.dto.CommonRespDTO;
 import com.jandi.band_backend.global.dto.PagedRespDTO;
@@ -76,6 +77,17 @@ public class ClubController {
         return ResponseEntity.ok(CommonRespDTO.success("동아리 정보가 성공적으로 수정되었습니다", response));
     }
 
+    @Operation(summary = "동아리 대표자 위임")
+    @PatchMapping("/{clubId}/representative")
+    public ResponseEntity<CommonRespDTO<Void>> transferRepresentative(
+            @PathVariable Integer clubId,
+            @Valid @RequestBody TransferRepresentativeReqDTO request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails.getUserId();
+        clubService.transferRepresentative(clubId, userId, request.getNewRepresentativeUserId());
+        return ResponseEntity.ok(CommonRespDTO.success("동아리 대표자 권한이 성공적으로 위임되었습니다"));
+    }
+
     @Operation(summary = "동아리 삭제")
     @DeleteMapping("/{clubId}")
     public ResponseEntity<CommonRespDTO<Void>> deleteClub(
@@ -84,6 +96,27 @@ public class ClubController {
         Integer userId = userDetails.getUserId();
         clubService.deleteClub(clubId, userId);
         return ResponseEntity.ok(CommonRespDTO.success("동아리가 성공적으로 삭제되었습니다"));
+    }
+
+    @Operation(summary = "동아리 탈퇴")
+    @DeleteMapping("/{clubId}/members/me")
+    public ResponseEntity<CommonRespDTO<Void>> leaveClub(
+            @PathVariable Integer clubId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer userId = userDetails.getUserId();
+        clubService.leaveClub(clubId, userId);
+        return ResponseEntity.ok(CommonRespDTO.success("동아리에서 성공적으로 탈퇴했습니다"));
+    }
+
+    @Operation(summary = "동아리 부원 강퇴")
+    @DeleteMapping("/{clubId}/members/{userId}")
+    public ResponseEntity<CommonRespDTO<Void>> kickMember(
+            @PathVariable Integer clubId,
+            @PathVariable Integer userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Integer currentUserId = userDetails.getUserId();
+        clubService.kickMember(clubId, currentUserId, userId);
+        return ResponseEntity.ok(CommonRespDTO.success("해당 부원이 성공적으로 강퇴되었습니다"));
     }
 
     @Operation(summary = "동아리 대표 사진 업로드")

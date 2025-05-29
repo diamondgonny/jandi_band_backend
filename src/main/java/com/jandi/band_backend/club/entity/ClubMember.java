@@ -40,6 +40,9 @@ public class ClubMember {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @PrePersist
     protected void onCreate() {
         joinedAt = LocalDateTime.now();
@@ -52,7 +55,7 @@ public class ClubMember {
     }
 
     public enum MemberRole {
-        REPRESENTATIVE, 
+        REPRESENTATIVE,
         MEMBER
     }
 }

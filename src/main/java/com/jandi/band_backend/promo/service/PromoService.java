@@ -90,6 +90,12 @@ public class PromoService {
     public PromoRespDTO createPromo(PromoReqDTO request, Integer creatorId) {
         Users creator = userValidationUtil.getUserById(creatorId);
 
+        // 클럽 멤버십 검증 (ADMIN은 제외)
+        if (creator.getAdminRole() != Users.AdminRole.ADMIN
+            && !clubMemberRepository.existsByClubAndUserAndDeletedAtIsNull(club, creator)) {
+            throw new IllegalStateException("클럽 멤버만 공연 홍보를 생성할 수 있습니다.");
+        }
+
         Promo promo = new Promo();
         
         // clubId가 있으면 Club 엔티티 설정, 없으면 null

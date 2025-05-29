@@ -1,0 +1,61 @@
+# Prometheus 설정 파일
+# Spring Boot 애플리케이션과 시스템 메트릭을 수집합니다.
+
+global:
+  scrape_interval: 15s # 15초마다 메트릭 수집
+  evaluation_interval: 15s # 15초마다 규칙 평가
+
+# 규칙 파일 경로 (선택사항)
+rule_files:
+  # - "alert_rules.yml"
+
+# 알림 관리자 설정 (선택사항)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           - alertmanager:9093
+
+# 메트릭 수집 대상 설정
+scrape_configs:
+  # Prometheus 자체 메트릭
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Spring Boot 애플리케이션 메트릭 (메인)
+  - job_name: 'jandi-band-backend'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+        labels:
+          application: 'jandi_band_backend'
+          environment: 'development'
+
+  # 시스템 메트릭 (Node Exporter)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          instance: 'jandi-server'
+
+  # JVM 메트릭 (Spring Boot Actuator에서 제공)
+  - job_name: 'jandi-actuator-health'
+    metrics_path: '/actuator/health'
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+        labels:
+          check: 'health'
+
+  # 커스텀 헬스 체크 엔드포인트
+  - job_name: 'jandi-health-custom'
+    metrics_path: '/health'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+        labels:
+          check: 'custom-health'
+    scrape_interval: 30s 

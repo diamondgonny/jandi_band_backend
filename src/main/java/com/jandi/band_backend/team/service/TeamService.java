@@ -3,8 +3,10 @@ package com.jandi.band_backend.team.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.repository.ClubRepository;
+import com.jandi.band_backend.global.exception.BadRequestException;
 import com.jandi.band_backend.global.exception.ClubNotFoundException;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
+import com.jandi.band_backend.global.exception.TeamLeaveNotAllowedException;
 import com.jandi.band_backend.team.dto.TeamDetailRespDTO;
 import com.jandi.band_backend.team.dto.TeamReqDTO;
 import com.jandi.band_backend.team.dto.TeamRespDTO;
@@ -72,7 +74,7 @@ public class TeamService {
         teamMemberRepository.save(teamMember);
 
         // 팀 멤버 목록 조회
-        List<TeamMember> teamMembers = teamMemberRepository.findByTeamId(savedTeam.getId());
+        List<TeamMember> teamMembers = teamMemberRepository.findByTeamIdAndDeletedAtIsNull(savedTeam.getId());
 
         return createTeamDetailRespDTO(savedTeam, teamMembers);
     }
@@ -82,16 +84,16 @@ public class TeamService {
      */
     public Page<TeamRespDTO> getTeamsByClub(Integer clubId, Pageable pageable, Integer currentUserId) {
         // 동아리 존재 확인
-        clubRepository.findByIdAndDeletedAtIsNull(clubId)
+        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
         // 동아리 부원 권한 확인
         permissionValidationUtil.validateClubMemberAccess(clubId, currentUserId, "동아리 부원만 팀 목록을 조회할 수 있습니다.");
 
-        Page<Team> teams = teamRepository.findAllByClubId(clubId, pageable);
+        Page<Team> teams = teamRepository.findAllByClubAndDeletedAtIsNullOrderByCreatedAtDesc(club, pageable);
 
         return teams.map(team -> {
-            Integer memberCount = teamMemberRepository.countByTeamId(team.getId());
+            Integer memberCount = teamMemberRepository.countByTeamIdAndDeletedAtIsNull(team.getId());
             return createTeamRespDTO(team, memberCount);
         });
     }
@@ -101,14 +103,14 @@ public class TeamService {
      */
     public TeamDetailRespDTO getTeamDetail(Integer teamId, Integer currentUserId) {
         // 팀 존재 확인
-        Team team = teamRepository.findByIdAndNotDeleted(teamId)
+        Team team = teamRepository.findByIdAndDeletedAtIsNull(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
 
         // 동아리 부원 권한 확인
         permissionValidationUtil.validateClubMemberAccess(team.getClub().getId(), currentUserId, "해당 동아리 부원만 팀 정보를 조회할 수 있습니다.");
 
         // 팀 멤버 목록 조회
-        List<TeamMember> teamMembers = teamMemberRepository.findByTeamId(teamId);
+        List<TeamMember> teamMembers = teamMemberRepository.findByTeamIdAndDeletedAtIsNull(teamId);
 
         return createTeamDetailRespDTOWithTimetable(team, teamMembers);
     }
@@ -119,11 +121,11 @@ public class TeamService {
     @Transactional
     public TeamRespDTO updateTeam(Integer teamId, TeamReqDTO teamReqDTO, Integer currentUserId) {
         // 팀 존재 확인
-        Team team = teamRepository.findByIdAndNotDeleted(teamId)
+        Team team = teamRepository.findByIdAndDeletedAtIsNull(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
 
-        // 권한 확인 (팀 생성자 또는 동아리 대표자)
-        permissionValidationUtil.validateTeamModificationPermission(team, currentUserId);
+        // 팀 멤버 권한 확인
+        permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "팀 멤버만 팀 이름을 수정할 수 있습니다.");
 
         // 팀 이름 수정
         team.setName(teamReqDTO.getName());
@@ -131,7 +133,7 @@ public class TeamService {
         Team updatedTeam = teamRepository.save(team);
 
         // 팀 멤버 수 조회
-        Integer memberCount = teamMemberRepository.countByTeamId(teamId);
+        Integer memberCount = teamMemberRepository.countByTeamIdAndDeletedAtIsNull(teamId);
 
         return createTeamRespDTO(updatedTeam, memberCount);
     }
@@ -142,15 +144,37 @@ public class TeamService {
     @Transactional
     public void deleteTeam(Integer teamId, Integer currentUserId) {
         // 팀 존재 확인
-        Team team = teamRepository.findByIdAndNotDeleted(teamId)
+        Team team = teamRepository.findByIdAndDeletedAtIsNull(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
 
-        // 권한 확인 (팀 생성자 또는 동아리 대표자)
-        permissionValidationUtil.validateTeamModificationPermission(team, currentUserId);
+        // 팀 멤버 권한 확인
+        permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "팀 멤버만 팀을 삭제할 수 있습니다.");
 
         // 소프트 삭제
         team.setDeletedAt(LocalDateTime.now());
         teamRepository.save(team);
+    }
+
+    /**
+     * 팀 탈퇴
+     */
+    @Transactional
+    public void leaveTeam(Integer teamId, Integer currentUserId) {
+        // 팀 존재 확인
+        Team team = teamRepository.findByIdAndDeletedAtIsNull(teamId)
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
+
+        // 팀 멤버 권한 확인
+        TeamMember teamMember = permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "해당 팀의 멤버가 아닙니다.");
+
+        // 팀원이 한명인 경우?
+        if (teamMemberRepository.countByTeamIdAndDeletedAtIsNull(teamId) == 1) {
+            throw new TeamLeaveNotAllowedException("마지막 남은 팀원은 탈퇴할 수 없습니다. 팀을 삭제해주세요.");
+        }
+
+        // 팀 멤버 소프트 삭제
+        teamMember.setDeletedAt(LocalDateTime.now());
+        teamMemberRepository.save(teamMember);
     }
 
     /**

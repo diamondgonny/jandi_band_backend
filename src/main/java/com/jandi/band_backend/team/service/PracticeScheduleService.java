@@ -58,7 +58,7 @@ public class PracticeScheduleService {
     // 곡 연습 일정 생성
     @Transactional
     public PracticeScheduleRespDTO createPracticeSchedule(PracticeScheduleReqDTO request, Integer creatorId) {
-        Team team = teamRepository.findByIdAndNotDeleted(request.getTeamId())
+        Team team = teamRepository.findByIdAndDeletedAtIsNull(request.getTeamId())
                 .orElseThrow(() -> new ResourceNotFoundException("팀을 찾을 수 없습니다."));
         
         Users creator = userRepository.findById(creatorId)
@@ -115,4 +115,4 @@ public class PracticeScheduleService {
 
         teamEvent.setDeletedAt(LocalDateTime.now());
     }
-} 
+}

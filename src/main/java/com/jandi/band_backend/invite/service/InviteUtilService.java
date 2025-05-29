@@ -47,20 +47,20 @@ public class InviteUtilService {
     /// 팀 관련
     // 팀 존재 확인
     public void isExistTeam(Integer teamId) {
-        teamRepository.findByIdAndNotDeleted(teamId)
+        teamRepository.findByIdAndDeletedAtIsNull(teamId)
                 .orElseThrow(()-> new TeamNotFoundException("팀이 존재하지 않습니다"));
     }
 
     // 팀원인지 확인
     public boolean isMemberOfTeam(Integer userId, Integer teamId) {
-        Optional<TeamMember> Optional = teamMemberRepository.findByTeamIdAndUser_Id(teamId, userId);
+        Optional<TeamMember> Optional = teamMemberRepository.findByTeamIdAndUserIdAndDeletedAtIsNull(teamId, userId);
         return Optional.isPresent();
     }
 
     // key에서 팀 객체 반환
     public Team getTeam(String keyId) {
         Integer teamId = getOriginalId(keyId, InviteType.TEAM);
-        return teamRepository.findByIdAndNotDeleted(teamId)
+        return teamRepository.findByIdAndDeletedAtIsNull(teamId)
                 .orElseThrow(() -> new TeamNotFoundException("팀이 존재하지 않습니다"));
     }
 

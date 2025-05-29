@@ -45,7 +45,7 @@ public class TeamTimetableService {
     @Transactional
     public ScheduleSuggestionRespDTO startScheduleSuggestion(Integer teamId, Integer currentUserId) {
         // 팀 존재 확인
-        Team team = teamRepository.findByIdAndNotDeleted(teamId)
+        Team team = teamRepository.findByIdAndDeletedAtIsNull(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
 
         // 팀원 권한 확인 (팀원만 스케줄 조율 제안 가능)
@@ -102,7 +102,7 @@ public class TeamTimetableService {
      */
     private TeamMember validateTeamAndGetTeamMember(Integer teamId, Integer currentUserId) {
         // 팀 존재 확인
-        teamRepository.findByIdAndNotDeleted(teamId)
+        teamRepository.findByIdAndDeletedAtIsNull(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
 
         // 본인만 시간표 입력 가능하도록 권한 확인

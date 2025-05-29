@@ -242,14 +242,51 @@ curl -X DELETE "http://localhost:8080/api/teams/1" \
 
 ---
 
+## 6. 팀 탈퇴
+### DELETE `/api/teams/{teamId}/members/me`
+
+#### 요청
+```bash
+curl -X DELETE "http://localhost:8080/api/teams/1/members/me" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "팀에서 성공적으로 탈퇴했습니다.",
+  "data": null
+}
+```
+
+#### 에러 응답 (400 Bad Request)
+```json
+{
+  "success": false,
+  "message": "마지막 남은 팀원은 탈퇴할 수 없습니다. 팀을 삭제해주세요.",
+  "errorCode": "TEAM_LEAVE_NOT_ALLOWED",
+  "data": null
+}
+```
+
+---
+
 ## 에러 응답
 ```json
 {
   "success": false,
   "message": "에러 메시지",
+  "errorCode": "ERROR_CODE",
   "data": null
 }
 ```
+
+### 주요 에러 코드
+- `TEAM_LEAVE_NOT_ALLOWED`: 팀 탈퇴 불가 (마지막 멤버인 경우)
+- `RESOURCE_NOT_FOUND`: 팀 또는 리소스를 찾을 수 없음
+- `UNAUTHORIZED_CLUB_ACCESS`: 권한 없음
+- `BAD_REQUEST`: 잘못된 요청
 
 ### HTTP 상태 코드
 - `200 OK`: 성공
@@ -260,10 +297,19 @@ curl -X DELETE "http://localhost:8080/api/teams/1" \
 - `404 Not Found`: 리소스 없음
 
 ## 참고사항
-- **권한**: 동아리 멤버만 팀 생성/조회 가능
-- **수정/삭제 권한**: 팀 생성자 또는 동아리 대표자만 가능
+- **권한**:
+  - **팀 생성**: 동아리 멤버만 가능
+  - **동아리 팀 목록 조회**: 권한 제한 없음 (동아리 메인 페이지 접속용)
+  - **팀 상세 조회**: 동아리 멤버만 가능
+  - **팀 수정/삭제**: 팀 멤버라면 누구나 가능
+  - **팀 탈퇴**: 팀 멤버만 가능 (단, 마지막 멤버는 제외)
+- **팀 탈퇴 제한**: 마지막 남은 팀원은 탈퇴 불가 (팀 삭제 필요)
 - **자동 멤버 추가**: 팀 생성자는 자동으로 첫 번째 멤버 등록
 - **페이지네이션**: 기본 크기 5개, PagedRespDTO 구조 사용, 최신 생성순으로 정렬
-- **소프트 삭제**: 실제 삭제가 아닌 deletedAt 설정
+- **소프트 삭제 시스템**:
+  - **팀 삭제**: 실제 삭제가 아닌 `deleted_at` 설정으로 소프트 삭제
+  - **팀 멤버 탈퇴**: 실제 삭제가 아닌 `deleted_at` 설정으로 소프트 삭제
+  - **자동 필터링**: 모든 조회 API에서 삭제된 팀/멤버는 자동으로 제외
+  - **멤버 수 계산**: 삭제되지 않은 활성 멤버만 카운트
 - **시간표 통합**: 팀 상세 조회 시 팀원들의 시간표 정보(`timetableData`, `isSubmitted` 등) 포함
 - **스케줄 조율**: 팀 상세 조회 시 `suggestedScheduleAt`과 `submissionProgress`로 시간표 제출 현황 추적

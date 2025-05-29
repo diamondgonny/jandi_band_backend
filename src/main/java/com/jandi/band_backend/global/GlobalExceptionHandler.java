@@ -146,6 +146,14 @@ public class GlobalExceptionHandler {
                 .body(CommonRespDTO.error(ex.getMessage(), "BAD_REQUEST"));
     }
 
+    // 팀 탈퇴 불가
+    @ExceptionHandler(TeamLeaveNotAllowedException.class)
+    public ResponseEntity<CommonRespDTO<?>> handleTeamLeaveNotAllowed(TeamLeaveNotAllowedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(CommonRespDTO.error(ex.getMessage(), "TEAM_LEAVE_NOT_ALLOWED"));
+    }
+
     /// 카카오 예외 처리
     // 카카오 로그인 토큰 발급 실패
     @ExceptionHandler(FailKakaoLoginException.class)

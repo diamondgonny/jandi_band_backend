@@ -25,8 +25,11 @@ public class Promo {
     private Integer id;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "club_id", nullable = false)
+    @JoinColumn(name = "club_id", nullable = true)
     private Club club;
+    
+    @Column(name = "team_name", nullable = false, length = 255)
+    private String teamName;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_user_id", nullable = false)
@@ -49,10 +52,6 @@ public class Promo {
     
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private PromoStatus status = PromoStatus.UPCOMING;
     
     @Column(name = "view_count", nullable = false)
     private Integer viewCount = 0;
@@ -93,11 +92,5 @@ public class Promo {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-    
-    public enum PromoStatus {
-        UPCOMING, 
-        ONGOING, 
-        COMPLETED
     }
 } 

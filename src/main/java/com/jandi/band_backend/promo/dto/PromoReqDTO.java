@@ -3,7 +3,6 @@ package com.jandi.band_backend.promo.dto;
 import com.jandi.band_backend.promo.entity.Promo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,9 +15,13 @@ import java.time.LocalDateTime;
 @Schema(description = "공연 홍보 생성/수정 요청 DTO")
 public class PromoReqDTO {
     
-    @Schema(description = "동아리 ID", example = "1", required = true)
-    @NotNull(message = "클럽 ID는 필수입니다")
+    @Schema(description = "동아리 ID (선택사항)", example = "1")
     private Integer clubId;
+    
+    @Schema(description = "팀명 (필수)", example = "락밴드 동아리", required = true, maxLength = 255)
+    @NotBlank(message = "팀명은 필수입니다")
+    @Size(max = 255, message = "팀명은 255자를 초과할 수 없습니다")
+    private String teamName;
 
     @Schema(description = "공연 제목", example = "락밴드 동아리 정기공연", required = true, maxLength = 255)
     @NotBlank(message = "제목은 필수입니다")

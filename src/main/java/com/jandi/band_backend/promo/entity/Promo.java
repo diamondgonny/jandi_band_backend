@@ -25,8 +25,11 @@ public class Promo {
     private Integer id;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "club_id", nullable = false)
+    @JoinColumn(name = "club_id", nullable = true)
     private Club club;
+    
+    @Column(name = "team_name", nullable = false, length = 255)
+    private String teamName;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_user_id", nullable = false)

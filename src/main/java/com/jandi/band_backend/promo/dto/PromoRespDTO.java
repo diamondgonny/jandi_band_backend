@@ -18,11 +18,14 @@ public class PromoRespDTO {
     @Schema(description = "공연 홍보 ID", example = "1")
     private Integer id;
     
-    @Schema(description = "동아리 ID", example = "1")
+    @Schema(description = "동아리 ID (선택사항)", example = "1")
     private Integer clubId;
     
-    @Schema(description = "동아리명", example = "락밴드 동아리")
+    @Schema(description = "동아리명 (선택사항)", example = "락밴드 동아리")
     private String clubName;
+    
+    @Schema(description = "팀명 (필수)", example = "락밴드 동아리")
+    private String teamName;
     
     @Schema(description = "작성자 ID", example = "1")
     private Integer creatorId;
@@ -75,8 +78,14 @@ public class PromoRespDTO {
     public static PromoRespDTO from(Promo promo) {
         PromoRespDTO response = new PromoRespDTO();
         response.setId(promo.getId());
-        response.setClubId(promo.getClub().getId());
-        response.setClubName(promo.getClub().getName());
+        
+        // club 정보 (nullable)
+        if (promo.getClub() != null) {
+            response.setClubId(promo.getClub().getId());
+            response.setClubName(promo.getClub().getName());
+        }
+        
+        response.setTeamName(promo.getTeamName());
         response.setCreatorId(promo.getCreator().getId());
         response.setCreatorName(promo.getCreator().getNickname());
         response.setTitle(promo.getTitle());

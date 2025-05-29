@@ -11,7 +11,6 @@ import com.jandi.band_backend.promo.entity.PromoPhoto;
 import com.jandi.band_backend.promo.repository.PromoRepository;
 import com.jandi.band_backend.promo.repository.PromoPhotoRepository;
 import com.jandi.band_backend.user.entity.Users;
-import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.global.util.PermissionValidationUtil;
 import com.jandi.band_backend.global.util.UserValidationUtil;
 import com.jandi.band_backend.global.util.S3FileManagementUtil;
@@ -34,7 +33,6 @@ public class PromoService {
     private final PromoRepository promoRepository;
     private final PromoPhotoRepository promoPhotoRepository;
     private final ClubRepository clubRepository;
-    private final ClubMemberRepository clubMemberRepository;
     private final PromoLikeService promoLikeService;
     private final PermissionValidationUtil permissionValidationUtil;
     private final UserValidationUtil userValidationUtil;
@@ -50,22 +48,6 @@ public class PromoService {
     // 공연 홍보 목록 조회 (사용자별 좋아요 상태 포함)
     public Page<PromoRespDTO> getPromos(Integer userId, Pageable pageable) {
         return promoRepository.findAllNotDeleted(pageable)
-                .map(promo -> {
-                    Boolean isLikedByUser = userId != null ? 
-                            promoLikeService.isLikedByUser(promo.getId(), userId) : null;
-                    return PromoRespDTO.from(promo, isLikedByUser);
-                });
-    }
-
-    // 클럽별 공연 홍보 목록 조회
-    public Page<PromoRespDTO> getPromosByClub(Integer clubId, Pageable pageable) {
-        return promoRepository.findAllByClubId(clubId, pageable)
-                .map(PromoRespDTO::from);
-    }
-
-    // 클럽별 공연 홍보 목록 조회 (사용자별 좋아요 상태 포함)
-    public Page<PromoRespDTO> getPromosByClub(Integer clubId, Integer userId, Pageable pageable) {
-        return promoRepository.findAllByClubId(clubId, pageable)
                 .map(promo -> {
                     Boolean isLikedByUser = userId != null ? 
                             promoLikeService.isLikedByUser(promo.getId(), userId) : null;
@@ -103,22 +85,21 @@ public class PromoService {
         return PromoRespDTO.from(promo, isLikedByUser);
     }
 
-    // 공연 홍보 생성 (ADMIN은 모든 클럽에 대해 생성 가능)
+    // 공연 홍보 생성
     @Transactional
     public PromoRespDTO createPromo(PromoReqDTO request, Integer creatorId) {
-        Club club = clubRepository.findById(request.getClubId())
-                .orElseThrow(() -> new ResourceNotFoundException("클럽을 찾을 수 없습니다."));
-        
         Users creator = userValidationUtil.getUserById(creatorId);
 
-        // 클럽 멤버십 검증 (ADMIN은 제외)
-        if (creator.getAdminRole() != Users.AdminRole.ADMIN 
-            && !clubMemberRepository.existsByClubAndUser(club, creator)) {
-            throw new IllegalStateException("클럽 멤버만 공연 홍보를 생성할 수 있습니다.");
-        }
-
         Promo promo = new Promo();
-        promo.setClub(club);
+        
+        // clubId가 있으면 Club 엔티티 설정, 없으면 null
+        if (request.getClubId() != null) {
+            Club club = clubRepository.findById(request.getClubId())
+                    .orElseThrow(() -> new ResourceNotFoundException("클럽을 찾을 수 없습니다."));
+            promo.setClub(club);
+        }
+        
+        promo.setTeamName(request.getTeamName());
         promo.setCreator(creator);
         promo.setTitle(request.getTitle());
         promo.setAdmissionFee(request.getAdmissionFee());
@@ -142,13 +123,16 @@ public class PromoService {
         // 권한 체크
         permissionValidationUtil.validateContentOwnership(promo.getCreator().getId(), userId, "공연 홍보를 수정할 권한이 없습니다.");
 
-        // 클럽 변경 시 새로운 클럽 조회
-        if (!promo.getClub().getId().equals(request.getClubId())) {
-            Club newClub = clubRepository.findById(request.getClubId())
+        // clubId 처리 (있으면 설정, 없으면 null로 설정)
+        if (request.getClubId() != null) {
+            Club club = clubRepository.findById(request.getClubId())
                     .orElseThrow(() -> new ResourceNotFoundException("클럽을 찾을 수 없습니다."));
-            promo.setClub(newClub);
+            promo.setClub(club);
+        } else {
+            promo.setClub(null);
         }
-
+        
+        promo.setTeamName(request.getTeamName());
         promo.setTitle(request.getTitle());
         promo.setAdmissionFee(request.getAdmissionFee());
         promo.setEventDatetime(request.getEventDatetime());
@@ -279,9 +263,9 @@ public class PromoService {
             Promo.PromoStatus status,
             LocalDateTime startDate,
             LocalDateTime endDate,
-            Integer clubId,
+            String teamName,
             Pageable pageable) {
-        return promoRepository.filterPromos(status, startDate, endDate, clubId, pageable)
+        return promoRepository.filterPromosByTeamName(status, startDate, endDate, teamName, pageable)
                 .map(PromoRespDTO::from);
     }
 
@@ -290,10 +274,26 @@ public class PromoService {
             Promo.PromoStatus status,
             LocalDateTime startDate,
             LocalDateTime endDate,
-            Integer clubId,
+            String teamName,
             Integer userId,
             Pageable pageable) {
-        return promoRepository.filterPromos(status, startDate, endDate, clubId, pageable)
+        return promoRepository.filterPromosByTeamName(status, startDate, endDate, teamName, pageable)
+                .map(promo -> {
+                    Boolean isLikedByUser = userId != null ? 
+                            promoLikeService.isLikedByUser(promo.getId(), userId) : null;
+                    return PromoRespDTO.from(promo, isLikedByUser);
+                });
+    }
+
+    // 클럽별 공연 홍보 목록 조회
+    public Page<PromoRespDTO> getPromosByClub(Integer clubId, Pageable pageable) {
+        return promoRepository.findAllByClubId(clubId, pageable)
+                .map(PromoRespDTO::from);
+    }
+
+    // 클럽별 공연 홍보 목록 조회 (사용자별 좋아요 상태 포함)
+    public Page<PromoRespDTO> getPromosByClub(Integer clubId, Integer userId, Pageable pageable) {
+        return promoRepository.findAllByClubId(clubId, pageable)
                 .map(promo -> {
                     Boolean isLikedByUser = userId != null ? 
                             promoLikeService.isLikedByUser(promo.getId(), userId) : null;

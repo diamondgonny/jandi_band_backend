@@ -39,19 +39,35 @@ public interface PromoRepository extends JpaRepository<Promo, Integer> {
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND " +
            "(LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "LOWER(p.location) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+           "LOWER(p.location) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(p.teamName) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<Promo> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
-    // 필터링
+    // 필터링 (팀명과 클럽ID 모두 지원)
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL " +
            "AND (:status IS NULL OR p.status = :status) " +
            "AND (:startDate IS NULL OR p.eventDatetime >= :startDate) " +
            "AND (:endDate IS NULL OR p.eventDatetime <= :endDate) " +
+           "AND (:teamName IS NULL OR LOWER(p.teamName) LIKE LOWER(CONCAT('%', :teamName, '%'))) " +
            "AND (:clubId IS NULL OR p.club.id = :clubId)")
     Page<Promo> filterPromos(
         @Param("status") Promo.PromoStatus status,
         @Param("startDate") LocalDateTime startDate,
         @Param("endDate") LocalDateTime endDate,
+        @Param("teamName") String teamName,
         @Param("clubId") Integer clubId,
+        Pageable pageable);
+
+    // 팀명만으로 필터링 (기존 호환성)
+    @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL " +
+           "AND (:status IS NULL OR p.status = :status) " +
+           "AND (:startDate IS NULL OR p.eventDatetime >= :startDate) " +
+           "AND (:endDate IS NULL OR p.eventDatetime <= :endDate) " +
+           "AND (:teamName IS NULL OR LOWER(p.teamName) LIKE LOWER(CONCAT('%', :teamName, '%')))")
+    Page<Promo> filterPromosByTeamName(
+        @Param("status") Promo.PromoStatus status,
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate,
+        @Param("teamName") String teamName,
         Pageable pageable);
 } 

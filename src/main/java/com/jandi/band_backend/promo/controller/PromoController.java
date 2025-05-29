@@ -104,14 +104,12 @@ public class PromoController {
 
     @Operation(
         summary = "공연 홍보 생성", 
-        description = "새로운 공연 홍보를 생성합니다. 클럽 멤버만 생성할 수 있습니다."
+        description = "새로운 공연 홍보를 생성합니다. teamName은 필수이고 clubId는 선택사항입니다."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "생성 성공"),
         @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
-        @ApiResponse(responseCode = "401", description = "인증 필요"),
-        @ApiResponse(responseCode = "403", description = "클럽 멤버가 아님"),
-        @ApiResponse(responseCode = "404", description = "클럽을 찾을 수 없음")
+        @ApiResponse(responseCode = "401", description = "인증 필요")
     })
     @PostMapping
     public ResponseEntity<CommonRespDTO<PromoRespDTO>> createPromo(
@@ -125,6 +123,7 @@ public class PromoController {
                         value = """
                         {
                           "clubId": 1,
+                          "teamName": "락밴드 동아리",
                           "title": "락밴드 동아리 정기공연",
                           "admissionFee": 10000,
                           "eventDatetime": "2024-03-15T19:00:00",
@@ -167,7 +166,8 @@ public class PromoController {
                         name = "공연 홍보 수정 예시",
                         value = """
                         {
-                          "clubId": 1,
+                          "clubId": null,
+                          "teamName": "독립 밴드",
                           "title": "수정된 공연 제목",
                           "admissionFee": 12000,
                           "eventDatetime": "2024-03-15T19:30:00",
@@ -283,7 +283,7 @@ public class PromoController {
             @Parameter(description = "공연 상태", example = "UPCOMING") @RequestParam(required = false) Promo.PromoStatus status,
             @Parameter(description = "시작 날짜", example = "2024-03-01T00:00:00") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @Parameter(description = "종료 날짜", example = "2024-03-31T23:59:59") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
-            @Parameter(description = "클럽 ID", example = "1") @RequestParam(required = false) Integer clubId,
+            @Parameter(description = "팀명", example = "락밴드") @RequestParam(required = false) String teamName,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "정렬 기준 (예: createdAt,desc)", example = "createdAt,desc") @RequestParam(defaultValue = "createdAt,desc") String sort,
@@ -291,7 +291,7 @@ public class PromoController {
         
         Pageable pageable = createPageable(page, size, sort);
         Integer userId = userDetails != null ? userDetails.getUserId() : null;
-        Page<PromoRespDTO> promoPage = promoService.filterPromos(status, startDate, endDate, clubId, userId, pageable);
+        Page<PromoRespDTO> promoPage = promoService.filterPromos(status, startDate, endDate, teamName, userId, pageable);
         return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 필터링 성공",
                 PagedRespDTO.from(promoPage)));
     }

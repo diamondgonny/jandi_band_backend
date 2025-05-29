@@ -2,6 +2,7 @@ package com.jandi.band_backend.promo.service;
 
 import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.repository.ClubRepository;
+import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
 
 import com.jandi.band_backend.promo.dto.PromoReqDTO;
@@ -17,7 +18,6 @@ import com.jandi.band_backend.global.util.S3FileManagementUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,6 +33,7 @@ public class PromoService {
     private final PromoRepository promoRepository;
     private final PromoPhotoRepository promoPhotoRepository;
     private final ClubRepository clubRepository;
+    private final ClubMemberRepository clubMemberRepository;
     private final PromoLikeService promoLikeService;
     private final PermissionValidationUtil permissionValidationUtil;
     private final UserValidationUtil userValidationUtil;
@@ -90,18 +91,19 @@ public class PromoService {
     public PromoRespDTO createPromo(PromoReqDTO request, Integer creatorId) {
         Users creator = userValidationUtil.getUserById(creatorId);
 
-        // 클럽 멤버십 검증 (ADMIN은 제외)
-        if (creator.getAdminRole() != Users.AdminRole.ADMIN
-            && !clubMemberRepository.existsByClubAndUserAndDeletedAtIsNull(club, creator)) {
-            throw new IllegalStateException("클럽 멤버만 공연 홍보를 생성할 수 있습니다.");
-        }
-
         Promo promo = new Promo();
         
-        // clubId가 있으면 Club 엔티티 설정, 없으면 null
+        // clubId가 있으면 Club 엔티티 설정 및 멤버십 검증
         if (request.getClubId() != null) {
             Club club = clubRepository.findById(request.getClubId())
                     .orElseThrow(() -> new ResourceNotFoundException("클럽을 찾을 수 없습니다."));
+            
+            // 클럽 멤버십 검증 (ADMIN은 제외)
+            if (creator.getAdminRole() != Users.AdminRole.ADMIN
+                && !clubMemberRepository.existsByClubAndUserAndDeletedAtIsNull(club, creator)) {
+                throw new IllegalStateException("클럽 멤버만 해당 클럽의 공연 홍보를 생성할 수 있습니다.");
+            }
+            
             promo.setClub(club);
         }
         

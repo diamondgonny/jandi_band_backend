@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -40,4 +41,10 @@ public class PromoReqDTO {
 
     @Schema(description = "공연 설명", example = "락밴드 동아리의 정기 공연입니다. 다양한 장르의 음악을 선보일 예정입니다.")
     private String description;
+
+    @Schema(description = "공연 이미지 파일 (선택사항)", type = "string", format = "binary")
+    private MultipartFile image;
+
+    @Schema(description = "삭제할 이미지 URL (수정 시만 사용)", example = "https://example.com/image.jpg")
+    private String deleteImageUrl;
 } 

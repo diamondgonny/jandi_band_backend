@@ -12,8 +12,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,10 +37,6 @@ public class PromoCommentController {
         summary = "공연 홍보 댓글 목록 조회", 
         description = "특정 공연 홍보의 댓글 목록을 페이지네이션으로 조회합니다. 로그인한 사용자의 경우 댓글 좋아요 상태도 함께 반환됩니다."
     )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "조회 성공"),
-        @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
-    })
     @GetMapping("/{promoId}/comments")
     public ResponseEntity<CommonRespDTO<PagedRespDTO<PromoCommentRespDTO>>> getCommentsByPromo(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
@@ -62,12 +56,6 @@ public class PromoCommentController {
         summary = "공연 홍보 댓글 생성", 
         description = "특정 공연 홍보에 새로운 댓글을 작성합니다."
     )
-    @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "댓글 생성 성공"),
-        @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
-        @ApiResponse(responseCode = "401", description = "인증 필요"),
-        @ApiResponse(responseCode = "404", description = "공연 홍보를 찾을 수 없음")
-    })
     @PostMapping("/{promoId}/comments")
     public ResponseEntity<CommonRespDTO<PromoCommentRespDTO>> createComment(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
@@ -98,13 +86,6 @@ public class PromoCommentController {
         summary = "공연 홍보 댓글 수정", 
         description = "기존 댓글을 수정합니다. 작성자만 수정할 수 있습니다."
     )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "댓글 수정 성공"),
-        @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
-        @ApiResponse(responseCode = "401", description = "인증 필요"),
-        @ApiResponse(responseCode = "403", description = "수정 권한 없음"),
-        @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
-    })
     @PatchMapping("/comments/{commentId}")
     public ResponseEntity<CommonRespDTO<PromoCommentRespDTO>> updateComment(
             @Parameter(description = "댓글 ID", example = "1") @PathVariable Integer commentId,
@@ -134,12 +115,6 @@ public class PromoCommentController {
         summary = "공연 홍보 댓글 삭제", 
         description = "댓글을 삭제합니다. 작성자만 삭제할 수 있습니다. (소프트 삭제)"
     )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "댓글 삭제 성공"),
-        @ApiResponse(responseCode = "401", description = "인증 필요"),
-        @ApiResponse(responseCode = "403", description = "삭제 권한 없음"),
-        @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
-    })
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<CommonRespDTO<Void>> deleteComment(
             @Parameter(description = "댓글 ID", example = "1") @PathVariable Integer commentId,
@@ -153,11 +128,6 @@ public class PromoCommentController {
         summary = "공연 홍보 댓글 좋아요 추가/취소", 
         description = "댓글에 좋아요를 추가하거나 취소합니다. 토글 방식으로 동작합니다."
     )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "좋아요 처리 성공"),
-        @ApiResponse(responseCode = "401", description = "인증 필요"),
-        @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
-    })
     @PostMapping("/comments/{commentId}/like")
     public ResponseEntity<CommonRespDTO<String>> toggleCommentLike(
             @Parameter(description = "댓글 ID", example = "1") @PathVariable Integer commentId,
@@ -175,11 +145,6 @@ public class PromoCommentController {
         summary = "공연 홍보 댓글 좋아요 상태 확인", 
         description = "현재 사용자가 해당 댓글에 좋아요를 눌렀는지 확인합니다."
     )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "상태 조회 성공"),
-        @ApiResponse(responseCode = "401", description = "인증 필요"),
-        @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
-    })
     @GetMapping("/comments/{commentId}/like/status")
     public ResponseEntity<CommonRespDTO<Boolean>> getCommentLikeStatus(
             @Parameter(description = "댓글 ID", example = "1") @PathVariable Integer commentId,
@@ -194,10 +159,6 @@ public class PromoCommentController {
         summary = "공연 홍보 댓글 좋아요 수 조회", 
         description = "해당 댓글의 총 좋아요 수를 조회합니다."
     )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "좋아요 수 조회 성공"),
-        @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
-    })
     @GetMapping("/comments/{commentId}/like/count")
     public ResponseEntity<CommonRespDTO<Integer>> getCommentLikeCount(
             @Parameter(description = "댓글 ID", example = "1") @PathVariable Integer commentId) {

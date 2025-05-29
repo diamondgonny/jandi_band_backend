@@ -25,7 +25,7 @@ public interface PromoRepository extends JpaRepository<Promo, Integer> {
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.creator.id = :userId")
     Page<Promo> findAllByCreatorId(@Param("userId") Integer userId, Pageable pageable);
     
-    @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.id = :id")
+    @Query("SELECT p FROM Promo p LEFT JOIN FETCH p.photos WHERE p.deletedAt IS NULL AND p.id = :id")
     Promo findByIdAndNotDeleted(@Param("id") Integer id);
 
     // 키워드 검색

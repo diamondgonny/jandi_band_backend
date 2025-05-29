@@ -33,7 +33,7 @@ public class PermissionValidationUtil {
         if (isAdmin(userId)) {
             return;
         }
-        
+
         clubMemberRepository.findByClubIdAndUserId(clubId, userId)
                 .orElseThrow(() -> new UnauthorizedClubAccessException(errorMessage));
     }
@@ -46,7 +46,7 @@ public class PermissionValidationUtil {
         if (isAdmin(userId)) {
             return;
         }
-        
+
         clubMemberRepository.findByClubIdAndUserId(clubId, userId)
                 .filter(member -> member.getRole() == ClubMember.MemberRole.REPRESENTATIVE)
                 .orElseThrow(() -> new UnauthorizedClubAccessException(errorMessage));
@@ -63,33 +63,9 @@ public class PermissionValidationUtil {
             adminTeamMember.setUser(adminUser);
             return adminTeamMember;
         }
-        
-        return teamMemberRepository.findByTeamIdAndUserId(teamId, userId)
+
+        return teamMemberRepository.findByTeamIdAndUserIdAndDeletedAtIsNull(teamId, userId)
                 .orElseThrow(() -> new UnauthorizedClubAccessException(errorMessage));
-    }
-
-    /**
-     * 팀 수정/삭제 권한 확인 (팀 생성자 또는 동아리 대표자, ADMIN은 항상 통과)
-     */
-    public void validateTeamModificationPermission(Team team, Integer currentUserId) {
-        // ADMIN 권한이 있으면 바로 통과
-        if (isAdmin(currentUserId)) {
-            return;
-        }
-        
-        boolean isCreator = team.getCreator().getId().equals(currentUserId);
-        boolean isRepresentative = false;
-
-        ClubMember clubMember = clubMemberRepository.findByClubIdAndUserId(team.getClub().getId(), currentUserId)
-                .orElse(null);
-
-        if (clubMember != null && clubMember.getRole() == ClubMember.MemberRole.REPRESENTATIVE) {
-            isRepresentative = true;
-        }
-
-        if (!isCreator && !isRepresentative) {
-            throw new UnauthorizedClubAccessException("팀 생성자 또는 동아리 대표자만 수정/삭제할 수 있습니다.");
-        }
     }
 
     /**
@@ -100,9 +76,9 @@ public class PermissionValidationUtil {
         if (isAdmin(userId)) {
             return;
         }
-        
+
         if (!contentOwnerId.equals(userId)) {
             throw new IllegalStateException(errorMessage);
         }
     }
-} 
+}

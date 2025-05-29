@@ -47,13 +47,13 @@ public class MyPageService {
      * 내가 참가한 팀 목록 조회
      */
     public List<MyTeamRespDTO> getMyTeams(Integer userId) {
-        List<TeamMember> teamMembers = teamMemberRepository.findByUserId(userId);
-        
+        List<TeamMember> teamMembers = teamMemberRepository.findByUserIdAndTeamDeletedAtIsNullAndDeletedAtIsNullOrderByJoinedAtDesc(userId);
+
         return teamMembers.stream()
                 .map(teamMember -> {
                     // 팀 멤버 수 조회
-                    Integer memberCount = teamMemberRepository.countByTeamId(teamMember.getTeam().getId());
-                    
+                    Integer memberCount = teamMemberRepository.countByTeamIdAndDeletedAtIsNull(teamMember.getTeam().getId());
+
                     return MyTeamRespDTO.from(teamMember, memberCount);
                 })
                 .collect(Collectors.toList());
@@ -67,4 +67,4 @@ public class MyPageService {
                 .map(ClubPhoto::getImageUrl)
                 .orElse(null);
     }
-} 
+}

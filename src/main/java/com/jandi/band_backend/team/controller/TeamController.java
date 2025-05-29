@@ -85,4 +85,15 @@ public class TeamController {
         teamService.deleteTeam(teamId, currentUserId);
         return ResponseEntity.ok(CommonRespDTO.success("곡 팀이 성공적으로 삭제되었습니다."));
     }
+
+    @Operation(summary = "팀 탈퇴")
+    @DeleteMapping("/teams/{teamId}/members/me")
+    public ResponseEntity<CommonRespDTO<Void>> leaveTeam(
+            @PathVariable Integer teamId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Integer currentUserId = userDetails.getUserId();
+        teamService.leaveTeam(teamId, currentUserId);
+        return ResponseEntity.ok(CommonRespDTO.success("팀에서 성공적으로 탈퇴했습니다."));
+    }
 }

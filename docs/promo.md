@@ -161,27 +161,14 @@ curl -X POST "http://localhost:8080/api/promos" \
 ```json
 {
   "success": true,
-  "message": "공연 홍보 생성 성공",
+  "message": "공연 홍보 생성 성공!",
   "data": {
-    "id": 1,
-    "teamName": "락밴드 팀",
-    "creatorId": 1,
-    "creatorName": "홍길동",
-    "title": "락밴드 정기공연",
-    "admissionFee": 10000,
-    "eventDatetime": "2024-03-15T19:00:00",
-    "location": "홍대 클럽",
-    "address": "서울시 마포구 홍익로 123",
-    "description": "락밴드 팀의 정기 공연입니다.",
-    "viewCount": 0,
-    "commentCount": 0,
-    "likeCount": 0,
-    "createdAt": "2024-03-01T10:00:00",
-    "updatedAt": "2024-03-01T10:00:00",
-    "photoUrls": ["https://example.com/photo.jpg"]
+    "id": 25
   }
 }
 ```
+
+**참고**: 생성된 공연 홍보의 상세 정보가 필요한 경우, 반환된 ID로 상세 조회 API(`GET /api/promos/{promoId}`)를 호출하세요.
 
 ---
 
@@ -242,27 +229,12 @@ curl -X PATCH "http://localhost:8080/api/promos/1" \
 ```json
 {
   "success": true,
-  "message": "공연 홍보 수정 성공",
-  "data": {
-    "id": 1,
-    "teamName": "수정된 팀명",
-    "creatorId": 1,
-    "creatorName": "홍길동",
-    "title": "수정된 공연 제목",
-    "admissionFee": 12000,
-    "eventDatetime": "2024-03-15T19:30:00",
-    "location": "새로운 장소",
-    "address": "새로운 주소",
-    "description": "수정된 설명",
-    "viewCount": 100,
-    "commentCount": 5,
-    "likeCount": 20,
-    "createdAt": "2024-03-01T10:00:00",
-    "updatedAt": "2024-03-01T11:00:00",
-    "photoUrls": ["https://example.com/new_image.jpg"]
-  }
+  "message": "공연 홍보 수정 성공!",
+  "data": null
 }
 ```
+
+**참고**: 수정된 공연 홍보의 상세 정보가 필요한 경우, 상세 조회 API(`GET /api/promos/{promoId}`)를 호출하세요.
 
 ---
 
@@ -279,7 +251,7 @@ curl -X DELETE "http://localhost:8080/api/promos/1" \
 ```json
 {
   "success": true,
-  "message": "공연 홍보 삭제 성공",
+  "message": "공연 홍보 삭제 성공!",
   "data": null
 }
 ```
@@ -580,3 +552,8 @@ curl -X GET "http://localhost:8080/api/promos/1/like/count"
 - **댓글**: 댓글 생성/삭제 시 공연 홍보의 commentCount 자동 업데이트
 - **좋아요**: 토글 방식으로 동작 (같은 API로 추가/취소), 중복 좋아요 방지
 - **좋아요 상태**: 공연 홍보 목록/상세 조회 시 `isLikedByUser` 필드로 현재 사용자의 좋아요 상태 포함 (true: 좋아요 누름, false: 좋아요 안 누름, null: 인증되지 않은 사용자)
+- **응답 정책**: 
+  - **생성**: 성공 시 생성된 리소스의 ID만 반환 (성능 최적화)
+  - **수정**: 성공 시 간단한 성공 메시지만 반환
+  - **삭제**: 성공 시 간단한 성공 메시지만 반환
+  - **상세 정보 필요 시**: 별도의 조회 API 호출로 최신 데이터 확인

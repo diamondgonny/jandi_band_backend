@@ -4,6 +4,7 @@ import com.jandi.band_backend.global.exception.ResourceNotFoundException;
 
 import com.jandi.band_backend.promo.dto.PromoReqDTO;
 import com.jandi.band_backend.promo.dto.PromoRespDTO;
+import com.jandi.band_backend.promo.dto.PromoSimpleRespDTO;
 import com.jandi.band_backend.promo.entity.Promo;
 import com.jandi.band_backend.promo.entity.PromoPhoto;
 import com.jandi.band_backend.promo.repository.PromoRepository;
@@ -19,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -34,7 +34,6 @@ public class PromoService {
     private final PermissionValidationUtil permissionValidationUtil;
     private final UserValidationUtil userValidationUtil;
     private final S3FileManagementUtil s3FileManagementUtil;
-    private final EntityManager entityManager;
     private static final String PROMO_PHOTO_DIR = "promo-photo";
 
     // 공연 홍보 목록 조회
@@ -85,7 +84,7 @@ public class PromoService {
 
     // 공연 홍보 생성 (이미지 포함)
     @Transactional
-    public PromoRespDTO createPromo(PromoReqDTO request, Integer creatorId) {
+    public PromoSimpleRespDTO createPromo(PromoReqDTO request, Integer creatorId) {
         Users creator = userValidationUtil.getUserById(creatorId);
 
         Promo promo = new Promo();
@@ -99,30 +98,18 @@ public class PromoService {
         promo.setDescription(request.getDescription());
 
         Promo savedPromo = promoRepository.save(promo);
-        System.out.println("Promo saved with ID: " + savedPromo.getId());
 
         // 이미지 처리
         if (request.getImage() != null && !request.getImage().isEmpty()) {
             processImage(savedPromo, request.getImage(), creator);
-            System.out.println("Image processed for promo ID: " + savedPromo.getId());
-            
-            // EntityManager를 사용해서 강제로 데이터베이스에 반영하고 영속성 컨텍스트 클리어
-            entityManager.flush();
-            entityManager.clear();
-            
-            // 다시 조회
-            savedPromo = promoRepository.findByIdAndNotDeleted(savedPromo.getId());
-            System.out.println("Promo reloaded, photos count: " + savedPromo.getPhotos().size());
         }
 
-        PromoRespDTO result = PromoRespDTO.from(savedPromo);
-        System.out.println("Response photoUrls count: " + result.getPhotoUrls().size());
-        return result;
+        return PromoSimpleRespDTO.of(savedPromo.getId());
     }
 
     // 공연 홍보 수정
     @Transactional
-    public PromoRespDTO updatePromo(Integer promoId, PromoReqDTO request, Integer userId) {
+    public void updatePromo(Integer promoId, PromoReqDTO request, Integer userId) {
         Promo promo = promoRepository.findByIdAndNotDeleted(promoId);
         if (promo == null) {
             throw new ResourceNotFoundException("공연 홍보를 찾을 수 없습니다.");
@@ -171,8 +158,6 @@ public class PromoService {
             
             processImage(promo, request.getImage(), promo.getCreator());
         }
-
-        return PromoRespDTO.from(promo);
     }
 
     // 공연 홍보 삭제 (소프트 삭제)

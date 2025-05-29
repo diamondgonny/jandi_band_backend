@@ -4,6 +4,7 @@ import com.jandi.band_backend.global.dto.CommonRespDTO;
 import com.jandi.band_backend.global.dto.PagedRespDTO;
 import com.jandi.band_backend.promo.dto.PromoReqDTO;
 import com.jandi.band_backend.promo.dto.PromoRespDTO;
+import com.jandi.band_backend.promo.dto.PromoSimpleRespDTO;
 import com.jandi.band_backend.promo.service.PromoService;
 import com.jandi.band_backend.promo.service.PromoLikeService;
 import com.jandi.band_backend.security.CustomUserDetails;
@@ -70,7 +71,7 @@ public class PromoController {
         description = "새로운 공연 홍보를 생성합니다. teamName은 필수이고, 이미지는 1개까지 업로드할 수 있습니다."
     )
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<CommonRespDTO<PromoRespDTO>> createPromo(
+    public ResponseEntity<CommonRespDTO<PromoSimpleRespDTO>> createPromo(
             @Parameter(description = "팀명", example = "락밴드 팀", required = true) @RequestParam String teamName,
             @Parameter(description = "공연 제목", example = "락밴드 정기공연", required = true) @RequestParam String title,
             @Parameter(description = "입장료", example = "10000") @RequestParam(required = false) Integer admissionFee,
@@ -93,7 +94,7 @@ public class PromoController {
         request.setImage(image);
         
         Integer userId = userDetails.getUserId();
-        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 생성 성공",
+        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 생성 성공!",
                 promoService.createPromo(request, userId)));
     }
 
@@ -102,7 +103,7 @@ public class PromoController {
         description = "기존 공연 홍보를 수정합니다. 작성자만 수정할 수 있습니다. 전송된 필드만 수정되고 나머지는 기존 값을 유지합니다."
     )
     @PatchMapping(value = "/{promoId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<CommonRespDTO<PromoRespDTO>> updatePromo(
+    public ResponseEntity<CommonRespDTO<Void>> updatePromo(
             @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
             @Parameter(description = "팀명", example = "수정된 팀명") @RequestParam(required = false) String teamName,
             @Parameter(description = "공연 제목", example = "수정된 공연 제목") @RequestParam(required = false) String title,
@@ -128,8 +129,8 @@ public class PromoController {
         request.setDeleteImageUrl(deleteImageUrl);
         
         Integer userId = userDetails.getUserId();
-        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 수정 성공",
-                promoService.updatePromo(promoId, request, userId)));
+        promoService.updatePromo(promoId, request, userId);
+        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 수정 성공!", null));
     }
 
     @Operation(
@@ -142,7 +143,7 @@ public class PromoController {
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         promoService.deletePromo(promoId, userId);
-        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 삭제 성공", null));
+        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 삭제 성공!", null));
     }
 
     @Operation(

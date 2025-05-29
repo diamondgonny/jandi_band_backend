@@ -82,13 +82,13 @@ public class TeamService {
      */
     public Page<TeamRespDTO> getTeamsByClub(Integer clubId, Pageable pageable, Integer currentUserId) {
         // 동아리 존재 확인
-        clubRepository.findByIdAndDeletedAtIsNull(clubId)
+        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
         // 동아리 부원 권한 확인
         permissionValidationUtil.validateClubMemberAccess(clubId, currentUserId, "동아리 부원만 팀 목록을 조회할 수 있습니다.");
 
-        Page<Team> teams = teamRepository.findAllByClubId(clubId, pageable);
+        Page<Team> teams = teamRepository.findAllByClubAndDeletedAtIsNullOrderByCreatedAtDesc(club, pageable);
 
         return teams.map(team -> {
             Integer memberCount = teamMemberRepository.countByTeamId(team.getId());
@@ -101,7 +101,7 @@ public class TeamService {
      */
     public TeamDetailRespDTO getTeamDetail(Integer teamId, Integer currentUserId) {
         // 팀 존재 확인
-        Team team = teamRepository.findByIdAndNotDeleted(teamId)
+        Team team = teamRepository.findByIdAndDeletedAtIsNull(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
 
         // 동아리 부원 권한 확인
@@ -119,7 +119,7 @@ public class TeamService {
     @Transactional
     public TeamRespDTO updateTeam(Integer teamId, TeamReqDTO teamReqDTO, Integer currentUserId) {
         // 팀 존재 확인
-        Team team = teamRepository.findByIdAndNotDeleted(teamId)
+        Team team = teamRepository.findByIdAndDeletedAtIsNull(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
 
         // 권한 확인 (팀 생성자 또는 동아리 대표자)
@@ -142,7 +142,7 @@ public class TeamService {
     @Transactional
     public void deleteTeam(Integer teamId, Integer currentUserId) {
         // 팀 존재 확인
-        Team team = teamRepository.findByIdAndNotDeleted(teamId)
+        Team team = teamRepository.findByIdAndDeletedAtIsNull(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
 
         // 권한 확인 (팀 생성자 또는 동아리 대표자)

@@ -47,7 +47,7 @@ public class InviteUtilService {
     /// 팀 관련
     // 팀 존재 확인
     public void isExistTeam(Integer teamId) {
-        teamRepository.findByIdAndNotDeleted(teamId)
+        teamRepository.findByIdAndDeletedAtIsNull(teamId)
                 .orElseThrow(()-> new TeamNotFoundException("팀이 존재하지 않습니다"));
     }
 
@@ -60,7 +60,7 @@ public class InviteUtilService {
     // key에서 팀 객체 반환
     public Team getTeam(String keyId) {
         Integer teamId = getOriginalId(keyId, InviteType.TEAM);
-        return teamRepository.findByIdAndNotDeleted(teamId)
+        return teamRepository.findByIdAndDeletedAtIsNull(teamId)
                 .orElseThrow(() -> new TeamNotFoundException("팀이 존재하지 않습니다"));
     }
 

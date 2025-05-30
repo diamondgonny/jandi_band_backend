@@ -66,11 +66,10 @@ public class AuthController {
     @Operation(summary = "회원탈퇴")
     @PostMapping("/cancel")
     public CommonRespDTO<UserInfoDTO> cancel(
-            @RequestHeader("Authorization") String token
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ){
-        String accessToken = token.replace("Bearer ", "");
-        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
-        authService.cancel(kakaoOauthId);
+        Integer userId = userDetails.getUserId();
+        authService.cancel(userId);
         return CommonRespDTO.success("회원탈퇴 성공");
     }
 

@@ -90,16 +90,16 @@ public class AuthService {
 
     /// 회원탈퇴
     @Transactional
-    public void cancel(String kakaoOauthId) {
+    public void cancel(Integer userId) {
         // DB에서 탈퇴 처리
-        Users user = userRepository.findByKakaoOauthIdAndDeletedAtIsNull(kakaoOauthId)
+        Users user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
         user.setIsRegistered(false);
         user.setDeletedAt(LocalDateTime.now());
         userRepository.save(user);
 
         // 카카오와 연결 끊기
-        kakaoUserService.unlink(kakaoOauthId);
+        kakaoUserService.unlink(user.getKakaoOauthId());
     }
 
     /// 리프레시 토큰 생성

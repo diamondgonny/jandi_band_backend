@@ -10,10 +10,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-import io.lettuce.core.ClientOptions;
-import io.lettuce.core.SocketOptions;
-
-import java.time.Duration;
 
 @Configuration
 public class RedisConfig {
@@ -30,15 +26,7 @@ public class RedisConfig {
         redisStandaloneConfiguration.setHostName(host);
         redisStandaloneConfiguration.setPort(port);
         
-        // Lettuce 클라이언트 옵션 설정
-        ClientOptions clientOptions = ClientOptions.builder()
-                .socketOptions(SocketOptions.builder()
-                        .connectTimeout(Duration.ofSeconds(10))
-                        .build())
-                .build();
-        
         LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory(redisStandaloneConfiguration);
-        lettuceConnectionFactory.setClientOptions(clientOptions);
         lettuceConnectionFactory.setValidateConnection(true);
         
         return lettuceConnectionFactory;

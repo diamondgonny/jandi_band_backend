@@ -2,7 +2,6 @@ package com.jandi.band_backend.club.controller;
 
 import com.jandi.band_backend.club.dto.ClubEventReqDTO;
 import com.jandi.band_backend.club.dto.ClubEventRespDTO;
-import com.jandi.band_backend.club.dto.ClubEventDetailRespDTO;
 import com.jandi.band_backend.club.service.ClubEventService;
 import com.jandi.band_backend.global.dto.CommonRespDTO;
 import com.jandi.band_backend.security.CustomUserDetails;
@@ -37,14 +36,14 @@ public class ClubEventController {
 
     @Operation(summary = "동아리 일정 상세 조회")
     @GetMapping("/events/{eventId}")
-    public ResponseEntity<CommonRespDTO<ClubEventDetailRespDTO>> getClubEventDetail(
+    public ResponseEntity<CommonRespDTO<ClubEventRespDTO>> getClubEventDetail(
             @PathVariable Integer clubId,
             @PathVariable Integer eventId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Integer userId = userDetails.getUserId();
 
-        ClubEventDetailRespDTO response = clubEventService.getClubEventDetail(clubId, eventId, userId);
+        ClubEventRespDTO response = clubEventService.getClubEventDetail(clubId, eventId, userId);
 
         return ResponseEntity.ok(CommonRespDTO.success("동아리 일정 상세 조회 성공", response));
     }

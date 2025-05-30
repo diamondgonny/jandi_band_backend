@@ -8,12 +8,14 @@ import com.jandi.band_backend.auth.dto.kakao.KakaoUserInfoDTO;
 import com.jandi.band_backend.auth.service.kakao.KaKaoTokenService;
 import com.jandi.band_backend.auth.service.kakao.KakaoUserService;
 import com.jandi.band_backend.global.dto.CommonRespDTO;
+import com.jandi.band_backend.security.CustomUserDetails;
 import com.jandi.band_backend.user.dto.UserInfoDTO;
 import com.jandi.band_backend.auth.service.AuthService;
 import com.jandi.band_backend.security.jwt.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Auth API")
@@ -42,24 +44,32 @@ public class AuthController {
     @Operation(summary = "로그아웃")
     @PostMapping("/logout")
     public CommonRespDTO<String> logout(
-            @RequestHeader("Authorization") String token
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ){
-        String accessToken = token.replace("Bearer ", "");
-        authService.logout(accessToken);
+        Integer userId = userDetails.getUserId();
+        authService.logout(userId);
         return CommonRespDTO.success("로그아웃 완료");
-
     }
 
     @Operation(summary = "회원가입")
     @PostMapping("/signup")
     public CommonRespDTO<UserInfoDTO> signUp(
-            @RequestHeader("Authorization") String token,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody SignUpReqDTO signUpReqDTO
     ){
-        String accessToken = token.replace("Bearer ", "");
-        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
-        UserInfoDTO userInfo = authService.signup(kakaoOauthId, signUpReqDTO);
+        Integer userId = userDetails.getUserId();
+        UserInfoDTO userInfo = authService.signup(userId, signUpReqDTO);
         return CommonRespDTO.success("회원가입 성공", userInfo);
+    }
+
+    @Operation(summary = "회원탈퇴")
+    @PostMapping("/cancel")
+    public CommonRespDTO<UserInfoDTO> cancel(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ){
+        Integer userId = userDetails.getUserId();
+        authService.cancel(userId);
+        return CommonRespDTO.success("회원탈퇴 성공");
     }
 
     @Operation(summary = "토큰 재발급")

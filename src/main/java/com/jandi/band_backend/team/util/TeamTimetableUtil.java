@@ -24,6 +24,4 @@ public class TeamTimetableUtil {
         // 시간표 형식 검증 (공통 유틸리티 사용)
         timetableValidationUtil.validateTimetableData(timetableData);
     }
-
-
 } 

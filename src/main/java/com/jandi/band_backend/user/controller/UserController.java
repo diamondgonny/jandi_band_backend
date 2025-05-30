@@ -28,7 +28,6 @@ public class UserController {
     ) {
         Integer userId = userDetails.getUserId();
 
-        // 유저 기본 정보 및 프로필 정보 조회
         UserInfoDTO userInfo = new UserInfoDTO(
                 userService.getMyInfo(userId),
                 userPhotoService.getMyPhoto(userId)
@@ -46,7 +45,6 @@ public class UserController {
     ) {
         Integer userId = userDetails.getUserId();
 
-        // 유저 기본 정보 및 프로필 사진 수정
         userService.updateMyInfo(userId, updateDTO);
         userPhotoService.updateMyPhoto(userId, profilePhoto);
         return CommonRespDTO.success("내 정보 수정 성공");

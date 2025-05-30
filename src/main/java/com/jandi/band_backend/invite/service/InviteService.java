@@ -23,7 +23,6 @@ public class InviteService {
 
     @Transactional
     public InviteLinkRespDTO generateInviteClubLink(Integer clubId, Integer userId) {
-        // 동아리 초대 권한이 있는지 검사
         inviteUtilService.isExistClub(clubId);
         if(!inviteUtilService.isMemberOfClub(clubId, userId)) {
             throw new InvalidAccessException("초대 권한이 없습니다");
@@ -33,14 +32,12 @@ public class InviteService {
         String code = generateRandomCode();
         inviteCodeService.saveCode(InviteType.CLUB, clubId, code);
 
-        // 초대 링크 생성 및 반환
         String link = clubLinkPrefix + "?code=" + code;
         return new InviteLinkRespDTO(link);
     }
 
     @Transactional
     public InviteLinkRespDTO generateInviteTeamLink(Integer teamId, Integer userId) {
-        // 팀 초대 권한이 있는지 검사
         inviteUtilService.isExistTeam(teamId);
         if(!inviteUtilService.isMemberOfTeam(teamId, userId)) {
             throw new InvalidAccessException("초대 권한이 없습니다");
@@ -50,13 +47,10 @@ public class InviteService {
         String code = generateRandomCode();
         inviteCodeService.saveCode(InviteType.TEAM, teamId, code);
 
-        // 초대 링크 생성 및 반환
         String link = teamLinkPrefix + "?code=" + code;
         return new InviteLinkRespDTO(link);
     }
 
-    /// 내부 메서드
-    // 랜덤 코드 생성
     private String generateRandomCode() {
         return RANDOM.ints('0', 'z' + 1)
                 .filter(i -> Character.isAlphabetic(i) || Character.isDigit(i))

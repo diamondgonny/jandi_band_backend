@@ -22,7 +22,7 @@ import org.springframework.lang.Nullable;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
-    private final ObjectMapper objectMapper; // Spring이 내부적으로 등록한 ObjectMapper를 주입하여 재사용성을 높임
+    private final ObjectMapper objectMapper;
 
     @Override
     protected void doFilterInternal(@Nullable HttpServletRequest request, @Nullable HttpServletResponse response, FilterChain filterChain)
@@ -30,19 +30,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String header = request.getHeader("Authorization");
 
         try {
-            // Authorization 헤더가 없으면 JWT 인증 생략하고 다음 필터로 진행
             if (header == null || !header.startsWith("Bearer ")){
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // 토큰이 유효하지 않다면 InvalidTokenException 예외 던짐
             String token = header.replace("Bearer ", "");
             if (!jwtTokenProvider.validateToken(token)) {
                 throw new InvalidTokenException();
             }
 
-            // 유효한 토큰에 대해서만 다음 필터로 요청을 넘김
             Authentication auth = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(auth);
             
@@ -51,7 +48,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 형식이 올바르지 않거나 미인가된 토큰일 시 SecurityContext 삭제
             SecurityContextHolder.clearContext();
 
-            // CommonRespDTO 형식대로 오류 응답 생성
             CommonRespDTO<?> errorResponse = CommonRespDTO.error(e.getMessage(), "INVALID_TOKEN");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json; charset=UTF-8");

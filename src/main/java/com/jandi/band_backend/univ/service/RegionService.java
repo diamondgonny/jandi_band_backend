@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 public class RegionService {
     private final RegionRepository regionRepository;
 
-    /// 전체 지역 조회
     @Transactional(readOnly = true)
     public List<RegionRespDTO> getAllRegions() {
         List<Region> regionList = regionRepository.findAll();

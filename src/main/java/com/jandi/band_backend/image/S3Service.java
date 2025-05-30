@@ -84,12 +84,6 @@ public class S3Service {
         }
     }
 
-    public String getFileUrl(String fileName) {
-        String url = amazonS3Client.getUrl(bucket, fileName).toString();
-        log.info("Generated URL for file {}: {}", fileName, url);
-        return url;
-    }
-
     private String createFileName(String originalFileName, String dirName) {
         String fileName = dirName + "/" + UUID.randomUUID().toString() + getFileExtension(originalFileName);
         log.info("Created file name: {} from original: {}", fileName, originalFileName);

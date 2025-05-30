@@ -55,6 +55,8 @@ public class AuthService {
         // 멘토링 결과 별도의 블랙리스트 처리는 필요하지 않아 로깅만 하는 것으로 작업
         // 카카오 토큰은 카카오 리소스 접근용이라 알림톡/메시지 공유에선 쓰이지 않아 굳이 카카오에게 로그아웃을 요청해 강제 만료처리할 필요가 없음
         String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
+        userRepository.findByKakaoOauthIdAndDeletedAtIsNull(kakaoOauthId)
+                .orElseThrow(UserNotFoundException::new);
         log.info("사용자: {}가 로그아웃했습니다", kakaoOauthId);
     }
 
@@ -62,7 +64,7 @@ public class AuthService {
     @Transactional
     public UserInfoDTO signup(String kakaoOauthId, SignUpReqDTO reqDTO) {
         // 유저 조회
-        Users user = userRepository.findByKakaoOauthId(kakaoOauthId)
+        Users user = userRepository.findByKakaoOauthIdAndDeletedAtIsNull(kakaoOauthId)
                 .orElseThrow(UserNotFoundException::new);
 
         // 회원가입 여부 확인 -> 정식 회원가입 완료한 기존 회원이라면 진행하지 않음
@@ -91,7 +93,7 @@ public class AuthService {
     @Transactional
     public void cancel(String kakaoOauthId) {
         // DB에서 탈퇴 처리
-        Users user = userRepository.findByKakaoOauthId(kakaoOauthId)
+        Users user = userRepository.findByKakaoOauthIdAndDeletedAtIsNull(kakaoOauthId)
                 .orElseThrow(UserNotFoundException::new);
         user.setIsRegistered(false);
         user.setDeletedAt(LocalDateTime.now());

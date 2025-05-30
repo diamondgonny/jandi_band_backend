@@ -2,6 +2,7 @@ package com.jandi.band_backend.auth.service;
 
 import com.jandi.band_backend.auth.dto.*;
 import com.jandi.band_backend.auth.dto.kakao.KakaoUserInfoDTO;
+import com.jandi.band_backend.auth.service.kakao.KakaoUserService;
 import com.jandi.band_backend.global.exception.InvalidAccessException;
 import com.jandi.band_backend.global.exception.InvalidTokenException;
 import com.jandi.band_backend.global.exception.UserNotFoundException;
@@ -18,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -26,6 +29,7 @@ public class AuthService {
     private final UserPhotoRepository userPhotoRepository;
     private final UniversityRepository universityRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final KakaoUserService kakaoUserService;
 
     /// 로그인
     @Transactional
@@ -81,6 +85,20 @@ public class AuthService {
         return new UserInfoDTO(
                 user, userPhotoRepository.findByUser(user)
         );
+    }
+
+    /// 회원탈퇴
+    @Transactional
+    public void cancel(String kakaoOauthId) {
+        // DB에서 탈퇴 처리
+        Users user = userRepository.findByKakaoOauthId(kakaoOauthId)
+                .orElseThrow(UserNotFoundException::new);
+        user.setIsRegistered(false);
+        user.setDeletedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        // 카카오와 연결 끊기
+        kakaoUserService.unlink(kakaoOauthId);
     }
 
     /// 리프레시 토큰 생성

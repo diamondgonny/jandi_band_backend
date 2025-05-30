@@ -62,6 +62,17 @@ public class AuthController {
         return CommonRespDTO.success("회원가입 성공", userInfo);
     }
 
+    @Operation(summary = "회원탈퇴")
+    @PostMapping("/cancel")
+    public CommonRespDTO<UserInfoDTO> cancel(
+            @RequestHeader("Authorization") String token
+    ){
+        String accessToken = token.replace("Bearer ", "");
+        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
+        authService.cancel(kakaoOauthId);
+        return CommonRespDTO.success("회원탈퇴 성공");
+    }
+
     @Operation(summary = "토큰 재발급")
     @PostMapping("/refresh")
     public CommonRespDTO<TokenRespDTO> refresh(

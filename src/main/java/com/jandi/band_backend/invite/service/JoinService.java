@@ -48,7 +48,7 @@ public class JoinService {
         Team team = inviteUtilService.getTeam(keyId);
 
         // 유저가 이미 팀원인지 검사
-        if(inviteUtilService.isMemberOfTeam(userId, team.getId())) {
+        if(inviteUtilService.isMemberOfTeam(team.getId(), userId)) {
             throw new InvalidAccessException("이미 가입한 팀입니다");
         }
 

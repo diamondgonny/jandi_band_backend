@@ -27,7 +27,7 @@ public class InviteController {
             @PathVariable("clubId") Integer clubId
     ) {
         Integer userId = userDetails.getUserId();
-        InviteLinkRespDTO inviteLinkRespDTO = inviteService.generateInviteClubLink(userId, clubId);
+        InviteLinkRespDTO inviteLinkRespDTO = inviteService.generateInviteClubLink(clubId, userId);
         return CommonRespDTO.success("동아리 초대 링크 생성 성공", inviteLinkRespDTO);
     }
 
@@ -38,7 +38,7 @@ public class InviteController {
             @PathVariable("teamId") Integer teamId
     ) {
         Integer userId = userDetails.getUserId();
-        InviteLinkRespDTO inviteLinkRespDTO = inviteService.generateInviteTeamLink(userId, teamId);
+        InviteLinkRespDTO inviteLinkRespDTO = inviteService.generateInviteTeamLink(teamId, userId);
         return CommonRespDTO.success("팀 초대 링크 생성 성공", inviteLinkRespDTO);
     }
 }

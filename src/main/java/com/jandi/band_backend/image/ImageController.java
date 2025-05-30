@@ -1,9 +1,14 @@
 package com.jandi.band_backend.image;
 
+import com.jandi.band_backend.global.dto.CommonRespDTO;
+import com.jandi.band_backend.security.CustomUserDetails;
+import com.jandi.band_backend.user.entity.Users;
+import com.jandi.band_backend.user.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,21 +21,44 @@ import java.io.IOException;
 public class ImageController {
 
     private final S3Service s3Service;
+    private final UserRepository userRepository;
 
-    @Operation(summary = "이미지 업로드")
+    @Operation(summary = "이미지 업로드 (관리자 전용)")
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadImage(
+    public ResponseEntity<CommonRespDTO<String>> uploadImage(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("dirName") String dirName) throws IOException {
+            @RequestParam("dirName") String dirName,
+            @AuthenticationPrincipal CustomUserDetails userDetails) throws IOException {
+        
+        // ADMIN 권한 체크
+        validateAdminPermission(userDetails.getUserId());
+        
         String imageUrl = s3Service.uploadImage(file, dirName);
-        return ResponseEntity.ok(imageUrl);
+        return ResponseEntity.ok(CommonRespDTO.success("이미지 업로드 성공", imageUrl));
     }
 
-    @Operation(summary = "이미지 삭제")
+    @Operation(summary = "이미지 삭제 (관리자 전용)")
     @DeleteMapping
-    public ResponseEntity<Void> deleteImage(
-            @RequestParam("fileUrl") String fileUrl) {
+    public ResponseEntity<CommonRespDTO<Void>> deleteImage(
+            @RequestParam("fileUrl") String fileUrl,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        
+        // ADMIN 권한 체크
+        validateAdminPermission(userDetails.getUserId());
+        
         s3Service.deleteImage(fileUrl);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(CommonRespDTO.success("이미지 삭제 성공"));
+    }
+
+    /**
+     * ADMIN 권한 확인
+     */
+    private void validateAdminPermission(Integer userId) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        
+        if (user.getAdminRole() != Users.AdminRole.ADMIN) {
+            throw new RuntimeException("관리자만 접근할 수 있습니다.");
+        }
     }
 } 

@@ -49,7 +49,6 @@ public class AuthController {
         Integer userId = userDetails.getUserId();
         authService.logout(userId);
         return CommonRespDTO.success("로그아웃 완료");
-
     }
 
     @Operation(summary = "회원가입")

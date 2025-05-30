@@ -5,6 +5,7 @@ import com.jandi.band_backend.auth.dto.kakao.KakaoUserInfoDTO;
 import com.jandi.band_backend.auth.service.kakao.KakaoUserService;
 import com.jandi.band_backend.global.exception.InvalidAccessException;
 import com.jandi.band_backend.global.exception.InvalidTokenException;
+import com.jandi.band_backend.global.exception.UniversityNotFoundException;
 import com.jandi.band_backend.global.exception.UserNotFoundException;
 import com.jandi.band_backend.security.jwt.JwtTokenProvider;
 import com.jandi.band_backend.univ.entity.University;
@@ -72,8 +73,11 @@ public class AuthService {
         }
 
         // 기본 유저 정보 입력
-        University university = universityRepository.findByName(reqDTO.getUniversity());
         Users.Position position = Users.Position.valueOf(reqDTO.getPosition());
+        University university = universityRepository.findByName(reqDTO.getUniversity());
+        if(university == null) {
+            throw new UniversityNotFoundException(("존재하지 않는 대학입니다: " + reqDTO.getUniversity()));
+        }
 
         user.setUniversity(university);
         user.setPosition(position);

@@ -20,7 +20,6 @@ public class CustomUserDetails implements UserDetails {
     }
 
     public Integer getUserId() {
-        log.info("deletedAt raw value: {}", user.getDeletedAt());
         if(user.getDeletedAt() != null) {
             throw new UserNotFoundException("유저 정보가 존재하지 않습니다: 탈퇴한 회원입니다.");
         }

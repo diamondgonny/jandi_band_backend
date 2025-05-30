@@ -22,11 +22,9 @@ public class UniversityService {
     private final RegionRepository regionRepository;
     private final UniversityRepository universityRepository;
 
-    /// 모든 대학 리스트 조회
-    // 기본적으로 전체 조회이나, filter 값에 따라 필터링 조회도 가능
     @Transactional(readOnly = true)
     public List<UniversityRespDTO> getAllUniversity(String filter, String type, String region) {
-        UnivFilter enumFilter = UnivFilter.valueOf(filter.toUpperCase()); // ← enum 변환
+        UnivFilter enumFilter = UnivFilter.valueOf(filter.toUpperCase());
         List<University> univList = switch (enumFilter) {
             case ALL -> universityRepository.findAll();
             case TYPE -> getUniversityByType(type);
@@ -36,7 +34,6 @@ public class UniversityService {
         return univList.stream().map(UniversityRespDTO::new).collect(Collectors.toList());
     }
 
-    /// 특정 대학 상세 조회
     @Transactional(readOnly = true)
     public UniversityDetailRespDTO getUniversityById(Integer id) {
         University university = universityRepository.findById(id)
@@ -44,14 +41,11 @@ public class UniversityService {
         return new UniversityDetailRespDTO(university);
     }
 
-    /// 내부 메서드
-    // 타입 필터: 대학 종류(ex. 대학교, 대학원)에 따른 필터링 조회
     private List<University> getUniversityByType(String type) {
         UnivType univType = UnivType.from(type);
         return universityRepository.findByNameContains(univType.getKeyword());
     }
 
-    // 지역 필터: 대학 소재지(ex. 서울, 강원)에 따른 필터링 조회
     private List<University> getUniversityByRegion(String region) {
         Set<String> regionCodes = regionRepository.findAllRegionCodes();
         if (!regionCodes.contains(region))

@@ -11,7 +11,6 @@ import com.jandi.band_backend.global.dto.CommonRespDTO;
 import com.jandi.band_backend.security.CustomUserDetails;
 import com.jandi.band_backend.user.dto.UserInfoDTO;
 import com.jandi.band_backend.auth.service.AuthService;
-import com.jandi.band_backend.security.jwt.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -26,14 +25,12 @@ public class AuthController {
     private final AuthService authService;
     private final KaKaoTokenService kaKaoTokenService;
     private final KakaoUserService kakaoUserService;
-    private final JwtTokenProvider jwtTokenProvider;
 
     @Operation(summary = "카카오 로그인")
     @GetMapping("/login")
     public CommonRespDTO<TokenRespDTO> kakaoLogin(
             @RequestParam String code
     ){
-        // 카카오로부터 유저 정보 얻기
         KakaoTokenRespDTO kakaoToken = kaKaoTokenService.getKakaoToken(code);
         KakaoUserInfoDTO kakaoUserInfo = kakaoUserService.getKakaoUserInfo(kakaoToken.getAccessToken());
 

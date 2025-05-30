@@ -32,12 +32,8 @@ public class MyPageService {
 
         return clubMembers.stream()
                 .map(clubMember -> {
-                    // 동아리 대표 사진 URL 조회
                     String photoUrl = getClubMainPhotoUrl(clubMember.getClub().getId());
-
-                    // 동아리 멤버 수 조회
                     Integer memberCount = clubMemberRepository.countByClubIdAndDeletedAtIsNull(clubMember.getClub().getId());
-
                     return MyClubRespDTO.from(clubMember, photoUrl, memberCount);
                 })
                 .collect(Collectors.toList());
@@ -51,17 +47,12 @@ public class MyPageService {
 
         return teamMembers.stream()
                 .map(teamMember -> {
-                    // 팀 멤버 수 조회
                     Integer memberCount = teamMemberRepository.countByTeamIdAndDeletedAtIsNull(teamMember.getTeam().getId());
-
                     return MyTeamRespDTO.from(teamMember, memberCount);
                 })
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 동아리 대표 사진 URL 조회 헬퍼 메서드
-     */
     private String getClubMainPhotoUrl(Integer clubId) {
         return clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
                 .map(ClubPhoto::getImageUrl)

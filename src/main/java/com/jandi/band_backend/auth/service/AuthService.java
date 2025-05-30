@@ -62,9 +62,9 @@ public class AuthService {
 
     /// 정식 회원가입
     @Transactional
-    public UserInfoDTO signup(String kakaoOauthId, SignUpReqDTO reqDTO) {
+    public UserInfoDTO signup(Integer userId, SignUpReqDTO reqDTO) {
         // 유저 조회
-        Users user = userRepository.findByKakaoOauthIdAndDeletedAtIsNull(kakaoOauthId)
+        Users user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
         // 회원가입 여부 확인 -> 정식 회원가입 완료한 기존 회원이라면 진행하지 않음
@@ -81,7 +81,7 @@ public class AuthService {
         user.setIsRegistered(true);
         userRepository.save(user);
 
-        log.info("KakaoOauthId: {}에 대해 정식 회원 가입 완료", kakaoOauthId);
+        log.info("KakaoOauthId: {}에 대해 정식 회원 가입 완료", user.getKakaoOauthId());
 
         // 유저 정보 반환: 유저 기본 정보, 유저 프로필
         return new UserInfoDTO(

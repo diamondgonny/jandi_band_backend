@@ -44,10 +44,10 @@ public class AuthController {
     @Operation(summary = "로그아웃")
     @PostMapping("/logout")
     public CommonRespDTO<String> logout(
-            @RequestHeader("Authorization") String token
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ){
-        String accessToken = token.replace("Bearer ", "");
-        authService.logout(accessToken);
+        Integer userId = userDetails.getUserId();
+        authService.logout(userId);
         return CommonRespDTO.success("로그아웃 완료");
 
     }

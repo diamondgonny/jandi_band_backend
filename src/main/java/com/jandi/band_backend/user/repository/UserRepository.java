@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<Users, Integer> {
     Optional<Users> findById(Integer id);
     Optional<Users> findByKakaoOauthId(String kakaoOauthId);
+
+    Optional<Users> findByKakaoOauthIdAndDeletedAtIsNull(String kakaoOauthId);
 }

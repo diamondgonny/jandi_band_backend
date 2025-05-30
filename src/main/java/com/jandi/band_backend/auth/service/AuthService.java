@@ -2,8 +2,10 @@ package com.jandi.band_backend.auth.service;
 
 import com.jandi.band_backend.auth.dto.*;
 import com.jandi.band_backend.auth.dto.kakao.KakaoUserInfoDTO;
+import com.jandi.band_backend.auth.service.kakao.KakaoUserService;
 import com.jandi.band_backend.global.exception.InvalidAccessException;
 import com.jandi.band_backend.global.exception.InvalidTokenException;
+import com.jandi.band_backend.global.exception.UniversityNotFoundException;
 import com.jandi.band_backend.global.exception.UserNotFoundException;
 import com.jandi.band_backend.security.jwt.JwtTokenProvider;
 import com.jandi.band_backend.univ.entity.University;
@@ -18,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -26,6 +30,7 @@ public class AuthService {
     private final UserPhotoRepository userPhotoRepository;
     private final UniversityRepository universityRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final KakaoUserService kakaoUserService;
 
     /// 로그인
     @Transactional
@@ -47,18 +52,19 @@ public class AuthService {
     }
 
     /// 로그아웃
-    public void logout(String accessToken) {
+    public void logout(Integer userId) {
         // 멘토링 결과 별도의 블랙리스트 처리는 필요하지 않아 로깅만 하는 것으로 작업
         // 카카오 토큰은 카카오 리소스 접근용이라 알림톡/메시지 공유에선 쓰이지 않아 굳이 카카오에게 로그아웃을 요청해 강제 만료처리할 필요가 없음
-        String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(accessToken);
-        log.info("사용자: {}가 로그아웃했습니다", kakaoOauthId);
+        Users user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+        log.info("KakaoOauthId: {}가 로그아웃 요청", user.getKakaoOauthId());
     }
 
     /// 정식 회원가입
     @Transactional
-    public UserInfoDTO signup(String kakaoOauthId, SignUpReqDTO reqDTO) {
+    public UserInfoDTO signup(Integer userId, SignUpReqDTO reqDTO) {
         // 유저 조회
-        Users user = userRepository.findByKakaoOauthId(kakaoOauthId)
+        Users user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
         // 회원가입 여부 확인 -> 정식 회원가입 완료한 기존 회원이라면 진행하지 않음
@@ -67,20 +73,37 @@ public class AuthService {
         }
 
         // 기본 유저 정보 입력
-        University university = universityRepository.findByName(reqDTO.getUniversity());
         Users.Position position = Users.Position.valueOf(reqDTO.getPosition());
+        University university = universityRepository.findByName(reqDTO.getUniversity());
+        if(university == null) {
+            throw new UniversityNotFoundException(("존재하지 않는 대학입니다: " + reqDTO.getUniversity()));
+        }
 
         user.setUniversity(university);
         user.setPosition(position);
         user.setIsRegistered(true);
         userRepository.save(user);
 
-        log.info("KakaoOauthId: {}에 대해 정식 회원 가입 완료", kakaoOauthId);
+        log.info("KakaoOauthId: {}에 대해 정식 회원 가입 완료", user.getKakaoOauthId());
 
         // 유저 정보 반환: 유저 기본 정보, 유저 프로필
         return new UserInfoDTO(
                 user, userPhotoRepository.findByUser(user)
         );
+    }
+
+    /// 회원탈퇴
+    @Transactional
+    public void cancel(Integer userId) {
+        // DB에서 탈퇴 처리
+        Users user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+        user.setIsRegistered(false);
+        user.setDeletedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        // 카카오와 연결 끊기
+        kakaoUserService.unlink(user.getKakaoOauthId());
     }
 
     /// 리프레시 토큰 생성
@@ -90,8 +113,12 @@ public class AuthService {
             throw new InvalidTokenException();
         }
 
-        // 토큰 재발급
+        // 유저 검증
         String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(refreshToken);
+        userRepository.findByKakaoOauthIdAndDeletedAtIsNull(kakaoOauthId)
+                .orElseThrow(UserNotFoundException::new);
+
+        // 토큰 재발급
         return new TokenRespDTO(
                 jwtTokenProvider.generateAccessToken(kakaoOauthId),
                 jwtTokenProvider.ReissueRefreshToken(refreshToken)

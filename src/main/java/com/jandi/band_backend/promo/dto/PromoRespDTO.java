@@ -85,6 +85,7 @@ public class PromoRespDTO {
         response.setCreatedAt(promo.getCreatedAt());
         response.setUpdatedAt(promo.getUpdatedAt());
         response.setPhotoUrls(promo.getPhotos().stream()
+                .filter(photo -> photo.getDeletedAt() == null)  // 삭제되지 않은 사진만 포함
                 .map(photo -> photo.getImageUrl())
                 .collect(Collectors.toList()));
         return response;

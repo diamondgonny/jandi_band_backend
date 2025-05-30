@@ -26,28 +26,23 @@ public class PromoCommentLikeService {
      * 공연 홍보 댓글 좋아요 추가/취소 토글
      */
     public boolean togglePromoCommentLike(Integer commentId, Integer userId) {
-        // 댓글 조회
         PromoComment comment = promoCommentRepository.findByIdAndNotDeleted(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("댓글을 찾을 수 없습니다."));
         
-        // 사용자 조회
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다."));
         
-        // 기존 좋아요 확인
         Optional<PromoCommentLike> existingLike = promoCommentLikeRepository.findByPromoCommentAndUser(comment, user);
         
         if (existingLike.isPresent()) {
-            // 좋아요 취소
             promoCommentLikeRepository.delete(existingLike.get());
-            return false; // 좋아요 취소됨
+            return false;
         } else {
-            // 좋아요 추가
             PromoCommentLike commentLike = new PromoCommentLike();
             commentLike.setPromoComment(comment);
             commentLike.setUser(user);
             promoCommentLikeRepository.save(commentLike);
-            return true; // 좋아요 추가됨
+            return true;
         }
     }
     

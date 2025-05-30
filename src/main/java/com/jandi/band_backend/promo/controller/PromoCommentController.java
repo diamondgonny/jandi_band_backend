@@ -8,10 +8,6 @@ import com.jandi.band_backend.promo.service.PromoCommentService;
 import com.jandi.band_backend.promo.service.PromoCommentLikeService;
 import com.jandi.band_backend.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Promo Comment API", description = "공연 홍보 댓글 관련 API")
+@Tag(name = "Promo Comment API")
 @RestController
 @RequestMapping("/api/promos")
 @RequiredArgsConstructor
@@ -33,17 +29,14 @@ public class PromoCommentController {
     private final PromoCommentService promoCommentService;
     private final PromoCommentLikeService promoCommentLikeService;
 
-    @Operation(
-        summary = "공연 홍보 댓글 목록 조회", 
-        description = "특정 공연 홍보의 댓글 목록을 페이지네이션으로 조회합니다. 로그인한 사용자의 경우 댓글 좋아요 상태도 함께 반환됩니다."
-    )
+    @Operation(summary = "공연 홍보 댓글 목록 조회")
     @GetMapping("/{promoId}/comments")
     public ResponseEntity<CommonRespDTO<PagedRespDTO<PromoCommentRespDTO>>> getCommentsByPromo(
-            @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
-            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "정렬 기준 (예: createdAt,desc)", example = "createdAt,desc") @RequestParam(defaultValue = "createdAt,desc") String sort,
-            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @PathVariable Integer promoId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         
         Pageable pageable = createPageable(page, size, sort);
         Integer userId = userDetails != null ? userDetails.getUserId() : null;
@@ -52,86 +45,44 @@ public class PromoCommentController {
                 PagedRespDTO.from(commentPage)));
     }
 
-    @Operation(
-        summary = "공연 홍보 댓글 생성", 
-        description = "특정 공연 홍보에 새로운 댓글을 작성합니다."
-    )
+    @Operation(summary = "공연 홍보 댓글 생성")
     @PostMapping("/{promoId}/comments")
     public ResponseEntity<CommonRespDTO<PromoCommentRespDTO>> createComment(
-            @Parameter(description = "공연 홍보 ID", example = "1") @PathVariable Integer promoId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                description = "댓글 생성 정보",
-                content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = PromoCommentReqDTO.class),
-                    examples = @ExampleObject(
-                        name = "댓글 생성 예시",
-                        value = """
-                        {
-                          "description": "정말 기대되는 공연이네요! 꼭 보러 가겠습니다."
-                        }
-                        """
-                    )
-                )
-            )
+            @PathVariable Integer promoId,
             @Valid @RequestBody PromoCommentReqDTO request,
-            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(CommonRespDTO.success("공연 홍보 댓글이 성공적으로 생성되었습니다.",
                         promoCommentService.createComment(promoId, request, userId)));
     }
 
-    @Operation(
-        summary = "공연 홍보 댓글 수정", 
-        description = "기존 댓글을 수정합니다. 작성자만 수정할 수 있습니다."
-    )
+    @Operation(summary = "공연 홍보 댓글 수정")
     @PatchMapping("/comments/{commentId}")
     public ResponseEntity<CommonRespDTO<PromoCommentRespDTO>> updateComment(
-            @Parameter(description = "댓글 ID", example = "1") @PathVariable Integer commentId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                description = "댓글 수정 정보",
-                content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = PromoCommentReqDTO.class),
-                    examples = @ExampleObject(
-                        name = "댓글 수정 예시",
-                        value = """
-                        {
-                          "description": "수정된 댓글 내용입니다. 더욱 기대됩니다!"
-                        }
-                        """
-                    )
-                )
-            )
+            @PathVariable Integer commentId,
             @Valid @RequestBody PromoCommentReqDTO request,
-            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 댓글이 성공적으로 수정되었습니다.",
                 promoCommentService.updateComment(commentId, request, userId)));
     }
 
-    @Operation(
-        summary = "공연 홍보 댓글 삭제", 
-        description = "댓글을 삭제합니다. 작성자만 삭제할 수 있습니다. (소프트 삭제)"
-    )
+    @Operation(summary = "공연 홍보 댓글 삭제")
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<CommonRespDTO<Void>> deleteComment(
-            @Parameter(description = "댓글 ID", example = "1") @PathVariable Integer commentId,
-            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @PathVariable Integer commentId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         promoCommentService.deleteComment(commentId, userId);
         return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 댓글이 성공적으로 삭제되었습니다.", null));
     }
 
-    @Operation(
-        summary = "공연 홍보 댓글 좋아요 추가/취소", 
-        description = "댓글에 좋아요를 추가하거나 취소합니다. 토글 방식으로 동작합니다."
-    )
+    @Operation(summary = "공연 홍보 댓글 좋아요 추가/취소")
     @PostMapping("/comments/{commentId}/like")
     public ResponseEntity<CommonRespDTO<String>> toggleCommentLike(
-            @Parameter(description = "댓글 ID", example = "1") @PathVariable Integer commentId,
-            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @PathVariable Integer commentId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         boolean isLiked = promoCommentLikeService.togglePromoCommentLike(commentId, userId);
         
@@ -141,33 +92,26 @@ public class PromoCommentController {
         return ResponseEntity.ok(CommonRespDTO.success(message, result));
     }
 
-    @Operation(
-        summary = "공연 홍보 댓글 좋아요 상태 확인", 
-        description = "현재 사용자가 해당 댓글에 좋아요를 눌렀는지 확인합니다."
-    )
+    @Operation(summary = "공연 홍보 댓글 좋아요 상태 확인")
     @GetMapping("/comments/{commentId}/like/status")
     public ResponseEntity<CommonRespDTO<Boolean>> getCommentLikeStatus(
-            @Parameter(description = "댓글 ID", example = "1") @PathVariable Integer commentId,
-            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @PathVariable Integer commentId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         boolean isLiked = promoCommentLikeService.isLikedByUser(commentId, userId);
         
         return ResponseEntity.ok(CommonRespDTO.success("댓글 좋아요 상태 조회 성공", isLiked));
     }
 
-    @Operation(
-        summary = "공연 홍보 댓글 좋아요 수 조회", 
-        description = "해당 댓글의 총 좋아요 수를 조회합니다."
-    )
+    @Operation(summary = "공연 홍보 댓글 좋아요 수 조회")
     @GetMapping("/comments/{commentId}/like/count")
     public ResponseEntity<CommonRespDTO<Integer>> getCommentLikeCount(
-            @Parameter(description = "댓글 ID", example = "1") @PathVariable Integer commentId) {
+            @PathVariable Integer commentId) {
         Integer likeCount = promoCommentLikeService.getLikeCount(commentId);
         
         return ResponseEntity.ok(CommonRespDTO.success("댓글 좋아요 수 조회 성공", likeCount));
     }
 
-    // Pageable 생성 헬퍼 메서드
     private Pageable createPageable(int page, int size, String sort) {
         if (sort == null || sort.trim().isEmpty()) {
             return PageRequest.of(page, size);

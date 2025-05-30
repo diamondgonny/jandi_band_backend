@@ -44,11 +44,9 @@ public class TeamTimetableService {
      */
     @Transactional
     public ScheduleSuggestionRespDTO startScheduleSuggestion(Integer teamId, Integer currentUserId) {
-        // 팀 존재 확인
         Team team = teamRepository.findByIdAndDeletedAtIsNull(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
 
-        // 팀원 권한 확인 (팀원만 스케줄 조율 제안 가능)
         TeamMember teamMember = permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "팀원만 접근할 수 있습니다.");
 
         // suggested_schedule_at을 현재 시간으로 설정
@@ -72,13 +70,10 @@ public class TeamTimetableService {
      */
     @Transactional
     public TimetableRespDTO registerMyTimetable(Integer teamId, TimetableReqDTO reqDTO, Integer currentUserId) {
-        // 팀 및 팀멤버 검증
         TeamMember teamMember = validateTeamAndGetTeamMember(teamId, currentUserId);
 
-        // 사용자의 특정 시간표 조회 (userId 사용)
         UserTimetableDetailsRespDTO userTimetable = userTimetableService.getMyTimetableById(currentUserId, reqDTO.getUserTimetableId());
 
-        // 시간표 데이터 저장 및 응답 반환
         return saveTeamMemberTimetableAndBuildResponse(teamMember, userTimetable.getTimetableData(), currentUserId, teamId);
     }
 
@@ -87,13 +82,10 @@ public class TeamTimetableService {
      */
     @Transactional
     public TimetableRespDTO updateMyTimetable(Integer teamId, TimetableUpdateReqDTO reqDTO, Integer currentUserId) {
-        // 팀 및 팀멤버 검증
         TeamMember teamMember = validateTeamAndGetTeamMember(teamId, currentUserId);
 
-        // Team 도메인 전용 유틸리티로 시간표 데이터 유효성 검사
         teamTimetableUtil.validateTimetableRequest(reqDTO);
 
-        // 시간표 데이터 저장 및 응답 반환
         return saveTeamMemberTimetableAndBuildResponse(teamMember, reqDTO.getTimetableData(), currentUserId, teamId);
     }
 
@@ -101,11 +93,9 @@ public class TeamTimetableService {
      * 팀 존재 확인 및 팀멤버 권한 검증
      */
     private TeamMember validateTeamAndGetTeamMember(Integer teamId, Integer currentUserId) {
-        // 팀 존재 확인
         teamRepository.findByIdAndDeletedAtIsNull(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
 
-        // 본인만 시간표 입력 가능하도록 권한 확인
         return permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "본인의 시간표만 입력할 수 있습니다.");
     }
 

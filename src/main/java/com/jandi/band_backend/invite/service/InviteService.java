@@ -22,10 +22,10 @@ public class InviteService {
     @Value("${invite.team.link.prefix}") private String teamLinkPrefix;
 
     @Transactional
-    public InviteLinkRespDTO generateInviteClubLink(Integer userId, Integer clubId) {
+    public InviteLinkRespDTO generateInviteClubLink(Integer clubId, Integer userId) {
         // 동아리 초대 권한이 있는지 검사
         inviteUtilService.isExistClub(clubId);
-        if(!inviteUtilService.isMemberOfClub(userId, clubId)) {
+        if(!inviteUtilService.isMemberOfClub(clubId, userId)) {
             throw new InvalidAccessException("초대 권한이 없습니다");
         }
 
@@ -39,10 +39,10 @@ public class InviteService {
     }
 
     @Transactional
-    public InviteLinkRespDTO generateInviteTeamLink(Integer userId, Integer teamId) {
+    public InviteLinkRespDTO generateInviteTeamLink(Integer teamId, Integer userId) {
         // 팀 초대 권한이 있는지 검사
         inviteUtilService.isExistTeam(teamId);
-        if(!inviteUtilService.isMemberOfTeam(userId, teamId)) {
+        if(!inviteUtilService.isMemberOfTeam(teamId, userId)) {
             throw new InvalidAccessException("초대 권한이 없습니다");
         }
 

@@ -44,6 +44,9 @@ curl -X GET "http://localhost:8080/api/users/me/info" \
 ## 2. 내 정보 수정
 ### PATCH `/api/users/me/info`
 
+#### Content-Type
+`multipart/form-data`
+
 #### 요청
 ```bash
 curl -X PATCH "http://localhost:8080/api/users/me/info" \

@@ -106,6 +106,8 @@ curl -X POST "http://localhost:8080/api/auth/refresh" \
 }
 ```
 
+---
+
 ## 4. 로그아웃
 ### POST `/api/auth/logout`
 
@@ -120,6 +122,26 @@ curl -X POST "http://localhost:8080/api/auth/logout" \
 {
   "success": true,
   "message": "로그아웃 완료",
+  "data": null
+}
+```
+
+---
+
+## 5. 회원탈퇴
+### POST `/api/auth/cancel`
+
+#### 요청
+```bash
+curl -X POST "http://localhost:8080/api/auth/cancel" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "회원탈퇴 성공",
   "data": null
 }
 ```

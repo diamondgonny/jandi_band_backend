@@ -108,8 +108,12 @@ public class AuthService {
             throw new InvalidTokenException();
         }
 
-        // 토큰 재발급
+        // 유저 검증
         String kakaoOauthId = jwtTokenProvider.getKakaoOauthId(refreshToken);
+        userRepository.findByKakaoOauthIdAndDeletedAtIsNull(kakaoOauthId)
+                .orElseThrow(UserNotFoundException::new);
+
+        // 토큰 재발급
         return new TokenRespDTO(
                 jwtTokenProvider.generateAccessToken(kakaoOauthId),
                 jwtTokenProvider.ReissueRefreshToken(refreshToken)

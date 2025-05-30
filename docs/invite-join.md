@@ -1,4 +1,3 @@
-
 # Invite & Join API 명세서
 
 ## Base URL
@@ -95,7 +94,8 @@ curl -X POST "http://localhost:8080/api/join/clubs?code=jaCprFeFtE" \
 ```json
 {
   "success": true,
-  "message": "동아리 가입 성공"
+  "message": "동아리 가입 성공",
+  "data": null
 }
 ```
 
@@ -105,6 +105,48 @@ curl -X POST "http://localhost:8080/api/join/clubs?code=jaCprFeFtE" \
   "success": false,
   "message": "이미 가입한 동아리입니다",
   "errorCode": "INVALID_ACCESS"
+}
+```
+
+---
+
+## 3. 팀 초대 링크 생성
+### POST `/api/invite/teams/{teamId}`
+
+#### 요청
+```bash
+curl -X POST "http://localhost:8080/api/invite/teams/1" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "팀 초대 링크 생성 성공",
+  "data": {
+    "link": "https://rhythmeetdevelop.netlify.app/invite/accept?code=tEaCtFeFpQ"
+  }
+}
+```
+
+---
+
+## 4. 팀 초대 수락 (가입)
+### POST `/api/join/teams?code={code}`
+
+#### 요청
+```bash
+curl -X POST "http://localhost:8080/api/join/teams?code=tEaCtFeFpQ" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+#### 응답 (성공 200 OK)
+```json
+{
+  "success": true,
+  "message": "팀 가입 성공",
+  "data": null
 }
 ```
 
@@ -120,11 +162,11 @@ curl -X POST "http://localhost:8080/api/join/clubs?code=jaCprFeFtE" \
 ---
 
 ## 참고 사항
-- 초대 링크는 기본적으로 7일간 유효합니다.
-- 초대 링크를 통한 가입은 중복 가입이 불가능합니다.
-- 링크 생성은 동아리 멤버인 사람만 가능합니다.
-- 카카오톡 메시지 생성 및 환영 페이지 이동은 프론트에서 처리해주셔야 합니다.
-- 팀 초대/가입은 동아리 초대/가입과 유사합니다. 요청 API 엔드포인트만 조금 다른게 전부라 DOCS에선 설명하지 않았습니다.
+- **초대 링크 유효기간**: 기본적으로 7일간 유효
+- **중복 가입 방지**: 이미 가입한 동아리/팀은 재가입 불가
+- **권한**: 동아리/팀 멤버만 초대 링크 생성 가능
+- **프론트 처리**: 카카오톡 메시지 생성 및 환영 페이지 이동은 프론트에서 구현
+- **팀 가입 조건**: 팀이 속한 동아리의 멤버여야 팀 가입 가능
 
 ## 프론트 예시
 https://github.com/user-attachments/assets/9fe66dad-f867-4843-ab61-ec7f7e8fea76

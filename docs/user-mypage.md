@@ -69,7 +69,7 @@ curl -X GET "http://localhost:8080/api/my/teams" \
     {
       "id": 1,
       "name": "밴드 팀",
-      "description": "락 음악을 연주하는 팀",
+      "description": null,
       "clubId": 1,
       "clubName": "락밴드 동아리",
       "creatorId": 2,
@@ -85,7 +85,7 @@ curl -X GET "http://localhost:8080/api/my/teams" \
 #### 응답 필드
 - `id`: 팀 ID
 - `name`: 팀 이름
-- `description`: 팀 설명
+- `description`: 팀 설명 (현재 사용하지 않음, 항상 null)
 - `clubId`: 소속 동아리 ID
 - `clubName`: 소속 동아리 이름
 - `creatorId`: 팀 생성자 ID
@@ -111,4 +111,4 @@ curl -X GET "http://localhost:8080/api/my/teams" \
 
 ## 참고사항
 - **빈 목록**: 참가한 동아리/팀이 없으면 빈 배열 반환
-- **정렬**: 가입 순서대로 정렬
+- **정렬**: 가입 순서대로 정렬 (joinedAt 내림차순)

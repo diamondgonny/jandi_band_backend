@@ -6,5 +6,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class JoinRespDTO {
-    private Integer id;
+    private Integer clubId;
+    private Integer teamId;
 }

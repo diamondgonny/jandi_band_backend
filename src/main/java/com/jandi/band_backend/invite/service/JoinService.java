@@ -37,7 +37,7 @@ public class JoinService {
         Users user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
         createNewClubMember(user, club);
-        return new JoinRespDTO(club.getId());
+        return new JoinRespDTO(club.getId(), null);
     }
 
     @Transactional
@@ -57,7 +57,7 @@ public class JoinService {
             createNewClubMember(user, club);
         }
         createNewTeamMember(user, team);
-        return new JoinRespDTO(team.getId());
+        return new JoinRespDTO(club.getId(), team.getId());
     }
 
     private void createNewClubMember(Users user, Club club) {

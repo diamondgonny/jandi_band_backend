@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Comparator;
 
 @Service
 @RequiredArgsConstructor
@@ -84,6 +85,24 @@ public class PollService {
                 .collect(Collectors.toList());
 
         return convertToPollDetailRespDTO(poll, songResponseDtos);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PollSongResultRespDTO> getPollSongs(Integer pollId, String sortBy, String order, Integer currentUserId) {
+        // 투표 조회
+        Poll poll = pollRepository.findByIdAndDeletedAtIsNull(pollId)
+                .orElseThrow(() -> new PollNotFoundException("해당 투표를 찾을 수 없습니다."));
+
+        // 투표에 해당하는 노래 목록 조회
+        List<PollSong> pollSongs = pollSongRepository.findAllByPollAndDeletedAtIsNullOrderByCreatedAtDesc(poll);
+
+        // PollSongResultRespDTO로 변환
+        List<PollSongResultRespDTO> songResultDtos = pollSongs.stream()
+                .map(this::convertToPollSongResultRespDTO)
+                .collect(Collectors.toList());
+
+        // 정렬 적용
+        return applySortingForResult(songResultDtos, sortBy, order);
     }
 
     @Transactional
@@ -335,6 +354,20 @@ public class PollService {
                 .build();
     }
 
+    private PollSongResultRespDTO convertToPollSongResultRespDTO(PollSong pollSong) {
+        return PollSongResultRespDTO.builder()
+                .id(pollSong.getId())
+                .pollId(pollSong.getPoll() != null ? pollSong.getPoll().getId() : null)
+                .songName(pollSong.getSongName())
+                .artistName(pollSong.getArtistName())
+                .createdAt(pollSong.getCreatedAt())
+                .likeCount(calculateVoteCount(pollSong, "LIKE"))
+                .dislikeCount(calculateVoteCount(pollSong, "DISLIKE"))
+                .cantCount(calculateVoteCount(pollSong, "CANT"))
+                .hajjCount(calculateVoteCount(pollSong, "HAJJ"))
+                .build();
+    }
+
     private int calculateVoteCount(PollSong pollSong, String voteMark) {
         return (int) pollSong.getVotes().stream()
                 .filter(vote -> vote.getVotedMark().name().equals(voteMark))
@@ -357,5 +390,41 @@ public class PollService {
                 .map(photo -> photo.getImageUrl())
                 .findFirst()
                 .orElse(null);
+    }
+
+    private List<PollSongResultRespDTO> applySortingForResult(List<PollSongResultRespDTO> songs, String sortBy, String order) {
+        Comparator<PollSongResultRespDTO> comparator;
+
+        switch (sortBy.toUpperCase()) {
+            case "LIKE":
+                comparator = Comparator.comparingInt(PollSongResultRespDTO::getLikeCount);
+                break;
+            case "DISLIKE":
+                comparator = Comparator.comparingInt(PollSongResultRespDTO::getDislikeCount);
+                break;
+            case "SCORE":
+                comparator = Comparator.comparingInt(this::calculateScore);
+                break;
+            default:
+                throw new IllegalArgumentException("유효하지 않은 정렬 기준입니다: " + sortBy);
+        }
+
+        // 내림차순이 기본값
+        if ("asc".equalsIgnoreCase(order)) {
+            return songs.stream()
+                    .sorted(comparator)
+                    .collect(Collectors.toList());
+        } else {
+            return songs.stream()
+                    .sorted(comparator.reversed())
+                    .collect(Collectors.toList());
+        }
+    }
+
+    // 점수 = (긍정 투표 수: LIKE + HAJJ) - (부정 투표 수: DISLIKE + CANT)
+    private int calculateScore(PollSongResultRespDTO song) {
+        int positiveVotes = song.getLikeCount() + song.getHajjCount();
+        int negativeVotes = song.getDislikeCount() + song.getCantCount();
+        return positiveVotes - negativeVotes;
     }
 }

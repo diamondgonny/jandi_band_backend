@@ -1,4 +1,4 @@
-# Promo API 명세서
+# Promo API
 
 ## Base URL
 `/api/promos`
@@ -35,13 +35,13 @@
 
 #### 요청
 ```bash
-curl -X GET "http://localhost:8080/api/promos?page=0&size=20"
+curl -X GET "http://localhost:8080/api/promos?page=0&size=20&sort=createdAt,desc"
 ```
 
 #### 쿼리 파라미터
 - `page` (integer): 페이지 번호 (기본값: 0)
 - `size` (integer): 페이지 크기 (기본값: 20)
-- `sort` (string): 정렬 기준
+- `sort` (string): 정렬 기준 (기본값: "createdAt,desc")
 
 #### 응답 (200 OK)
 ```json
@@ -199,32 +199,6 @@ curl -X PATCH "http://localhost:8080/api/promos/1" \
 - `image` (file, 선택): 새 이미지 파일 (업로드 시 기존 이미지 자동 교체)
 - `deleteImageUrl` (string, 선택): 삭제할 이미지 URL (이미지만 삭제하고 싶을 때)
 
-#### 사용 예시
-
-##### 팀명만 수정
-```bash
-curl -X PATCH "http://localhost:8080/api/promos/1" \
-  -H "Authorization: Bearer {JWT_TOKEN}" \
-  -F "teamName=새로운 팀명"
-```
-
-##### 이미지만 교체
-```bash
-curl -X PATCH "http://localhost:8080/api/promos/1" \
-  -H "Authorization: Bearer {JWT_TOKEN}" \
-  -F "image=@/path/to/new_image.jpg"
-```
-
-##### 여러 필드 동시 수정
-```bash
-curl -X PATCH "http://localhost:8080/api/promos/1" \
-  -H "Authorization: Bearer {JWT_TOKEN}" \
-  -F "teamName=수정된 팀명" \
-  -F "title=수정된 공연 제목" \
-  -F "admissionFee=12000" \
-  -F "image=@/path/to/new_image.jpg"
-```
-
 #### 응답 (200 OK)
 ```json
 {
@@ -256,7 +230,7 @@ curl -X DELETE "http://localhost:8080/api/promos/1" \
 }
 ```
 
-**참고**: 공연 홍보 삭제 시 관련된 이미지도 함께 삭제됩니다.
+**참고**: 공연 홍보 삭제는 관련된 이미지와 함께 처리됩니다.
 
 ---
 
@@ -265,12 +239,12 @@ curl -X DELETE "http://localhost:8080/api/promos/1" \
 
 #### 요청
 ```bash
-curl -X GET "http://localhost:8080/api/promos/search?keyword=락밴드&page=0&size=20"
+curl -X GET "http://localhost:8080/api/promos/search?keyword=락밴드&page=0&size=20&sort=createdAt,desc"
 ```
 
 #### 쿼리 파라미터
 - `keyword` (string, 필수): 검색 키워드
-- `page`, `size`, `sort`: 페이지네이션 옵션
+- `page`, `size`, `sort`: 페이지네이션
 
 #### 응답 (200 OK)
 ```json
@@ -314,25 +288,25 @@ curl -X GET "http://localhost:8080/api/promos/search?keyword=락밴드&page=0&si
 
 ---
 
-## 7. 공연 홍보 필터링
+## 7. 공연 홍보 필터
 ### GET `/api/promos/filter`
 
 #### 요청
 ```bash
-curl -X GET "http://localhost:8080/api/promos/filter?teamName=락밴드&page=0&size=20"
+curl -X GET "http://localhost:8080/api/promos/filter?teamName=락밴드&page=0&size=20&sort=createdAt,desc"
 ```
 
 #### 쿼리 파라미터
-- `startDate` (string, 선택): 시작 날짜 (ISO 8601)
-- `endDate` (string, 선택): 종료 날짜 (ISO 8601)
+- `startDate` (string, 선택): 시작 일자 (ISO 8601)
+- `endDate` (string, 선택): 종료 일자 (ISO 8601)
 - `teamName` (string, 선택): 팀명
-- `page`, `size`, `sort`: 페이지네이션 옵션
+- `page`, `size`, `sort`: 페이지네이션
 
 #### 응답 (200 OK)
 ```json
 {
   "success": true,
-  "message": "공연 홍보 필터링 성공",
+  "message": "공연 홍보 필터 성공",
   "data": {
     "content": [
       {
@@ -370,103 +344,7 @@ curl -X GET "http://localhost:8080/api/promos/filter?teamName=락밴드&page=0&s
 
 ---
 
-## 에러 응답
-```json
-{
-  "success": false,
-  "message": "에러 메시지",
-  "data": null
-}
-```
-
-### HTTP 상태 코드
-- `200 OK`: 성공
-- `400 Bad Request`: 잘못된 요청
-- `401 Unauthorized`: 인증 실패
-- `403 Forbidden`: 권한 없음
-- `404 Not Found`: 리소스 없음
-
----
-
-## 8. 공연 홍보 댓글 목록 조회
-### GET `/api/promos/{promoId}/comments`
-
-#### 요청
-```bash
-curl -X GET "http://localhost:8080/api/promos/1/comments?page=0&size=20"
-```
-
-#### 응답 (200 OK)
-```json
-{
-  "success": true,
-  "message": "공연 홍보 댓글 목록을 조회했습니다.",
-  "data": {
-    "content": [
-      {
-        "id": 1,
-        "promoId": 1,
-        "description": "정말 기대되는 공연이네요!",
-        "creatorId": 1,
-        "creatorName": "홍길동",
-        "creatorProfilePhoto": "https://example.com/profile.jpg",
-        "likeCount": 5,
-        "createdAt": "2024-03-15T10:30:00",
-        "updatedAt": "2024-03-15T10:30:00"
-      }
-    ],
-    "totalElements": 1,
-    "totalPages": 1,
-    "first": true,
-    "last": true
-  }
-}
-```
-
----
-
-## 9. 공연 홍보 댓글 생성
-### POST `/api/promos/{promoId}/comments`
-
-#### 요청
-```bash
-curl -X POST "http://localhost:8080/api/promos/1/comments" \
-  -H "Authorization: Bearer {JWT_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "description": "정말 기대되는 공연이네요!"
-  }'
-```
-
----
-
-## 10. 공연 홍보 댓글 수정
-### PATCH `/api/promos/comments/{commentId}`
-
-#### 요청
-```bash
-curl -X PATCH "http://localhost:8080/api/promos/comments/1" \
-  -H "Authorization: Bearer {JWT_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "description": "수정된 댓글 내용입니다."
-  }'
-```
-
----
-
-## 11. 공연 홍보 댓글 삭제
-### DELETE `/api/promos/comments/{commentId}`
-
-#### 요청
-```bash
-curl -X DELETE "http://localhost:8080/api/promos/comments/1" \
-  -H "Authorization: Bearer {JWT_TOKEN}"
-```
-
----
-
-## 12. 공연 홍보 좋아요 추가/취소
+## 8. 공연 홍보 좋아요 추가/취소
 ### POST `/api/promos/{promoId}/like`
 
 #### 요청
@@ -475,7 +353,7 @@ curl -X POST "http://localhost:8080/api/promos/1/like" \
   -H "Authorization: Bearer {JWT_TOKEN}"
 ```
 
-#### 응답 (200 OK) - 좋아요 추가 시
+#### 응답 (200 OK) - 좋아요 추가 성공
 ```json
 {
   "success": true,
@@ -484,7 +362,7 @@ curl -X POST "http://localhost:8080/api/promos/1/like" \
 }
 ```
 
-#### 응답 (200 OK) - 좋아요 취소 시
+#### 응답 (200 OK) - 좋아요 취소 성공
 ```json
 {
   "success": true,
@@ -495,7 +373,7 @@ curl -X POST "http://localhost:8080/api/promos/1/like" \
 
 ---
 
-## 13. 공연 홍보 좋아요 상태 확인
+## 9. 공연 홍보 좋아요 상태 조회
 ### GET `/api/promos/{promoId}/like/status`
 
 #### 요청
@@ -518,7 +396,7 @@ curl -X GET "http://localhost:8080/api/promos/1/like/status" \
 
 ---
 
-## 14. 공연 홍보 좋아요 수 조회
+## 10. 공연 홍보 좋아요 수 조회
 ### GET `/api/promos/{promoId}/like/count`
 
 #### 요청
@@ -536,24 +414,41 @@ curl -X GET "http://localhost:8080/api/promos/1/like/count"
 ```
 
 #### 응답 필드
-- `data` (integer): 공연 홍보의 총 좋아요 수
+- `data` (integer): 공연 홍보의 좋아요 수
 
 ---
 
-## 참고사항
-- **권한**: 생성은 인증된 사용자만, 수정/삭제는 작성자만 가능
-- **팀명**: teamName만 사용하며 모든 공연 홍보에 필수
-- **이미지**: 생성/수정 시 함께 처리, 1개만 업로드 가능
+## 에러 응답
+```json
+{
+  "success": false,
+  "message": "에러 메시지",
+  "data": null
+}
+```
+
+### HTTP 상태 코드
+- `200 OK`: 성공
+- `400 Bad Request`: 잘못된 요청
+- `401 Unauthorized`: 인증 실패
+- `403 Forbidden`: 권한 없음
+- `404 Not Found`: 리소스 없음
+
+---
+
+## 참고 항목
+- **권한**: 생성/수정/삭제는 인증된 사용자만, 조회/검색은 모든 사용자 가능
+- **팀명**: teamName 필드가 사용되며 모든 공연 홍보에 필수
+- **이미지**: 생성/수정 시 multipart/form-data 형식으로 처리, 1개만 허용
 - **이미지 형식**: JPG, PNG 등 일반적인 이미지 형식 지원
 - **이미지 교체**: 수정 시 새 이미지 업로드하면 기존 이미지 자동 교체
-- **부분 수정**: PATCH 방식으로 전송된 필드만 수정, 나머지 필드는 기존 값 유지
-- **자동 계산**: viewCount, commentCount, likeCount 자동 관리
-- **소프트 삭제**: 실제 삭제가 아닌 deletedAt 설정, 이미지도 함께 삭제
-- **댓글**: 댓글 생성/삭제 시 공연 홍보의 commentCount 자동 업데이트
-- **좋아요**: 토글 방식으로 동작 (같은 API로 추가/취소), 중복 좋아요 방지
-- **좋아요 상태**: 공연 홍보 목록/상세 조회 시 `isLikedByUser` 필드로 현재 사용자의 좋아요 상태 포함 (true: 좋아요 누름, false: 좋아요 안 누름, null: 인증되지 않은 사용자)
-- **응답 정책**: 
-  - **생성**: 성공 시 생성된 리소스의 ID만 반환 (성능 최적화)
-  - **수정**: 성공 시 간단한 성공 메시지만 반환
-  - **삭제**: 성공 시 간단한 성공 메시지만 반환
-  - **상세 정보 필요 시**: 별도의 조회 API 호출로 최신 데이터 확인
+- **부분 수정**: PATCH 방식으로 필요한 필드만 전송하면 나머지는 기존 값 유지
+- **동적 계산**: viewCount, commentCount, likeCount는 실시간 동기화
+- **소프트 삭제**: deletedAt 필드 사용, 이미지도 함께 삭제 처리
+- **좋아요**: 토글 방식으로 추가/취소 (같은 API), 중복 좋아요 방지
+- **좋아요 상태**: 공연 홍보 목록/상세 조회 시 `isLikedByUser` 필드 포함
+- **정렬 옵션**: `sort` 파라미터로 정렬 기준 지정 가능 (기본값: `createdAt,desc`)
+- **응답 최적화**: 
+  - **생성**: ID만 반환 (성능 최적화)
+  - **수정/삭제**: null 반환
+  - **세부 정보 필요 시**: 별도 조회 API 호출하여 최신 데이터 확인

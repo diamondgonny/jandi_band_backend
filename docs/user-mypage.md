@@ -1,23 +1,23 @@
-# MyPage API 명세서
+# MyPage API
 
-## Base URL
-`/api/my`
-
-## 인증
-JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails)
+## 📱 마이페이지
+JWT 인증 필요
 
 ---
 
-## 1. 내가 참가한 동아리 목록 조회
-### GET `/api/my/clubs`
+## 1. 내가 참가한 동아리 목록
+```
+GET /api/my/clubs
+Authorization: Bearer {JWT_TOKEN}
+```
 
-#### 요청
+### 요청 예시
 ```bash
-curl -X GET "http://localhost:8080/api/my/clubs" \
+curl "http://localhost:8080/api/my/clubs" \
   -H "Authorization: Bearer {JWT_TOKEN}"
 ```
 
-#### 응답 (200 OK)
+### 성공 응답 (200)
 ```json
 {
   "success": true,
@@ -38,29 +38,26 @@ curl -X GET "http://localhost:8080/api/my/clubs" \
 }
 ```
 
-#### 응답 필드
-- `id`: 동아리 ID
-- `name`: 동아리 이름  
-- `description`: 동아리 설명
-- `photoUrl`: 동아리 대표 사진 URL (없으면 null)
-- `universityName`: 대학교 이름 (연합동아리면 null)
-- `isUnionClub`: 연합동아리 여부 (true/false)
-- `myRole`: 내 역할 (REPRESENTATIVE/MEMBER)
+### 응답 필드
+- `myRole`: 내 역할 (`REPRESENTATIVE` 또는 `MEMBER`)
+- `isUnionClub`: 연합동아리 여부
 - `joinedAt`: 가입 일시
-- `memberCount`: 동아리 총 멤버 수
 
 ---
 
-## 2. 내가 참가한 팀 목록 조회
-### GET `/api/my/teams`
+## 2. 내가 참가한 팀 목록
+```
+GET /api/my/teams
+Authorization: Bearer {JWT_TOKEN}
+```
 
-#### 요청
+### 요청 예시
 ```bash
-curl -X GET "http://localhost:8080/api/my/teams" \
+curl "http://localhost:8080/api/my/teams" \
   -H "Authorization: Bearer {JWT_TOKEN}"
 ```
 
-#### 응답 (200 OK)
+### 성공 응답 (200)
 ```json
 {
   "success": true,
@@ -82,33 +79,7 @@ curl -X GET "http://localhost:8080/api/my/teams" \
 }
 ```
 
-#### 응답 필드
-- `id`: 팀 ID
-- `name`: 팀 이름
-- `description`: 팀 설명 (현재 사용하지 않음, 항상 null)
-- `clubId`: 소속 동아리 ID
-- `clubName`: 소속 동아리 이름
+### 응답 필드
+- `description`: 현재 사용하지 않음 (항상 null)
 - `creatorId`: 팀 생성자 ID
 - `creatorName`: 팀 생성자 닉네임
-- `joinedAt`: 팀 가입 일시
-- `createdAt`: 팀 생성 일시
-- `memberCount`: 팀 총 멤버 수
-
----
-
-## 에러 응답
-```json
-{
-  "success": false,
-  "message": "에러 메시지",
-  "data": null
-}
-```
-
-### HTTP 상태 코드
-- `200 OK`: 성공
-- `401 Unauthorized`: 인증 실패
-
-## 참고사항
-- **빈 목록**: 참가한 동아리/팀이 없으면 빈 배열 반환
-- **정렬**: 가입 순서대로 정렬 (joinedAt 내림차순)

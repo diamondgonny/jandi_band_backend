@@ -146,16 +146,8 @@ public class PromoService {
             deleteImage(promo, request.getDeleteImageUrl());
         }
 
-        // 새 이미지 추가
+        // 새 이미지 추가 또는 기존 이미지 업데이트
         if (request.getImage() != null && !request.getImage().isEmpty()) {
-            // 기존 이미지가 있으면 먼저 삭제
-            List<PromoPhoto> existingPhotos = promoPhotoRepository.findByPromoIdAndNotDeleted(promoId);
-            for (PromoPhoto photo : existingPhotos) {
-                photo.setDeletedAt(LocalDateTime.now());
-                s3FileManagementUtil.deleteFileSafely(photo.getImageUrl());
-                promoPhotoRepository.save(photo);
-            }
-            
             processImage(promo, request.getImage(), promo.getCreator());
         }
     }
@@ -182,19 +174,30 @@ public class PromoService {
         promo.setDeletedAt(LocalDateTime.now());
     }
 
-    // 단일 이미지 처리 헬퍼 메소드
+    // 단일 이미지 처리 헬퍼 메소드 - 기존 레코드 업데이트 또는 새 레코드 생성
     private void processImage(Promo promo, MultipartFile image, Users uploader) {
-        // S3에 이미지 업로드
-        String imageUrl = s3FileManagementUtil.uploadFile(image, PROMO_PHOTO_DIR, "공연 홍보 이미지 업로드 실패");
+        List<PromoPhoto> existingPhotos = promoPhotoRepository.findByPromoIdAndNotDeleted(promo.getId());
 
-        // PromoPhoto 엔티티 생성 및 저장
-        PromoPhoto photo = new PromoPhoto();
-        photo.setPromo(promo);
-        photo.setUploader(uploader);
-        photo.setImageUrl(imageUrl);
-        photo.setIsCurrent(true); // 단일 이미지이므로 항상 대표 이미지
+        String newImageUrl = s3FileManagementUtil.uploadFile(image, PROMO_PHOTO_DIR, "공연 홍보 이미지 업로드 실패");
 
-        promoPhotoRepository.save(photo);
+        if (!existingPhotos.isEmpty()) {
+            PromoPhoto existingPhoto = existingPhotos.get(0);
+            String oldImageUrl = existingPhoto.getImageUrl();
+
+            s3FileManagementUtil.deleteFileSafely(oldImageUrl);
+
+            existingPhoto.setImageUrl(newImageUrl);
+            existingPhoto.setUploader(uploader);
+            existingPhoto.setUploadedAt(LocalDateTime.now());
+            promoPhotoRepository.save(existingPhoto);
+        } else {
+            PromoPhoto photo = new PromoPhoto();
+            photo.setPromo(promo);
+            photo.setUploader(uploader);
+            photo.setImageUrl(newImageUrl);
+            photo.setIsCurrent(true);
+            promoPhotoRepository.save(photo);
+        }
     }
 
     // 단일 이미지 삭제 헬퍼 메소드

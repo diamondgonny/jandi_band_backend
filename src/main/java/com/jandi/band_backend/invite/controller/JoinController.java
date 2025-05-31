@@ -1,6 +1,7 @@
 package com.jandi.band_backend.invite.controller;
 
 import com.jandi.band_backend.global.dto.CommonRespDTO;
+import com.jandi.band_backend.invite.dto.JoinRespDTO;
 import com.jandi.band_backend.invite.service.JoinService;
 import com.jandi.band_backend.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,23 +19,23 @@ public class JoinController {
 
     @Operation(summary = "동아리 가입 요청")
     @PostMapping("/clubs")
-    public CommonRespDTO<?> joinClub(
+    public CommonRespDTO<JoinRespDTO> joinClub(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam String code
     ) {
         Integer userId = userDetails.getUserId();
-        joinService.joinClub(userId, code);
-        return CommonRespDTO.success("동아리 가입 성공");
+        JoinRespDTO joinRespDTO = joinService.joinClub(userId, code);
+        return CommonRespDTO.success("동아리 가입 성공", joinRespDTO);
     }
 
     @Operation(summary = "팀 가입 요청")
     @PostMapping("/teams")
-    public CommonRespDTO<?> joinTeam(
+    public CommonRespDTO<JoinRespDTO> joinTeam(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam String code
     ) {
         Integer userId = userDetails.getUserId();
-        joinService.joinTeam(userId, code);
-        return CommonRespDTO.success("팀 가입 성공");
+        JoinRespDTO joinRespDTO = joinService.joinTeam(userId, code);
+        return CommonRespDTO.success("팀 가입 성공", joinRespDTO);
     }
 }

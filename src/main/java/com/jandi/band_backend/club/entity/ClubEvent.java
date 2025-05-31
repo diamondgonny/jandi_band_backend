@@ -33,12 +33,6 @@ public class ClubEvent {
     @Column(name = "end_datetime", nullable = false)
     private LocalDateTime endDatetime;
 
-    @Column(name = "location", length = 255)
-    private String location;
-
-    @Column(name = "address", length = 255)
-    private String address;
-
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 

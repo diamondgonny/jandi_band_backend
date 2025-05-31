@@ -7,4 +7,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public class InviteLinkRespDTO {
     private final String link;
+    private final Integer id;
 }

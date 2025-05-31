@@ -13,6 +13,12 @@ import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.club.repository.ClubPhotoRepository;
 import com.jandi.band_backend.club.repository.ClubRepository;
 import com.jandi.band_backend.club.repository.ClubEventRepository;
+import com.jandi.band_backend.team.repository.TeamRepository;
+import com.jandi.band_backend.team.repository.TeamMemberRepository;
+import com.jandi.band_backend.team.repository.TeamEventRepository;
+import com.jandi.band_backend.team.entity.Team;
+import com.jandi.band_backend.team.entity.TeamMember;
+import com.jandi.band_backend.team.entity.TeamEvent;
 import com.jandi.band_backend.univ.dto.UniversityRespDTO;
 import com.jandi.band_backend.univ.entity.University;
 import com.jandi.band_backend.univ.repository.UniversityRepository;
@@ -43,6 +49,9 @@ public class ClubService {
     private final ClubMemberRepository clubMemberRepository;
     private final ClubPhotoRepository clubPhotoRepository;
     private final ClubEventRepository clubEventRepository;
+    private final TeamRepository teamRepository;
+    private final TeamMemberRepository teamMemberRepository;
+    private final TeamEventRepository teamEventRepository;
     private final UniversityRepository universityRepository;
     private final S3FileManagementUtil s3FileManagementUtil;
     private final PermissionValidationUtil permissionValidationUtil;
@@ -238,6 +247,29 @@ public class ClubService {
         // 권한 확인 (대표자만 삭제 가능)
         permissionValidationUtil.validateClubRepresentativeAccess(clubId, userId, "동아리 삭제 권한이 없습니다.");
 
+        // 동아리에 속한 팀들 연쇄 삭제 처리
+        LocalDateTime deletedTime = LocalDateTime.now();
+        List<Team> teams = teamRepository.findAllByClubIdAndDeletedAtIsNull(clubId);
+        for (Team team : teams) {
+            // 팀 멤버들 소프트 삭제
+            List<TeamMember> teamMembers = teamMemberRepository.findByTeamIdAndDeletedAtIsNull(team.getId());
+            teamMembers.forEach(teamMember -> teamMember.setDeletedAt(deletedTime));
+            teamMemberRepository.saveAll(teamMembers);
+
+            // 팀 이벤트들 소프트 삭제
+            List<TeamEvent> teamEvents = teamEventRepository.findAllByTeamIdAndDeletedAtIsNull(team.getId());
+            teamEvents.forEach(teamEvent -> teamEvent.setDeletedAt(deletedTime));
+            teamEventRepository.saveAll(teamEvents);
+
+            // 팀 소프트 삭제
+            team.setDeletedAt(deletedTime);
+        }
+        teamRepository.saveAll(teams);
+
+        // 동아리 갤러리 사진들 S3 삭제 (정희님)
+
+        // 동아리 갤러리 사진들 DB 레코드 소프트 삭제 (정희님)
+
         // 동아리 대표 사진 S3 삭제
         deleteClubPhoto(clubId, userId);
 
@@ -246,24 +278,24 @@ public class ClubService {
                 .findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
                 .ifPresent(clubPhoto -> {
                     clubPhoto.setIsCurrent(false);
-                    clubPhoto.setDeletedAt(LocalDateTime.now());
+                    clubPhoto.setDeletedAt(deletedTime);
                     clubPhotoRepository.save(clubPhoto);
                 });
 
         // 동아리 멤버 소프트 삭제
         clubMemberRepository.findByClubIdAndDeletedAtIsNull(clubId).forEach(clubMember -> {
-            clubMember.setDeletedAt(LocalDateTime.now());
+            clubMember.setDeletedAt(deletedTime);
             clubMemberRepository.save(clubMember);
         });
 
         // 동아리 이벤트 소프트 삭제
         clubEventRepository.findByClubIdAndDeletedAtIsNull(clubId).forEach(clubEvent -> {
-            clubEvent.setDeletedAt(LocalDateTime.now());
+            clubEvent.setDeletedAt(deletedTime);
             clubEventRepository.save(clubEvent);
         });
 
         // 동아리 삭제 (소프트 삭제)
-        club.setDeletedAt(LocalDateTime.now());
+        club.setDeletedAt(deletedTime);
         clubRepository.save(club);
     }
 

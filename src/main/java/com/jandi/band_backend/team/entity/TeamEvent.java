@@ -33,12 +33,6 @@ public class TeamEvent {
     @Column(name = "end_datetime", nullable = false)
     private LocalDateTime endDatetime;
 
-    @Column(name = "location", length = 255)
-    private String location;
-
-    @Column(name = "address", length = 255)
-    private String address;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "no_position")
     private NoPosition noPosition = NoPosition.NONE;

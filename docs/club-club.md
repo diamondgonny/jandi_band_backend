@@ -145,7 +145,48 @@ curl "http://localhost:8080/api/clubs/1" \
 
 ---
 
-## 4. 동아리 수정
+## 4. 동아리 부원 명단 조회
+```
+GET /api/clubs/{clubId}/members
+```
+
+### 요청 예시
+```bash
+curl "http://localhost:8080/api/clubs/1/members"
+```
+
+### 성공 응답 (200)
+```json
+{
+  "success": true,
+  "message": "동아리 부원 명단 조회 성공",
+  "data": {
+    "id": 1,
+    "members": [
+      {
+        "userId": 1,
+        "name": "김철수",
+        "position": "보컬"
+      },
+      {
+        "userId": 2,
+        "name": "이영희",
+        "position": "기타"
+      }
+    ],
+    "vocalCount": 1,
+    "guitarCount": 1,
+    "keyboardCount": 0,
+    "bassCount": 0,
+    "drumCount": 0,
+    "totalMemberCount": 2
+  }
+}
+```
+
+---
+
+## 5. 동아리 수정
 ```
 PATCH /api/clubs/{clubId}
 Authorization: Bearer {JWT_TOKEN}
@@ -174,7 +215,43 @@ curl -X PATCH "http://localhost:8080/api/clubs/1" \
 
 ---
 
-## 5. 동아리 삭제
+## 6. 동아리 대표자 위임
+```
+PATCH /api/clubs/{clubId}/representative
+Authorization: Bearer {JWT_TOKEN}
+Content-Type: application/json
+```
+
+### 요청 예시
+```bash
+curl -X PATCH "http://localhost:8080/api/clubs/1/representative" \
+  -H "Authorization: Bearer {JWT_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "newRepresentativeUserId": 2
+  }'
+```
+
+### 요청 필드
+- `newRepresentativeUserId`: 새로운 대표자로 지정할 사용자 ID
+
+### 성공 응답 (200)
+```json
+{
+  "success": true,
+  "message": "동아리 대표자 권한이 성공적으로 위임되었습니다.",
+  "data": null
+}
+```
+
+### 실패 응답
+- **400**: 자기 자신에게 위임하는 경우
+- **403**: 동아리 대표자가 아님
+- **404**: 위임할 사용자가 동아리 멤버가 아님
+
+---
+
+## 7. 동아리 삭제
 ```
 DELETE /api/clubs/{clubId}
 Authorization: Bearer {JWT_TOKEN}
@@ -201,31 +278,112 @@ curl -X DELETE "http://localhost:8080/api/clubs/1" \
 
 ---
 
-## 6. 동아리 검색
+## 8. 동아리 탈퇴
 ```
-GET /api/clubs/search?keyword={검색어}&page=0&size=10
+DELETE /api/clubs/{clubId}/members/me
+Authorization: Bearer {JWT_TOKEN}
 ```
 
 ### 요청 예시
 ```bash
-curl "http://localhost:8080/api/clubs/search?keyword=락밴드&page=0&size=10"
+curl -X DELETE "http://localhost:8080/api/clubs/1/members/me" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
 ```
 
 ### 성공 응답 (200)
-동아리 목록 조회와 동일한 형식
+```json
+{
+  "success": true,
+  "message": "동아리에서 성공적으로 탈퇴했습니다.",
+  "data": null
+}
+```
+
+### 실패 응답
+- **400**: 동아리 대표자는 탈퇴 불가 (먼저 대표자 권한 위임 필요)
+- **404**: 동아리 멤버가 아님
 
 ---
 
-## 7. 동아리 필터링
+## 9. 동아리 부원 강퇴
 ```
-GET /api/clubs/filter?universityName={대학명}&page=0&size=10
+DELETE /api/clubs/{clubId}/members/{userId}
+Authorization: Bearer {JWT_TOKEN}
 ```
 
 ### 요청 예시
 ```bash
-curl "http://localhost:8080/api/clubs/filter?universityName=서울대학교"
+curl -X DELETE "http://localhost:8080/api/clubs/1/members/2" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
 ```
 
-### 쿼리 파라미터
-- `universityName`: 대학교명 (선택)
-- `isUnionClub`: 연합동아리 여부 (선택)
+### 성공 응답 (200)
+```json
+{
+  "success": true,
+  "message": "해당 부원이 성공적으로 강퇴되었습니다.",
+  "data": null
+}
+```
+
+### 실패 응답
+- **400**: 대표자를 강퇴하려는 경우
+- **403**: 동아리 대표자가 아님
+- **404**: 강퇴할 사용자가 동아리 멤버가 아님
+
+---
+
+## 10. 동아리 대표 사진 업로드
+```
+POST /api/clubs/{clubId}/main-image
+Authorization: Bearer {JWT_TOKEN}
+Content-Type: multipart/form-data
+```
+
+### 요청 예시
+```bash
+curl -X POST "http://localhost:8080/api/clubs/1/main-image" \
+  -H "Authorization: Bearer {JWT_TOKEN}" \
+  -F "image=@/path/to/image.jpg"
+```
+
+### 요청 필드
+- `image`: 업로드할 이미지 파일
+
+### 성공 응답 (200)
+```json
+{
+  "success": true,
+  "message": "동아리 대표 사진이 성공적으로 업로드되었습니다.",
+  "data": "https://example.com/images/club-photo.jpg"
+}
+```
+
+### 실패 응답
+- **403**: 동아리 멤버가 아님
+
+---
+
+## 11. 동아리 대표 사진 삭제
+```
+DELETE /api/clubs/{clubId}/main-image
+Authorization: Bearer {JWT_TOKEN}
+```
+
+### 요청 예시
+```bash
+curl -X DELETE "http://localhost:8080/api/clubs/1/main-image" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+### 성공 응답 (200)
+```json
+{
+  "success": true,
+  "message": "동아리 대표 사진이 성공적으로 삭제되었습니다.",
+  "data": null
+}
+```
+
+### 실패 응답
+- **403**: 동아리 멤버가 아님

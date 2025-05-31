@@ -208,7 +208,78 @@ curl -X POST "http://localhost:8080/api/polls/1/songs" \
 
 ---
 
-## 5. 곡에 투표하기
+## 5. 투표 곡 목록 조회 (정렬)
+```
+GET /api/polls/{pollId}/songs?sortBy=LIKE&order=desc
+Authorization: Bearer {JWT_TOKEN}
+```
+
+### 요청 예시
+```bash
+# 좋아요 많은 순 (기본값)
+curl "http://localhost:8080/api/polls/1/songs" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+
+# 종합 점수 높은 순
+curl "http://localhost:8080/api/polls/1/songs?sortBy=SCORE&order=desc" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+
+# 별로에요 적은 순
+curl "http://localhost:8080/api/polls/1/songs?sortBy=DISLIKE&order=asc" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+### 쿼리 파라미터
+- `sortBy`: 정렬 기준 (기본값: LIKE)
+  - `LIKE`: 좋아요 수 기준
+  - `DISLIKE`: 싫어요 수 기준
+  - `SCORE`: 종합 점수 기준
+- `order`: 정렬 순서 (기본값: desc)
+  - `desc`: 내림차순 (높은 값부터)
+  - `asc`: 오름차순 (낮은 값부터)
+
+### 성공 응답 (200)
+```json
+{
+  "success": true,
+  "message": "투표 곡 목록을 조회했습니다.",
+  "data": [
+    {
+      "id": 1,
+      "pollId": 1,
+      "songName": "Bohemian Rhapsody",
+      "artistName": "Queen",
+      "createdAt": "2024-03-15T11:00:00",
+      "likeCount": 8,
+      "dislikeCount": 1,
+      "cantCount": 2,
+      "hajjCount": 3
+    },
+    {
+      "id": 2,
+      "pollId": 1,
+      "songName": "Welcome To The Black Parade",
+      "artistName": "My Chemical Romance",
+      "createdAt": "2024-03-15T12:00:00",
+      "likeCount": 5,
+      "dislikeCount": 2,
+      "cantCount": 1,
+      "hajjCount": 1
+    }
+  ]
+}
+```
+
+### 종합 점수 계산 방식
+```
+점수 = (긍정 투표 수) - (부정 투표 수)
+긍정: LIKE + HAJJ
+부정: DISLIKE + CANT
+```
+
+---
+
+## 6. 곡에 투표하기
 ```
 PUT /api/polls/{pollId}/songs/{songId}/votes/{emoji}
 Authorization: Bearer {JWT_TOKEN}
@@ -230,18 +301,76 @@ curl -X PUT "http://localhost:8080/api/polls/1/songs/1/votes/LIKE" \
 ```json
 {
   "success": true,
-  "message": "투표가 성공적으로 등록되었습니다.",
-  "data": null
+  "message": "투표가 설정되었습니다.",
+  "data": {
+    "id": 1,
+    "pollId": 1,
+    "songName": "Bohemian Rhapsody",
+    "artistName": "Queen",
+    "youtubeUrl": "https://www.youtube.com/watch?v=fJ9rUzIMcZQ",
+    "description": "클래식한 록 명곡입니다",
+    "suggesterId": 1,
+    "suggesterName": "홍길동",
+    "suggesterProfilePhoto": "https://example.com/profile.jpg",
+    "createdAt": "2024-03-15T11:00:00",
+    "likeCount": 6,
+    "dislikeCount": 1,
+    "cantCount": 2,
+    "hajjCount": 0,
+    "userVoteType": "LIKE"
+  }
 }
 ```
 
 ### 실패 응답
-- **400**: 마감된 투표
+- **400**: 마감된 투표 또는 같은 타입 재투표
 - **404**: 존재하지 않는 투표 또는 곡
 
 ---
 
-## 6. 투표 삭제
+## 7. 곡 투표 취소
+```
+DELETE /api/polls/{pollId}/songs/{songId}/votes/{emoji}
+Authorization: Bearer {JWT_TOKEN}
+```
+
+### 요청 예시
+```bash
+curl -X DELETE "http://localhost:8080/api/polls/1/songs/1/votes/LIKE" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+### 성공 응답 (200)
+```json
+{
+  "success": true,
+  "message": "투표가 취소되었습니다.",
+  "data": {
+    "id": 1,
+    "pollId": 1,
+    "songName": "Bohemian Rhapsody",
+    "artistName": "Queen",
+    "youtubeUrl": "https://www.youtube.com/watch?v=fJ9rUzIMcZQ",
+    "description": "클래식한 록 명곡입니다",
+    "suggesterId": 1,
+    "suggesterName": "홍길동",
+    "suggesterProfilePhoto": "https://example.com/profile.jpg",
+    "createdAt": "2024-03-15T11:00:00",
+    "likeCount": 5,
+    "dislikeCount": 1,
+    "cantCount": 2,
+    "hajjCount": 0,
+    "userVoteType": null
+  }
+}
+```
+
+### 실패 응답
+- **404**: 해당 타입의 투표를 찾을 수 없음
+
+---
+
+## 8. 투표 삭제
 ```
 DELETE /api/polls/{pollId}
 Authorization: Bearer {JWT_TOKEN}
@@ -267,7 +396,7 @@ curl -X DELETE "http://localhost:8080/api/polls/1" \
 
 ---
 
-## 7. 곡 삭제
+## 9. 곡 삭제
 ```
 DELETE /api/polls/{pollId}/songs/{songId}
 Authorization: Bearer {JWT_TOKEN}

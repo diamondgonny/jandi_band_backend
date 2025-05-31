@@ -30,6 +30,11 @@ JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails)
 
 ---
 
+## 🎵 팀 관리
+JWT 인증 필요
+
+---
+
 ## 1. 팀 생성
 ### POST `/api/clubs/{clubId}/teams`
 
@@ -39,12 +44,12 @@ curl -X POST "http://localhost:8080/api/clubs/1/teams" \
   -H "Authorization: Bearer {JWT_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "락밴드 A팀"
+    "name": "밴드 팀"
   }'
 ```
 
 #### 요청 필드
-- `name` (string, 필수): 팀 이름 (최대 100자)
+- `name`: 팀 이름
 
 #### 응답 (201 Created)
 ```json
@@ -53,31 +58,29 @@ curl -X POST "http://localhost:8080/api/clubs/1/teams" \
   "message": "곡 팀이 성공적으로 생성되었습니다.",
   "data": {
     "id": 1,
-    "name": "락밴드 A팀",
+    "name": "밴드 팀",
     "clubId": 1,
     "clubName": "락밴드 동아리",
     "creatorId": 1,
     "creatorName": "홍길동",
+    "createdAt": "2024-03-15T10:30:00",
+    "memberCount": 1,
     "members": [
       {
         "userId": 1,
-        "name": "홍길동",
+        "nickname": "홍길동",
+        "profilePhoto": "https://example.com/profile.jpg",
         "position": "GUITAR",
-        "timetableUpdatedAt": null,
-        "isSubmitted": false,
-        "timetableData": null
+        "joinedAt": "2024-03-15T10:30:00"
       }
-    ],
-    "suggestedScheduleAt": null,
-    "submissionProgress": {
-      "submittedMember": 0,
-      "totalMember": 1
-    },
-    "createdAt": "2024-03-15T10:30:00",
-    "updatedAt": "2024-03-15T10:30:00"
+    ]
   }
 }
 ```
+
+### 실패 응답
+- **400**: 중복된 팀 이름
+- **403**: 동아리 멤버가 아님
 
 ---
 
@@ -91,8 +94,8 @@ curl -X GET "http://localhost:8080/api/clubs/1/teams?page=0&size=5" \
 ```
 
 #### 쿼리 파라미터
-- `page` (integer): 페이지 번호 (기본값: 0)
-- `size` (integer): 페이지 크기 (기본값: 5)
+- `page`: 페이지 번호 (기본값: 0)
+- `size`: 페이지 크기 (기본값: 5)
 
 #### 응답 (200 OK)
 ```json
@@ -103,23 +106,22 @@ curl -X GET "http://localhost:8080/api/clubs/1/teams?page=0&size=5" \
     "content": [
       {
         "id": 1,
-        "name": "락밴드 A팀",
+        "name": "밴드 팀",
         "clubId": 1,
         "clubName": "락밴드 동아리",
         "creatorId": 1,
         "creatorName": "홍길동",
-        "memberCount": 4,
-        "createdAt": "2024-03-15T10:30:00"
+        "createdAt": "2024-03-15T10:30:00",
+        "memberCount": 4
       }
     ],
     "pageInfo": {
-      "page": 0,
-      "size": 5,
       "totalElements": 1,
       "totalPages": 1,
       "first": true,
       "last": true,
-      "empty": false
+      "size": 5,
+      "number": 0
     }
   }
 }
@@ -143,47 +145,36 @@ curl -X GET "http://localhost:8080/api/teams/1" \
   "message": "곡 팀 정보를 성공적으로 조회했습니다.",
   "data": {
     "id": 1,
-    "name": "락밴드 A팀",
+    "name": "밴드 팀",
     "clubId": 1,
     "clubName": "락밴드 동아리",
     "creatorId": 1,
     "creatorName": "홍길동",
+    "createdAt": "2024-03-15T10:30:00",
+    "memberCount": 4,
     "members": [
       {
         "userId": 1,
-        "name": "홍길동",
+        "nickname": "홍길동",
+        "profilePhoto": "https://example.com/profile.jpg",
         "position": "GUITAR",
-        "timetableUpdatedAt": "2024-03-16T14:30:00",
-        "isSubmitted": true,
-        "timetableData": {
-          "Mon": ["14:00", "15:00"],
-          "Tue": ["18:00", "19:00"],
-          "Wed": ["14:00", "15:00"],
-          "Thu": [],
-          "Fri": ["17:00", "18:00"],
-          "Sat": ["10:00", "11:00"],
-          "Sun": []
-        }
+        "joinedAt": "2024-03-15T10:30:00"
       },
       {
         "userId": 2,
-        "name": "김철수",
-        "position": "BASS",
-        "timetableUpdatedAt": null,
-        "isSubmitted": false,
-        "timetableData": null
+        "nickname": "김철수",
+        "profilePhoto": "https://example.com/profile2.jpg",
+        "position": "VOCAL",
+        "joinedAt": "2024-03-16T14:20:00"
       }
-    ],
-    "suggestedScheduleAt": "2024-03-16T10:00:00",
-    "submissionProgress": {
-      "submittedMember": 1,
-      "totalMember": 2
-    },
-    "createdAt": "2024-03-15T10:30:00",
-    "updatedAt": "2024-03-15T10:30:00"
+    ]
   }
 }
 ```
+
+### 실패 응답
+- **403**: 동아리 멤버가 아님
+- **404**: 존재하지 않는 팀
 
 ---
 
@@ -196,7 +187,7 @@ curl -X PATCH "http://localhost:8080/api/teams/1" \
   -H "Authorization: Bearer {JWT_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "수정된 락밴드 A팀"
+    "name": "수정된 팀 이름"
   }'
 ```
 
@@ -207,18 +198,19 @@ curl -X PATCH "http://localhost:8080/api/teams/1" \
   "message": "곡 팀 이름이 성공적으로 수정되었습니다.",
   "data": {
     "id": 1,
-    "name": "수정된 락밴드 A팀",
+    "name": "수정된 팀 이름",
     "clubId": 1,
     "clubName": "락밴드 동아리",
     "creatorId": 1,
     "creatorName": "홍길동",
-    "memberCount": 1,
-    "createdAt": "2024-03-15T10:30:00"
+    "createdAt": "2024-03-15T10:30:00",
+    "memberCount": 4
   }
 }
 ```
 
-**참고**: 실제 응답은 `TeamRespDTO` 구조를 따름
+### 실패 응답
+- **403**: 팀 생성자가 아님
 
 ---
 
@@ -239,6 +231,10 @@ curl -X DELETE "http://localhost:8080/api/teams/1" \
   "data": null
 }
 ```
+
+### 실패 응답
+- **403**: 팀 생성자가 아님
+- **404**: 존재하지 않는 팀
 
 #### 삭제 동작
 팀 삭제 시 다음 리소스들이 함께 소프트 삭제됩니다:
@@ -268,17 +264,181 @@ curl -X DELETE "http://localhost:8080/api/teams/1/members/me" \
 }
 ```
 
-#### 에러 응답 (400 Bad Request)
+### 실패 응답
+- **400**: 팀 생성자는 탈퇴 불가 (팀 삭제 필요)
+- **404**: 팀 멤버가 아님
+
+---
+
+## 7. 팀 연습 일정 생성
+### POST `/api/teams/{teamId}/practice-schedules`
+
+#### 요청
+```bash
+curl -X POST "http://localhost:8080/api/teams/1/practice-schedules" \
+  -H "Authorization: Bearer {JWT_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "주간 연습",
+    "description": "이번 주 연습 일정입니다",
+    "startDatetime": "2024-03-20T19:00:00",
+    "endDatetime": "2024-03-20T21:00:00",
+    "location": "연습실 A"
+  }'
+```
+
+#### 요청 필드
+- `title`: 연습 일정 제목
+- `description`: 연습 일정 설명
+- `startDatetime`: 연습 일정 시작 시간
+- `endDatetime`: 연습 일정 종료 시간
+- `location`: 연습 일정 장소
+
+#### 응답 (201 Created)
 ```json
 {
-  "success": false,
-  "message": "마지막 남은 팀원은 탈퇴할 수 없습니다. 팀을 삭제해주세요.",
-  "errorCode": "TEAM_LEAVE_NOT_ALLOWED",
+  "success": true,
+  "message": "연습 일정이 성공적으로 생성되었습니다.",
+  "data": {
+    "id": 1,
+    "title": "주간 연습",
+    "description": "이번 주 연습 일정입니다",
+    "startDatetime": "2024-03-20T19:00:00",
+    "endDatetime": "2024-03-20T21:00:00",
+    "location": "연습실 A",
+    "teamId": 1,
+    "teamName": "밴드 팀",
+    "creatorId": 1,
+    "creatorName": "홍길동",
+    "createdAt": "2024-03-15T10:30:00"
+  }
+}
+```
+
+---
+
+## 8. 팀 연습 일정 목록 조회
+### GET `/api/teams/{teamId}/practice-schedules?page=0&size=10`
+
+#### 요청
+```bash
+curl "http://localhost:8080/api/teams/1/practice-schedules?page=0&size=10" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+#### 쿼리 파라미터
+- `page`: 페이지 번호 (기본값: 0)
+- `size`: 페이지 크기 (기본값: 10)
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "연습 일정 목록을 성공적으로 조회했습니다.",
+  "data": {
+    "content": [
+      {
+        "id": 1,
+        "title": "주간 연습",
+        "description": "이번 주 연습 일정입니다",
+        "startDatetime": "2024-03-20T19:00:00",
+        "endDatetime": "2024-03-20T21:00:00",
+        "location": "연습실 A",
+        "teamId": 1,
+        "teamName": "밴드 팀",
+        "creatorId": 1,
+        "creatorName": "홍길동",
+        "createdAt": "2024-03-15T10:30:00"
+      }
+    ],
+    "pageInfo": {
+      "totalElements": 1,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "size": 10,
+      "number": 0
+    }
+  }
+}
+```
+
+---
+
+## 9. 팀 연습 일정 상세 조회
+### GET `/api/practice-schedules/{scheduleId}`
+
+#### 요청
+```bash
+curl "http://localhost:8080/api/practice-schedules/1" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "연습 일정을 성공적으로 조회했습니다.",
+  "data": {
+    "id": 1,
+    "title": "주간 연습",
+    "description": "이번 주 연습 일정입니다",
+    "startDatetime": "2024-03-20T19:00:00",
+    "endDatetime": "2024-03-20T21:00:00",
+    "location": "연습실 A",
+    "teamId": 1,
+    "teamName": "밴드 팀",
+    "creatorId": 1,
+    "creatorName": "홍길동",
+    "createdAt": "2024-03-15T10:30:00"
+  }
+}
+```
+
+---
+
+## 10. 팀 연습 일정 수정
+### PATCH `/api/practice-schedules/{scheduleId}`
+
+#### 요청
+```bash
+curl -X PATCH "http://localhost:8080/api/practice-schedules/1" \
+  -H "Authorization: Bearer {JWT_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "수정된 연습",
+    "location": "연습실 B"
+  }'
+```
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "연습 일정이 성공적으로 수정되었습니다.",
   "data": null
 }
 ```
 
 ---
+
+## 11. 팀 연습 일정 삭제
+### DELETE `/api/practice-schedules/{scheduleId}`
+
+#### 요청
+```bash
+curl -X DELETE "http://localhost:8080/api/practice-schedules/1" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "연습 일정이 성공적으로 삭제되었습니다.",
+  "data": null
+}
+```
 
 ## 에러 응답
 ```json

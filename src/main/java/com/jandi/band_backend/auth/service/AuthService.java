@@ -3,6 +3,8 @@ package com.jandi.band_backend.auth.service;
 import com.jandi.band_backend.auth.dto.*;
 import com.jandi.band_backend.auth.dto.kakao.KakaoUserInfoDTO;
 import com.jandi.band_backend.auth.service.kakao.KakaoUserService;
+import com.jandi.band_backend.club.entity.ClubMember;
+import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.global.exception.InvalidAccessException;
 import com.jandi.band_backend.global.exception.InvalidTokenException;
 import com.jandi.band_backend.global.exception.UniversityNotFoundException;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -29,6 +32,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final UserPhotoRepository userPhotoRepository;
     private final UniversityRepository universityRepository;
+    private final ClubMemberRepository clubMemberRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final KakaoUserService kakaoUserService;
 
@@ -95,9 +99,18 @@ public class AuthService {
     /// 회원탈퇴
     @Transactional
     public void cancel(Integer userId) {
-        // DB에서 탈퇴 처리
+        // 만약 동아리장이라면 탈퇴 불가
         Users user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
+
+        List<String> myRepresentativeClub
+                = clubMemberRepository.findClubNamesByUserRole(userId, ClubMember.MemberRole.REPRESENTATIVE);
+        if(!myRepresentativeClub.isEmpty()) {
+            String clubNames = String.join(", ", myRepresentativeClub);
+            throw new RuntimeException("탈퇴할 수 없습니다: 해당 동아리 대표직을 타인에게 위임 후 재시도해주세요: " + clubNames);
+        }
+
+        // DB에서 탈퇴 처리
         user.setIsRegistered(false);
         user.setDeletedAt(LocalDateTime.now());
         userRepository.save(user);

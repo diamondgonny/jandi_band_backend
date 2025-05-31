@@ -30,7 +30,7 @@ JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails)
 
 ---
 
-## 🎵 팀 관리
+## 팀 관리
 JWT 인증 필요
 
 ---
@@ -397,32 +397,7 @@ curl "http://localhost:8080/api/practice-schedules/1" \
 
 ---
 
-## 10. 팀 연습 일정 수정
-### PATCH `/api/practice-schedules/{scheduleId}`
-
-#### 요청
-```bash
-curl -X PATCH "http://localhost:8080/api/practice-schedules/1" \
-  -H "Authorization: Bearer {JWT_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "수정된 연습",
-    "location": "연습실 B"
-  }'
-```
-
-#### 응답 (200 OK)
-```json
-{
-  "success": true,
-  "message": "연습 일정이 성공적으로 수정되었습니다.",
-  "data": null
-}
-```
-
----
-
-## 11. 팀 연습 일정 삭제
+## 10. 팀 연습 일정 삭제
 ### DELETE `/api/practice-schedules/{scheduleId}`
 
 #### 요청

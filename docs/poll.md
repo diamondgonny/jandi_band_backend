@@ -292,10 +292,10 @@ curl -X PUT "http://localhost:8080/api/polls/1/songs/1/votes/LIKE" \
 ```
 
 ### 투표 타입
-- `LIKE`: 좋아요 (👍)
-- `DISLIKE`: 싫어요 (👎)
-- `CANT`: 못해요 (😅)
-- `HAJJ`: 하고싶어요 (🔥)
+- `LIKE`: 좋아요
+- `DISLIKE`: 싫어요
+- `CANT`: 못해요
+- `HAJJ`: 하고싶어요
 
 ### 성공 응답 (200)
 ```json
@@ -367,55 +367,3 @@ curl -X DELETE "http://localhost:8080/api/polls/1/songs/1/votes/LIKE" \
 
 ### 실패 응답
 - **404**: 해당 타입의 투표를 찾을 수 없음
-
----
-
-## 8. 투표 삭제
-```
-DELETE /api/polls/{pollId}
-Authorization: Bearer {JWT_TOKEN}
-```
-
-### 요청 예시
-```bash
-curl -X DELETE "http://localhost:8080/api/polls/1" \
-  -H "Authorization: Bearer {JWT_TOKEN}"
-```
-
-### 성공 응답 (200)
-```json
-{
-  "success": true,
-  "message": "투표가 성공적으로 삭제되었습니다.",
-  "data": null
-}
-```
-
-### 실패 응답
-- **403**: 투표 생성자가 아님
-
----
-
-## 9. 곡 삭제
-```
-DELETE /api/polls/{pollId}/songs/{songId}
-Authorization: Bearer {JWT_TOKEN}
-```
-
-### 요청 예시
-```bash
-curl -X DELETE "http://localhost:8080/api/polls/1/songs/1" \
-  -H "Authorization: Bearer {JWT_TOKEN}"
-```
-
-### 성공 응답 (200)
-```json
-{
-  "success": true,
-  "message": "곡이 성공적으로 삭제되었습니다.",
-  "data": null
-}
-```
-
-### 실패 응답
-- **403**: 곡 제안자가 아님

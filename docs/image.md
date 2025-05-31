@@ -1,6 +1,6 @@
 # Image API
 
-## 📷 이미지 업로드
+## 이미지 업로드
 JWT 인증 필요
 
 ---
@@ -67,7 +67,7 @@ curl -X DELETE "http://localhost:8080/api/images?imageUrl=https://example.com/im
 
 ---
 
-## 📝 지원 형식
-- **파일 형식**: JPG, JPEG, PNG, GIF
-- **최대 크기**: 10MB
-- **용도**: 프로필 사진, 동아리 사진, 홍보글 이미지 
+## 지원 형식
+- JPG, JPEG, PNG, GIF, WebP
+- 최대 크기: 10MB
+- 용도: 프로필 사진, 동아리 사진, 홍보글 이미지 

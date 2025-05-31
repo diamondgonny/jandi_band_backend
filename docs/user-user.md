@@ -1,6 +1,6 @@
 # User API
 
-## 👤 사용자 정보 관리
+## 사용자 정보 관리
 JWT 인증 필요
 
 ---
@@ -79,10 +79,9 @@ curl -X PATCH "http://localhost:8080/api/users/me/info" \
 
 ---
 
-## 🎵 포지션 값
+## 포지션 값
 - `VOCAL`: 보컬
 - `GUITAR`: 기타
 - `KEYBOARD`: 키보드
 - `BASS`: 베이스
 - `DRUM`: 드럼
-- `OTHER`: 기타

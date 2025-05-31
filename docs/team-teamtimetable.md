@@ -29,7 +29,7 @@ curl -X POST "http://localhost:8080/api/teams/1/schedule-suggestion" \
 ```json
 {
   "success": true,
-  "message": "스케줄 조율 모드가 시작되었습니다.",
+  "message": "스케줄 조율 모드가 시작되었습니다",
   "data": {
     "teamId": 1,
     "suggestedScheduleAt": "2024-05-15T10:30:00",

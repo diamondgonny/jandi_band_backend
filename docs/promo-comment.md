@@ -35,12 +35,13 @@
 
 #### 요청
 ```bash
-curl -X GET "http://localhost:8080/api/promos/1/comments?page=0&size=20"
+curl -X GET "http://localhost:8080/api/promos/1/comments?page=0&size=20&sort=createdAt,desc"
 ```
 
 #### 쿼리 파라미터
 - `page` (integer): 페이지 번호 (기본값: 0)
 - `size` (integer): 페이지 크기 (기본값: 20)
+- `sort` (string): 정렬 기준 (기본값: "createdAt,desc")
 
 #### 응답 (200 OK)
 ```json
@@ -106,6 +107,7 @@ curl -X POST "http://localhost:8080/api/promos/1/comments" \
     "creatorName": "홍길동",
     "creatorProfilePhoto": "https://example.com/profile.jpg",
     "likeCount": 0,
+    "isLikedByUser": null,
     "createdAt": "2024-03-15T10:30:00",
     "updatedAt": "2024-03-15T10:30:00"
   }
@@ -143,6 +145,7 @@ curl -X PATCH "http://localhost:8080/api/promos/comments/1" \
     "creatorName": "홍길동",
     "creatorProfilePhoto": "https://example.com/profile.jpg",
     "likeCount": 5,
+    "isLikedByUser": true,
     "createdAt": "2024-03-15T10:30:00",
     "updatedAt": "2024-03-15T11:00:00"
   }
@@ -256,6 +259,7 @@ curl -X GET "http://localhost:8080/api/promos/comments/1/like/count"
 
 ### HTTP 상태 코드
 - `200 OK`: 성공
+- `201 Created`: 생성 성공
 - `400 Bad Request`: 잘못된 요청
 - `401 Unauthorized`: 인증 실패
 - `403 Forbidden`: 권한 없음
@@ -270,8 +274,10 @@ curl -X GET "http://localhost:8080/api/promos/comments/1/like/count"
 ## 참고사항
 - **권한**: 댓글 생성은 모든 인증된 사용자, 수정/삭제는 댓글 작성자만 가능
 - **소프트 삭제**: 실제 삭제가 아닌 deletedAt 설정
-- **페이지네이션**: 기본 크기 20개, 생성 시간 오름차순 정렬
+- **페이지네이션**: 기본 크기 20개, 정렬 기본값은 생성 시간 내림차순 (`createdAt,desc`)
+- **정렬 옵션**: `sort` 파라미터로 정렬 기준과 방향 지정 가능 (예: `createdAt,asc`, `likeCount,desc`)
 - **자동 계산**: 댓글 생성/삭제 시 공연 홍보의 commentCount 자동 업데이트
 - **프로필 사진**: 댓글 작성자의 현재 프로필 사진 URL 포함 (없으면 null)
 - **좋아요**: 토글 방식으로 동작 (같은 API로 추가/취소), 중복 좋아요 방지
-- **좋아요 상태**: 댓글 목록 조회 시 `isLikedByUser` 필드로 현재 사용자의 좋아요 상태 포함 (true: 좋아요 누름, false: 좋아요 안 누름, null: 인증되지 않은 사용자) 
+- **좋아요 상태**: 댓글 목록 조회 시 `isLikedByUser` 필드로 현재 사용자의 좋아요 상태 포함 (true: 좋아요 누름, false: 좋아요 안 누름, null: 인증되지 않은 사용자)
+- **응답 구조**: 실제 `PromoCommentRespDTO` 구조 반영, `isLikedByUser` 필드 포함 

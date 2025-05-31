@@ -1,23 +1,21 @@
-# University & Region API 명세서
+# University & Region API
 
-## Base URL
-- University: `/api/univ`
-- Region: `/api/region`
-
-## 인증
+## 🏫 대학교 및 지역 정보
 인증 불필요 (공개 API)
 
 ---
 
 ## 1. 지역 목록 조회
-### GET `/api/region/all`
-
-#### 요청
-```bash
-curl -X GET "http://localhost:8080/api/region/all"
+```
+GET /api/region/all
 ```
 
-#### 응답 (200 OK)
+### 요청 예시
+```bash
+curl "http://localhost:8080/api/region/all"
+```
+
+### 성공 응답 (200)
 ```json
 {
   "success": true,
@@ -32,7 +30,7 @@ curl -X GET "http://localhost:8080/api/region/all"
 }
 ```
 
-#### 응답 필드
+### 응답 필드
 - `id`: 지역 ID
 - `code`: 지역 코드 (SEOUL, BUSAN 등)
 - `name`: 지역명
@@ -40,28 +38,35 @@ curl -X GET "http://localhost:8080/api/region/all"
 ---
 
 ## 2. 대학교 목록 조회
-### GET `/api/univ/all`
-
-#### 요청
-```bash
-curl -X GET "http://localhost:8080/api/univ/all"
-curl -X GET "http://localhost:8080/api/univ/all?filter=TYPE&type=UNIVERSITY"
-curl -X GET "http://localhost:8080/api/univ/all?filter=REGION&region=SEOUL"
+```
+GET /api/univ/all?filter=ALL&type=UNIVERSITY&region=SEOUL
 ```
 
-#### 쿼리 파라미터
-- `filter` (string): 필터 타입 (기본값: ALL)
+### 요청 예시
+```bash
+# 전체 조회
+curl "http://localhost:8080/api/univ/all"
+
+# 종류별 조회
+curl "http://localhost:8080/api/univ/all?filter=TYPE&type=UNIVERSITY"
+
+# 지역별 조회
+curl "http://localhost:8080/api/univ/all?filter=REGION&region=SEOUL"
+```
+
+### 쿼리 파라미터
+- `filter`: 필터 타입 (기본값: ALL)
   - `ALL`: 전체 조회
   - `TYPE`: 종류별 조회 (type 파라미터 필요)
   - `REGION`: 지역별 조회 (region 파라미터 필요)
-- `type` (string): 대학교 종류
+- `type`: 대학교 종류
   - `COLLEGE`: 전문대학
   - `UNIVERSITY`: 대학교  
   - `GRADUATE`: 일반대학원
   - `POLYTECH`: 한국폴리텍
-- `region` (string): 지역 코드
+- `region`: 지역 코드
 
-#### 응답 (200 OK)
+### 성공 응답 (200)
 ```json
 {
   "success": true,
@@ -75,21 +80,23 @@ curl -X GET "http://localhost:8080/api/univ/all?filter=REGION&region=SEOUL"
 }
 ```
 
-#### 응답 필드
+### 응답 필드
 - `id`: 대학교 ID
 - `name`: 대학교명
 
 ---
 
 ## 3. 대학교 상세 조회
-### GET `/api/univ/{univId}`
-
-#### 요청
-```bash
-curl -X GET "http://localhost:8080/api/univ/1"
+```
+GET /api/univ/{univId}
 ```
 
-#### 응답 (200 OK)
+### 요청 예시
+```bash
+curl "http://localhost:8080/api/univ/1"
+```
+
+### 성공 응답 (200)
 ```json
 {
   "success": true,
@@ -103,29 +110,11 @@ curl -X GET "http://localhost:8080/api/univ/1"
 }
 ```
 
-#### 응답 필드
+### 응답 필드
 - `universityCode`: 대학교 코드
 - `name`: 대학교명
 - `region`: 소재 지역명
 - `address`: 주소
 
----
-
-## 에러 응답
-```json
-{
-  "success": false,
-  "message": "에러 메시지",
-  "data": null
-}
-```
-
-### HTTP 상태 코드
-- `200 OK`: 성공
-- `400 Bad Request`: 잘못된 파라미터
-- `404 Not Found`: 리소스 없음
-
-## 참고사항
-- **필터링**: TYPE 필터는 대학교 이름에 해당 키워드 포함 여부로 판단
-- **대소문자**: filter, type 파라미터는 대소문자 구분 안함
-- **지역 코드**: `/api/region/all`로 확인 가능
+### 실패 응답
+- **404**: 존재하지 않는 대학교 ID

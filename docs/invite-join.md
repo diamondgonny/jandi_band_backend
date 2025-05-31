@@ -1,172 +1,146 @@
-# Invite & Join API 명세서
+# Invite & Join API
 
-## Base URL
-`/api`
-
-## 인증
-모든 초대/가입 API는 JWT 인증 필요.
+## 🤝 초대 및 가입
+JWT 인증 필요
 
 ---
 
-## 1. 동아리 초대 링크 생성
-### POST `/api/invite/clubs/{clubId}`
-
-#### 설명
-특정 동아리의 초대 링크를 생성한다.  
-프론트에서는 생성된 링크를 클립보드에 복사하거나, 카카오톡으로 공유할 수 있다.
-
-#### 요청 예시 (React에서)
-```js
-const token = sessionStorage.getItem('userToken');
-axios.post(
-  `http://localhost:8080/api/invite/clubs/${clubId}`,
-  {},
-  {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  }
-)
-.then(response => {
-  const inviteLink = response.data.data.link;
-  console.log('생성된 초대 링크:', inviteLink);
-});
+## 1. 동아리 초대 코드 생성
+```
+POST /api/invites/clubs/{clubId}
+Authorization: Bearer {JWT_TOKEN}
 ```
 
-#### 요청
+### 요청 예시
 ```bash
-curl -X POST "http://localhost:8080/api/invite/clubs/1" \
+curl -X POST "http://localhost:8080/api/invites/clubs/1" \
   -H "Authorization: Bearer {JWT_TOKEN}"
 ```
 
-#### 응답 (200 OK)
+### 성공 응답 (201)
 ```json
 {
   "success": true,
-  "message": "동아리 초대 링크 생성 성공",
+  "message": "동아리 초대 코드가 생성되었습니다.",
   "data": {
-    "link": "https://rhythmeetdevelop.netlify.app/invite/accept?code=jaCprFeFtE"
+    "inviteCode": "ABC123DEF",
+    "clubId": 1,
+    "clubName": "락밴드 동아리",
+    "expiresAt": "2024-03-22T10:30:00"
   }
 }
 ```
+
+### 실패 응답
+- **403**: 동아리 대표자가 아님
 
 ---
 
-## 2. 동아리 초대 수락 (가입)
-### POST `/api/join/clubs?code={code}`
-
-#### 설명
-초대 링크를 클릭하면 code 파라미터를 통해 동아리 가입이 처리된다.  
-프론트에서는 성공 시 환영 페이지로 이동, 실패 시 에러 메시지를 표시한다.
-
-#### 요청 예시 (React에서)
-```js
-const token = sessionStorage.getItem('userToken');
-axios.post(
-  'http://localhost:8080/api/join/clubs',
-  null,
-  {
-    params: { code },
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  }
-)
-.then(response => {
-  if (response.data.success) {
-    navigate('/welcome', {
-      state: {
-        message: '동아리 가입을 축하합니다! 🎉',
-        clubName: '리듬밋 동아리'
-      }
-    });
-  }
-});
+## 2. 팀 초대 코드 생성
+```
+POST /api/invites/teams/{teamId}
+Authorization: Bearer {JWT_TOKEN}
 ```
 
-#### 요청
+### 요청 예시
 ```bash
-curl -X POST "http://localhost:8080/api/join/clubs?code=jaCprFeFtE" \
+curl -X POST "http://localhost:8080/api/invites/teams/1" \
   -H "Authorization: Bearer {JWT_TOKEN}"
 ```
 
-#### 응답 (성공 200 OK)
+### 성공 응답 (201)
 ```json
 {
   "success": true,
-  "message": "동아리 가입 성공",
-  "data": null
-}
-```
-
-#### 응답 (실패 예시)
-```json
-{
-  "success": false,
-  "message": "이미 가입한 동아리입니다",
-  "errorCode": "INVALID_ACCESS"
-}
-```
-
----
-
-## 3. 팀 초대 링크 생성
-### POST `/api/invite/teams/{teamId}`
-
-#### 요청
-```bash
-curl -X POST "http://localhost:8080/api/invite/teams/1" \
-  -H "Authorization: Bearer {JWT_TOKEN}"
-```
-
-#### 응답 (200 OK)
-```json
-{
-  "success": true,
-  "message": "팀 초대 링크 생성 성공",
+  "message": "팀 초대 코드가 생성되었습니다.",
   "data": {
-    "link": "https://rhythmeetdevelop.netlify.app/invite/accept?code=tEaCtFeFpQ"
+    "inviteCode": "XYZ789GHI",
+    "teamId": 1,
+    "teamName": "밴드 팀",
+    "expiresAt": "2024-03-22T10:30:00"
   }
 }
 ```
 
+### 실패 응답
+- **403**: 팀 생성자가 아님
+
 ---
 
-## 4. 팀 초대 수락 (가입)
-### POST `/api/join/teams?code={code}`
+## 3. 초대 코드로 가입
+```
+POST /api/joins/{inviteCode}
+Authorization: Bearer {JWT_TOKEN}
+```
 
-#### 요청
+### 요청 예시
 ```bash
-curl -X POST "http://localhost:8080/api/join/teams?code=tEaCtFeFpQ" \
+curl -X POST "http://localhost:8080/api/joins/ABC123DEF" \
   -H "Authorization: Bearer {JWT_TOKEN}"
 ```
 
-#### 응답 (성공 200 OK)
+### 성공 응답 (200)
 ```json
 {
   "success": true,
-  "message": "팀 가입 성공",
-  "data": null
+  "message": "성공적으로 가입되었습니다.",
+  "data": {
+    "clubId": 1,
+    "clubName": "락밴드 동아리",
+    "teamId": null,
+    "teamName": null,
+    "joinedAt": "2024-03-15T10:30:00"
+  }
 }
 ```
 
+### 응답 필드
+- `clubId`/`teamId`: 둘 중 하나만 값이 있음
+- `clubName`/`teamName`: 해당하는 이름만 값이 있음
+
+### 실패 응답
+- **400**: 만료된 초대 코드
+- **404**: 존재하지 않는 초대 코드
+- **409**: 이미 가입된 멤버
+
 ---
 
-## 상태 코드
-- `200 OK`: 성공
-- `400 Bad Request`: 잘못된 요청
-- `401 Unauthorized`: 인증 실패 (JWT 토큰 필요)
-- `403 Forbidden`: 권한 없음
-- `404 Not Found`: 리소스 없음
+## 4. 초대 코드 조회
+```
+GET /api/invites/{inviteCode}
+```
+
+### 요청 예시
+```bash
+curl "http://localhost:8080/api/invites/ABC123DEF"
+```
+
+### 성공 응답 (200)
+```json
+{
+  "success": true,
+  "message": "초대 정보 조회 성공",
+  "data": {
+    "inviteCode": "ABC123DEF",
+    "clubId": 1,
+    "clubName": "락밴드 동아리",
+    "teamId": null,
+    "teamName": null,
+    "expiresAt": "2024-03-22T10:30:00"
+  }
+}
+```
+
+### 실패 응답
+- **404**: 존재하지 않는 초대 코드
 
 ---
 
-## 참고 사항
-- **초대 링크 유효기간**: 기본적으로 7일간 유효
-- **중복 가입 방지**: 이미 가입한 동아리/팀은 재가입 불가
-- **권한**: 동아리/팀 멤버만 초대 링크 생성 가능
-- **프론트 처리**: 카카오톡 메시지 생성 및 환영 페이지 이동은 프론트에서 구현
-- **팀 가입 조건**: 팀이 속한 동아리의 멤버여야 팀 가입 가능
+## 📋 초대 코드 규칙
+- **유효 기간**: 7일
+- **형식**: 9자리 영숫자 (대문자)
+- **일회성**: 사용 후에도 유효 (여러 명 가입 가능)
+- **권한**: 동아리는 대표자만, 팀은 생성자만 생성 가능
 
 ## 프론트 예시
 https://github.com/user-attachments/assets/9fe66dad-f867-4843-ab61-ec7f7e8fea76

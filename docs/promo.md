@@ -35,13 +35,13 @@
 
 #### 요청
 ```bash
-curl -X GET "http://localhost:8080/api/promos?page=0&size=20"
+curl -X GET "http://localhost:8080/api/promos?page=0&size=20&sort=createdAt,desc"
 ```
 
 #### 쿼리 파라미터
 - `page` (integer): 페이지 번호 (기본값: 0)
 - `size` (integer): 페이지 크기 (기본값: 20)
-- `sort` (string): 정렬 기준
+- `sort` (string): 정렬 기준 (기본값: "createdAt,desc")
 
 #### 응답 (200 OK)
 ```json
@@ -265,7 +265,7 @@ curl -X DELETE "http://localhost:8080/api/promos/1" \
 
 #### 요청
 ```bash
-curl -X GET "http://localhost:8080/api/promos/search?keyword=락밴드&page=0&size=20"
+curl -X GET "http://localhost:8080/api/promos/search?keyword=락밴드&page=0&size=20&sort=createdAt,desc"
 ```
 
 #### 쿼리 파라미터
@@ -319,7 +319,7 @@ curl -X GET "http://localhost:8080/api/promos/search?keyword=락밴드&page=0&si
 
 #### 요청
 ```bash
-curl -X GET "http://localhost:8080/api/promos/filter?teamName=락밴드&page=0&size=20"
+curl -X GET "http://localhost:8080/api/promos/filter?teamName=락밴드&page=0&size=20&sort=createdAt,desc"
 ```
 
 #### 쿼리 파라미터
@@ -370,103 +370,7 @@ curl -X GET "http://localhost:8080/api/promos/filter?teamName=락밴드&page=0&s
 
 ---
 
-## 에러 응답
-```json
-{
-  "success": false,
-  "message": "에러 메시지",
-  "data": null
-}
-```
-
-### HTTP 상태 코드
-- `200 OK`: 성공
-- `400 Bad Request`: 잘못된 요청
-- `401 Unauthorized`: 인증 실패
-- `403 Forbidden`: 권한 없음
-- `404 Not Found`: 리소스 없음
-
----
-
-## 8. 공연 홍보 댓글 목록 조회
-### GET `/api/promos/{promoId}/comments`
-
-#### 요청
-```bash
-curl -X GET "http://localhost:8080/api/promos/1/comments?page=0&size=20"
-```
-
-#### 응답 (200 OK)
-```json
-{
-  "success": true,
-  "message": "공연 홍보 댓글 목록을 조회했습니다.",
-  "data": {
-    "content": [
-      {
-        "id": 1,
-        "promoId": 1,
-        "description": "정말 기대되는 공연이네요!",
-        "creatorId": 1,
-        "creatorName": "홍길동",
-        "creatorProfilePhoto": "https://example.com/profile.jpg",
-        "likeCount": 5,
-        "createdAt": "2024-03-15T10:30:00",
-        "updatedAt": "2024-03-15T10:30:00"
-      }
-    ],
-    "totalElements": 1,
-    "totalPages": 1,
-    "first": true,
-    "last": true
-  }
-}
-```
-
----
-
-## 9. 공연 홍보 댓글 생성
-### POST `/api/promos/{promoId}/comments`
-
-#### 요청
-```bash
-curl -X POST "http://localhost:8080/api/promos/1/comments" \
-  -H "Authorization: Bearer {JWT_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "description": "정말 기대되는 공연이네요!"
-  }'
-```
-
----
-
-## 10. 공연 홍보 댓글 수정
-### PATCH `/api/promos/comments/{commentId}`
-
-#### 요청
-```bash
-curl -X PATCH "http://localhost:8080/api/promos/comments/1" \
-  -H "Authorization: Bearer {JWT_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "description": "수정된 댓글 내용입니다."
-  }'
-```
-
----
-
-## 11. 공연 홍보 댓글 삭제
-### DELETE `/api/promos/comments/{commentId}`
-
-#### 요청
-```bash
-curl -X DELETE "http://localhost:8080/api/promos/comments/1" \
-  -H "Authorization: Bearer {JWT_TOKEN}"
-```
-
----
-
-## 12. 공연 홍보 좋아요 추가/취소
+## 8. 공연 홍보 좋아요 추가/취소
 ### POST `/api/promos/{promoId}/like`
 
 #### 요청
@@ -495,7 +399,7 @@ curl -X POST "http://localhost:8080/api/promos/1/like" \
 
 ---
 
-## 13. 공연 홍보 좋아요 상태 확인
+## 9. 공연 홍보 좋아요 상태 확인
 ### GET `/api/promos/{promoId}/like/status`
 
 #### 요청
@@ -518,7 +422,7 @@ curl -X GET "http://localhost:8080/api/promos/1/like/status" \
 
 ---
 
-## 14. 공연 홍보 좋아요 수 조회
+## 10. 공연 홍보 좋아요 수 조회
 ### GET `/api/promos/{promoId}/like/count`
 
 #### 요청
@@ -540,6 +444,24 @@ curl -X GET "http://localhost:8080/api/promos/1/like/count"
 
 ---
 
+## 에러 응답
+```json
+{
+  "success": false,
+  "message": "에러 메시지",
+  "data": null
+}
+```
+
+### HTTP 상태 코드
+- `200 OK`: 성공
+- `400 Bad Request`: 잘못된 요청
+- `401 Unauthorized`: 인증 실패
+- `403 Forbidden`: 권한 없음
+- `404 Not Found`: 리소스 없음
+
+---
+
 ## 참고사항
 - **권한**: 생성은 인증된 사용자만, 수정/삭제는 작성자만 가능
 - **팀명**: teamName만 사용하며 모든 공연 홍보에 필수
@@ -552,8 +474,10 @@ curl -X GET "http://localhost:8080/api/promos/1/like/count"
 - **댓글**: 댓글 생성/삭제 시 공연 홍보의 commentCount 자동 업데이트
 - **좋아요**: 토글 방식으로 동작 (같은 API로 추가/취소), 중복 좋아요 방지
 - **좋아요 상태**: 공연 홍보 목록/상세 조회 시 `isLikedByUser` 필드로 현재 사용자의 좋아요 상태 포함 (true: 좋아요 누름, false: 좋아요 안 누름, null: 인증되지 않은 사용자)
+- **정렬 옵션**: `sort` 파라미터로 정렬 기준과 방향 지정 가능 (기본값: `createdAt,desc`)
 - **응답 정책**: 
   - **생성**: 성공 시 생성된 리소스의 ID만 반환 (성능 최적화)
   - **수정**: 성공 시 간단한 성공 메시지만 반환
   - **삭제**: 성공 시 간단한 성공 메시지만 반환
   - **상세 정보 필요 시**: 별도의 조회 API 호출로 최신 데이터 확인
+- **댓글 API**: 댓글 관련 기능은 별도의 Promo Comment API 명세서 참조

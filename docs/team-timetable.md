@@ -14,7 +14,7 @@ JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails)
 ### POST `/api/teams/{teamId}/schedule-suggestion`
 
 #### 설명
-팀 내에서 스케줄 조율을 시작하는 API입니다. `suggestedScheduleAt`을 현재 시간으로 설정한 후 팀원이 시간표를 등록하면 해탕 팀원의 `isSubmitted`가 true로 바뀝니다.
+팀 내에서 스케줄 조율을 시작하는 API입니다. `suggestedScheduleAt`을 현재 시간으로 설정한 후 팀원이 시간표를 등록하면 해당 팀원의 `isSubmitted`가 true로 바뀝니다.
 
 #### 요청
 ```bash
@@ -45,7 +45,7 @@ curl -X POST "http://localhost:8080/api/teams/1/schedule-suggestion" \
 ### POST `/api/teams/{teamId}/members/me/timetable`
 
 #### 설명
-팀원이 기존에 만들어둔 개인 시간표를 팀 시간표로 등록합니다. 시간표 등록시 `updatedTimetableAt`이 현재 시간으로 자동 업데이트됩니다. (TODO: 만약 이 입력으로 팀원 전원이 시간표를 제출했다면 팀원들에게 카톡 알림을 보내는 로직 추가)
+팀원이 기존에 만들어둔 개인 시간표를 팀 시간표로 등록합니다. 시간표 등록시 `timetableUpdatedAt`이 현재 시간으로 자동 업데이트됩니다. (TODO: 만약 이 입력으로 팀원 전원이 시간표를 제출했다면 팀원들에게 카톡 알림을 보내는 로직 추가)
 
 #### 요청
 ```bash
@@ -88,7 +88,7 @@ curl -X POST "http://localhost:8080/api/teams/1/members/me/timetable" \
 ### PATCH `/api/teams/{teamId}/members/me/timetable`
 
 #### 설명
-팀원이 자신의 팀 시간표를 직접 수정합니다. 시간표 수정시 `updatedTimetableAt`이 현재 시간으로 자동 업데이트됩니다. (TODO: 만약 이 수정으로 팀원 전원이 시간표를 제출했다면 팀원들에게 카톡 알림을 보내는 로직 추가)
+팀원이 자신의 팀 시간표를 직접 수정합니다. 시간표 수정시 `timetableUpdatedAt`이 현재 시간으로 자동 업데이트됩니다. (TODO: 만약 이 수정으로 팀원 전원이 시간표를 제출했다면 팀원들에게 카톡 알림을 보내는 로직 추가)
 
 #### 요청
 ```bash
@@ -152,7 +152,7 @@ curl -X PATCH "http://localhost:8080/api/teams/1/members/me/timetable" \
 ### 유효성 검사
 - 같은 요일 내 중복 시간 불가
 - 빈 배열 허용 (해당 요일 불가능)
-- 시간표 입력/수정시 `updatedTimetableAt` 자동 업데이트
+- 시간표 입력/수정시 `timetableUpdatedAt` 자동 업데이트
 
 ---
 
@@ -166,7 +166,7 @@ curl -X PATCH "http://localhost:8080/api/teams/1/members/me/timetable" \
 ### 2단계: 시간표 입력
 - 각 팀원이 `POST /teams/{teamId}/members/me/timetable`로 기존 개인 시간표 등록 (userTimetableId 사용)
 - 또는 `PATCH /teams/{teamId}/members/me/timetable`로 시간표 직접 수정 (timetableData 직접 입력)
-- `updatedTimetableAt` 자동 업데이트로 제출 현황 추적
+- `timetableUpdatedAt` 자동 업데이트로 제출 현황 추적
 - `GET /teams/{teamId}`(팀 상세 조회)를 통해 전체 현황 확인
 
 ### 3단계: 결과 확인 및 일정 확정
@@ -200,7 +200,7 @@ curl -X PATCH "http://localhost:8080/api/teams/1/members/me/timetable" \
 - `PATCH /teams/{teamId}/members/me/timetable` - 내 시간표 수정 (직접 입력)
 
 ## 참고사항
-- **시간표 업데이트**: 시간표 입력/수정시 `updatedTimetableAt` 자동 업데이트
+- **시간표 업데이트**: 시간표 입력/수정시 `timetableUpdatedAt` 자동 업데이트
 - **공통 시간 계산**: 프론트엔드에서 팀원들의 시간표 데이터를 기반으로 계산
 - **알림**: 중요한 단계마다 써드파티(카카오톡 채널)를 통한 개인 알림 발송
 - **시간표 등록 방식**: POST는 기존 개인 시간표 참조, PATCH는 시간표 데이터 직접 입력

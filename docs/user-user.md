@@ -1,23 +1,23 @@
-# User API 명세서
+# User API
 
-## Base URL
-`/api/users`
-
-## 인증
-JWT 인증 필요 (Spring Security + @AuthenticationPrincipal CustomUserDetails)
+## 👤 사용자 정보 관리
+JWT 인증 필요
 
 ---
 
 ## 1. 내 정보 조회
-### GET `/api/users/me/info`
+```
+GET /api/users/me/info
+Authorization: Bearer {JWT_TOKEN}
+```
 
-#### 요청
+### 요청 예시
 ```bash
-curl -X GET "http://localhost:8080/api/users/me/info" \
+curl "http://localhost:8080/api/users/me/info" \
   -H "Authorization: Bearer {JWT_TOKEN}"
 ```
 
-#### 응답 (200 OK)
+### 성공 응답 (200)
 ```json
 {
   "success": true,
@@ -32,22 +32,23 @@ curl -X GET "http://localhost:8080/api/users/me/info" \
 }
 ```
 
-#### 응답 필드
+### 응답 필드
 - `id`: 사용자 ID
 - `nickname`: 닉네임
 - `profilePhoto`: 프로필 사진 URL (없으면 빈 문자열)
-- `position`: 음악 포지션 (VOCAL/GUITAR/KEYBOARD/BASS/DRUM/OTHER)
+- `position`: 음악 포지션
 - `university`: 소속 대학교 이름
 
 ---
 
 ## 2. 내 정보 수정
-### PATCH `/api/users/me/info`
+```
+PATCH /api/users/me/info
+Authorization: Bearer {JWT_TOKEN}
+Content-Type: multipart/form-data
+```
 
-#### Content-Type
-`multipart/form-data`
-
-#### 요청
+### 요청 예시
 ```bash
 curl -X PATCH "http://localhost:8080/api/users/me/info" \
   -H "Authorization: Bearer {JWT_TOKEN}" \
@@ -57,13 +58,13 @@ curl -X PATCH "http://localhost:8080/api/users/me/info" \
   -F "profilePhoto=@/path/to/profile.jpg"
 ```
 
-#### 요청 필드 (Form Data)
-- `nickname` (string, 선택): 닉네임 (최대 100자)
-- `position` (string, 선택): 음악 포지션 (VOCAL/GUITAR/KEYBOARD/BASS/DRUM/OTHER)
-- `university` (string, 선택): 대학교 이름 (실제 등록된 대학교)
-- `profilePhoto` (file, 선택): 프로필 사진 파일 (이미지 파일)
+### 요청 필드 (모두 선택)
+- `nickname`: 닉네임 (최대 100자)
+- `position`: 음악 포지션
+- `university`: 대학교 이름
+- `profilePhoto`: 프로필 사진 파일
 
-#### 응답 (200 OK)
+### 성공 응답 (200)
 ```json
 {
   "success": true,
@@ -72,34 +73,16 @@ curl -X PATCH "http://localhost:8080/api/users/me/info" \
 }
 ```
 
+### 실패 응답
+- **400**: 잘못된 요청 (닉네임 중복, 존재하지 않는 대학교 등)
+- **401**: 인증 실패
+
 ---
 
-## 포지션 값
+## 🎵 포지션 값
 - `VOCAL`: 보컬
 - `GUITAR`: 기타
 - `KEYBOARD`: 키보드
 - `BASS`: 베이스
 - `DRUM`: 드럼
 - `OTHER`: 기타
-
----
-
-## 에러 응답
-```json
-{
-  "success": false,
-  "message": "에러 메시지",
-  "data": null
-}
-```
-
-### HTTP 상태 코드
-- `200 OK`: 성공
-- `400 Bad Request`: 잘못된 요청
-- `401 Unauthorized`: 인증 실패
-- `404 Not Found`: 사용자 없음
-
-## 참고사항
-- **Content-Type**: 수정 시 `multipart/form-data` 사용
-- **부분 수정**: 원하는 필드만 전송 가능
-- **파일 업로드**: 프로필 사진은 선택사항

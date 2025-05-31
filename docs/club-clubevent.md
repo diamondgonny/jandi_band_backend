@@ -207,7 +207,7 @@ interface ClubEventReqDTO {
 ### ClubEventRespDTO (응답)
 ```typescript
 interface ClubEventRespDTO {
-  id: number;            // 일정 ID (Long 타입)
+  id: number;            // 일정 ID (Long 타입, JSON에서는 number로 표현)
   name: string;          // 일정 이름
   startDatetime: string; // 시작 시간 (LocalDateTime)
   endDatetime: string;   // 종료 시간 (LocalDateTime)

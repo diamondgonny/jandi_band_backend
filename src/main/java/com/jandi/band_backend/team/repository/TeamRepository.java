@@ -7,10 +7,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface TeamRepository extends JpaRepository<Team, Integer> {
     Optional<Team> findByIdAndDeletedAtIsNull(Integer id);
     Page<Team> findAllByClubAndDeletedAtIsNullOrderByCreatedAtDesc(Club club, Pageable pageable);
+    List<Team> findAllByClubIdAndDeletedAtIsNull(Integer clubId);
 }

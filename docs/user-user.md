@@ -39,6 +39,9 @@ curl "http://localhost:8080/api/users/me/info" \
 - `position`: 음악 포지션
 - `university`: 소속 대학교 이름
 
+### 실패 응답
+- **401**: 인증 실패
+
 ---
 
 ## 2. 내 정보 수정
@@ -79,9 +82,29 @@ curl -X PATCH "http://localhost:8080/api/users/me/info" \
 
 ---
 
+## 에러 응답
+```json
+{
+  "success": false,
+  "message": "에러 메시지",
+  "data": null
+}
+```
+
+### HTTP 상태 코드
+- `200 OK`: 성공
+- `400 Bad Request`: 잘못된 요청
+- `401 Unauthorized`: 인증 실패
+
 ## 포지션 값
 - `VOCAL`: 보컬
 - `GUITAR`: 기타
 - `KEYBOARD`: 키보드
 - `BASS`: 베이스
 - `DRUM`: 드럼
+- `OTHER`: 기타
+
+## 참고사항
+- **파일 업로드**: @ModelAttribute와 @RequestPart 혼합 사용
+- **부분 수정**: 전송된 필드만 수정, 나머지는 기존 값 유지
+- **프로필 사진**: 새 파일 업로드 시 기존 사진 자동 교체

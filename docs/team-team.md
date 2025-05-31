@@ -1,4 +1,4 @@
-# Team API 명세서
+# Team API
 
 ## Base URL
 `/api`
@@ -210,7 +210,9 @@ curl -X PATCH "http://localhost:8080/api/teams/1" \
 ```
 
 ### 실패 응답
-- **403**: 팀 생성자가 아님
+- **400**: 중복된 팀 이름
+- **403**: 팀장이 아님
+- **404**: 존재하지 않는 팀
 
 ---
 
@@ -233,16 +235,8 @@ curl -X DELETE "http://localhost:8080/api/teams/1" \
 ```
 
 ### 실패 응답
-- **403**: 팀 생성자가 아님
+- **403**: 팀장이 아님
 - **404**: 존재하지 않는 팀
-
-#### 삭제 동작
-팀 삭제 시 다음 리소스들이 함께 소프트 삭제됩니다:
-- **팀 자체** (`Team`)
-- **팀 멤버 관계** (`TeamMember`): 해당 팀의 모든 멤버 관계
-- **팀 연습 일정** (`TeamEvent`): 해당 팀의 모든 연습 스케줄
-
-모든 삭제 작업은 하나의 트랜잭션으로 처리되어 데이터 일관성을 보장합니다.
 
 ---
 
@@ -265,8 +259,8 @@ curl -X DELETE "http://localhost:8080/api/teams/1/members/me" \
 ```
 
 ### 실패 응답
-- **400**: 팀 생성자는 탈퇴 불가 (팀 삭제 필요)
-- **404**: 팀 멤버가 아님
+- **400**: 팀장은 탈퇴할 수 없음
+- **404**: 존재하지 않는 팀 또는 팀 멤버가 아님
 
 ---
 
@@ -280,19 +274,19 @@ curl -X POST "http://localhost:8080/api/teams/1/practice-schedules" \
   -H "Content-Type: application/json" \
   -d '{
     "title": "주간 연습",
-    "description": "이번 주 연습 일정입니다",
-    "startDatetime": "2024-03-20T19:00:00",
-    "endDatetime": "2024-03-20T21:00:00",
+    "memo": "새로운 곡 연습",
+    "startTime": "2024-03-20T19:00:00",
+    "endTime": "2024-03-20T21:00:00",
     "location": "연습실 A"
   }'
 ```
 
 #### 요청 필드
-- `title`: 연습 일정 제목
-- `description`: 연습 일정 설명
-- `startDatetime`: 연습 일정 시작 시간
-- `endDatetime`: 연습 일정 종료 시간
-- `location`: 연습 일정 장소
+- `title`: 일정 제목 (필수)
+- `memo`: 메모 (선택)
+- `startTime`: 시작 시간 (ISO 8601, 필수)
+- `endTime`: 종료 시간 (ISO 8601, 필수)
+- `location`: 장소 (선택)
 
 #### 응답 (201 Created)
 ```json
@@ -301,19 +295,23 @@ curl -X POST "http://localhost:8080/api/teams/1/practice-schedules" \
   "message": "연습 일정이 성공적으로 생성되었습니다.",
   "data": {
     "id": 1,
-    "title": "주간 연습",
-    "description": "이번 주 연습 일정입니다",
-    "startDatetime": "2024-03-20T19:00:00",
-    "endDatetime": "2024-03-20T21:00:00",
-    "location": "연습실 A",
     "teamId": 1,
-    "teamName": "밴드 팀",
+    "title": "주간 연습",
+    "memo": "새로운 곡 연습",
+    "startTime": "2024-03-20T19:00:00",
+    "endTime": "2024-03-20T21:00:00",
+    "location": "연습실 A",
     "creatorId": 1,
     "creatorName": "홍길동",
     "createdAt": "2024-03-15T10:30:00"
   }
 }
 ```
+
+### 실패 응답
+- **400**: 잘못된 시간 설정 (과거 시간, 종료시간이 시작시간보다 빠름)
+- **403**: 팀 멤버가 아님
+- **404**: 존재하지 않는 팀
 
 ---
 
@@ -322,7 +320,7 @@ curl -X POST "http://localhost:8080/api/teams/1/practice-schedules" \
 
 #### 요청
 ```bash
-curl "http://localhost:8080/api/teams/1/practice-schedules?page=0&size=10" \
+curl -X GET "http://localhost:8080/api/teams/1/practice-schedules?page=0&size=10" \
   -H "Authorization: Bearer {JWT_TOKEN}"
 ```
 
@@ -339,13 +337,12 @@ curl "http://localhost:8080/api/teams/1/practice-schedules?page=0&size=10" \
     "content": [
       {
         "id": 1,
-        "title": "주간 연습",
-        "description": "이번 주 연습 일정입니다",
-        "startDatetime": "2024-03-20T19:00:00",
-        "endDatetime": "2024-03-20T21:00:00",
-        "location": "연습실 A",
         "teamId": 1,
-        "teamName": "밴드 팀",
+        "title": "주간 연습",
+        "memo": "새로운 곡 연습",
+        "startTime": "2024-03-20T19:00:00",
+        "endTime": "2024-03-20T21:00:00",
+        "location": "연습실 A",
         "creatorId": 1,
         "creatorName": "홍길동",
         "createdAt": "2024-03-15T10:30:00"
@@ -370,7 +367,7 @@ curl "http://localhost:8080/api/teams/1/practice-schedules?page=0&size=10" \
 
 #### 요청
 ```bash
-curl "http://localhost:8080/api/practice-schedules/1" \
+curl -X GET "http://localhost:8080/api/practice-schedules/1" \
   -H "Authorization: Bearer {JWT_TOKEN}"
 ```
 
@@ -381,19 +378,22 @@ curl "http://localhost:8080/api/practice-schedules/1" \
   "message": "연습 일정을 성공적으로 조회했습니다.",
   "data": {
     "id": 1,
-    "title": "주간 연습",
-    "description": "이번 주 연습 일정입니다",
-    "startDatetime": "2024-03-20T19:00:00",
-    "endDatetime": "2024-03-20T21:00:00",
-    "location": "연습실 A",
     "teamId": 1,
-    "teamName": "밴드 팀",
+    "title": "주간 연습",
+    "memo": "새로운 곡 연습",
+    "startTime": "2024-03-20T19:00:00",
+    "endTime": "2024-03-20T21:00:00",
+    "location": "연습실 A",
     "creatorId": 1,
     "creatorName": "홍길동",
     "createdAt": "2024-03-15T10:30:00"
   }
 }
 ```
+
+### 실패 응답
+- **403**: 팀 멤버가 아님
+- **404**: 존재하지 않는 일정
 
 ---
 
@@ -420,16 +420,9 @@ curl -X DELETE "http://localhost:8080/api/practice-schedules/1" \
 {
   "success": false,
   "message": "에러 메시지",
-  "errorCode": "ERROR_CODE",
   "data": null
 }
 ```
-
-### 주요 에러 코드
-- `TEAM_LEAVE_NOT_ALLOWED`: 팀 탈퇴 불가 (마지막 멤버인 경우)
-- `RESOURCE_NOT_FOUND`: 팀 또는 리소스를 찾을 수 없음
-- `UNAUTHORIZED_CLUB_ACCESS`: 권한 없음
-- `BAD_REQUEST`: 잘못된 요청
 
 ### HTTP 상태 코드
 - `200 OK`: 성공
@@ -438,26 +431,3 @@ curl -X DELETE "http://localhost:8080/api/practice-schedules/1" \
 - `401 Unauthorized`: 인증 실패
 - `403 Forbidden`: 권한 없음
 - `404 Not Found`: 리소스 없음
-
-## 참고사항
-- **권한**:
-  - **팀 생성**: 동아리 멤버만 가능
-  - **동아리 팀 목록 조회**: 권한 제한 없음 (동아리 메인 페이지 접속용)
-  - **팀 상세 조회**: 동아리 멤버만 가능
-  - **팀 수정/삭제**: 팀 멤버라면 누구나 가능
-  - **팀 탈퇴**: 팀 멤버만 가능 (단, 마지막 멤버는 제외)
-- **팀 탈퇴 제한**: 마지막 남은 팀원은 탈퇴 불가 (팀 삭제 필요)
-- **자동 멤버 추가**: 팀 생성자는 자동으로 첫 번째 멤버 등록
-- **페이지네이션**: 기본 크기 5개, PagedRespDTO 구조 사용, 최신 생성순으로 정렬
-- **소프트 삭제 시스템**:
-  - **팀 삭제**: 실제 삭제가 아닌 `deleted_at` 설정으로 소프트 삭제
-    - **연쇄 삭제**: 팀 삭제 시 관련 리소스들도 함께 소프트 삭제
-      - `TeamMember`: 해당 팀의 모든 멤버 관계 소프트 삭제
-      - `TeamEvent`: 해당 팀의 모든 연습 일정 소프트 삭제
-    - **트랜잭션 보장**: 모든 관련 리소스가 동일한 시점에 일괄 처리
-    - **데이터 일관성**: 동일한 `deleted_at` 시간으로 데이터 무결성 보장
-  - **팀 멤버 탈퇴**: 실제 삭제가 아닌 `deleted_at` 설정으로 소프트 삭제
-  - **자동 필터링**: 모든 조회 API에서 삭제된 팀/멤버는 자동으로 제외
-  - **멤버 수 계산**: 삭제되지 않은 활성 멤버만 카운트
-- **시간표 통합**: 팀 상세 조회 시 팀원들의 시간표 정보(`timetableData`, `isSubmitted` 등) 포함
-- **스케줄 조율**: 팀 상세 조회 시 `suggestedScheduleAt`과 `submissionProgress`로 시간표 제출 현황 추적

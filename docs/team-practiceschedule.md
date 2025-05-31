@@ -1,10 +1,10 @@
-# Practice Schedule API 명세서
+# Practice Schedule API
 
 ## Base URL
 `/api`
 
 ## 인증
-**모든 API에 JWT 인증 필요** (Spring Security + @AuthenticationPrincipal CustomUserDetails)
+**모든 API는 JWT 인증 필요** (Spring Security + @AuthenticationPrincipal CustomUserDetails)
 
 ## 권한 체계
 - **일정 조회 (목록/상세)**: 동아리 멤버 또는 ADMIN
@@ -51,7 +51,7 @@ curl -X GET "http://localhost:8080/api/teams/1/practice-schedules?page=0&size=20
 ```json
 {
   "success": true,
-  "message": "팀별 곡 연습 일정 목록 조회 성공",
+  "message": "팀별 연습 일정 목록 조회 성공",
   "data": {
     "content": [
       {
@@ -198,29 +198,23 @@ curl -X DELETE "http://localhost:8080/api/practice-schedules/1" \
 - `404 Not Found`: 리소스 없음 (TEAM_NOT_FOUND, USER_NOT_FOUND, RESOURCE_NOT_FOUND)
 
 ### 주요 에러 코드
-- `TEAM_NOT_FOUND`: 팀을 찾을 수 없음
-- `USER_NOT_FOUND`: 사용자를 찾을 수 없음
-- `RESOURCE_NOT_FOUND`: 연습 일정을 찾을 수 없음
-- `UNAUTHORIZED_CLUB_ACCESS`: 권한 없음 (동아리 멤버 아님 또는 팀 멤버 아님)
+- `TEAM_NOT_FOUND`: 존재하지 않는 팀
+- `USER_NOT_FOUND`: 존재하지 않는 사용자
+- `RESOURCE_NOT_FOUND`: 존재하지 않는 연습 일정
+- `UNAUTHORIZED_CLUB_ACCESS`: 권한 없음 (동아리 멤버가 아님)
+- `BAD_REQUEST`: 잘못된 요청 (잘못된 시간 형식, 과거 시간 입력 등)
+
+## Position 값
+- `VOCAL`: 보컬
+- `GUITAR`: 기타
+- `KEYBOARD`: 키보드
+- `BASS`: 베이스
+- `DRUM`: 드럼
+- `NONE`: 모든 포지션 참여
 
 ## 참고사항
-
-### 권한 체계
-- **조회 권한**: 해당 팀이 속한 동아리의 멤버여야 함
-- **생성/삭제 권한**: 해당 팀의 멤버여야 함
-- **ADMIN**: 모든 권한 보유
-
-### 데이터 구조
-- **name**: 연습 일정명 (자유 형식, 곡명-아티스트명 등)
-- **noPosition**: 연습에서 제외되는 포지션 (VOCAL, GUITAR, KEYBOARD, BASS, DRUM, NONE)
-- **페이지네이션**: 기본 크기 20개, PagedRespDTO 구조 사용
-- **정렬**: 연습 시작 일시(startDatetime) 오름차순 정렬
-- **소프트 삭제**: 실제 삭제가 아닌 deletedAt 설정
-
-### 변경사항 (이전 버전 대비)
-- **인증 필수**: 모든 API에 JWT 토큰 필요
-- **참여자 제거**: participants 필드 및 관련 기능 제거
-- **필드 간소화**: songName, artistName → name 통합
-- **불필요 필드 제거**: location, address, youtubeUrl, additionalDescription 제거
-- **포지션 필드 추가**: noPosition 필드로 제외 포지션 지정
-- **권한 체계 개선**: 동아리 멤버(조회) vs 팀 멤버(생성/삭제) 구분
+- **권한**: 동아리 멤버만 일정 조회 가능, 팀 멤버만 일정 생성/삭제 가능
+- **시간 형식**: ISO 8601 형식 (YYYY-MM-DDTHH:mm:ss)
+- **페이지네이션**: 기본 크기 20개, 최신 생성순으로 정렬
+- **소프트 삭제**: 실제 삭제가 아닌 deletedAt 설정으로 소프트 삭제
+- **자동 필터링**: 모든 조회 API에서 삭제된 일정은 자동으로 제외

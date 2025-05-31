@@ -33,7 +33,7 @@ public class InviteService {
         inviteCodeService.saveCode(InviteType.CLUB, clubId, code);
 
         String link = clubLinkPrefix + "?code=" + code;
-        return new InviteLinkRespDTO(link);
+        return new InviteLinkRespDTO(link, clubId);
     }
 
     @Transactional
@@ -48,7 +48,7 @@ public class InviteService {
         inviteCodeService.saveCode(InviteType.TEAM, teamId, code);
 
         String link = teamLinkPrefix + "?code=" + code;
-        return new InviteLinkRespDTO(link);
+        return new InviteLinkRespDTO(link, teamId);
     }
 
     private String generateRandomCode() {

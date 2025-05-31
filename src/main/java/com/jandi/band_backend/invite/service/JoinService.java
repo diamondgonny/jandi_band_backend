@@ -44,13 +44,18 @@ public class JoinService {
     public JoinRespDTO joinTeam(Integer userId, String code) {
         String keyId = inviteCodeService.getKeyId(code);
         Team team = inviteUtilService.getTeam(keyId);
+        Club club = team.getClub();
 
         if(inviteUtilService.isMemberOfTeam(team.getId(), userId)) {
             throw new InvalidAccessException("이미 가입한 팀입니다");
         }
 
+        // 팀 초대 + 동아리원이 아니라면 동아리원 초대도 자동으로 진행
         Users user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
+        if(!inviteUtilService.isMemberOfClub(club.getId(), userId)) {
+            createNewClubMember(user, club);
+        }
         createNewTeamMember(user, team);
         return new JoinRespDTO(team.getId());
     }

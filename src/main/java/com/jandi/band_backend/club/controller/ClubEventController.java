@@ -30,7 +30,7 @@ public class ClubEventController {
     ) {
         Integer userId = userDetails.getUserId();
         ClubEventRespDTO response = clubEventService.createClubEvent(clubId, userId, dto);
-        
+
         return ResponseEntity.ok(CommonRespDTO.success("동아리 일정이 생성되었습니다.", response));
     }
 

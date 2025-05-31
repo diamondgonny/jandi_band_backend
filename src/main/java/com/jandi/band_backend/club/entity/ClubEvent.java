@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "club_event")
@@ -35,12 +33,6 @@ public class ClubEvent {
     @Column(name = "end_datetime", nullable = false)
     private LocalDateTime endDatetime;
 
-    @Column(name = "location", length = 255)
-    private String location;
-
-    @Column(name = "address", length = 255)
-    private String address;
-
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
@@ -56,9 +48,6 @@ public class ClubEvent {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
-
-    @OneToMany(mappedBy = "clubEvent")
-    private List<ClubEventParticipant> participants = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

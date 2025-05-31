@@ -1,10 +1,10 @@
 package com.jandi.band_backend.invite.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
+@Data
 @AllArgsConstructor
-public class InviteLinkRespDTO {
-    private final String link;
+public class JoinRespDTO {
+    private Integer id;
 }

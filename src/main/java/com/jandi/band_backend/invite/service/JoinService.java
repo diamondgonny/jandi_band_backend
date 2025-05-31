@@ -5,6 +5,7 @@ import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.global.exception.InvalidAccessException;
 import com.jandi.band_backend.global.exception.UserNotFoundException;
+import com.jandi.band_backend.invite.dto.JoinRespDTO;
 import com.jandi.band_backend.invite.redis.InviteCodeService;
 import com.jandi.band_backend.team.entity.Team;
 import com.jandi.band_backend.team.entity.TeamMember;
@@ -25,7 +26,7 @@ public class JoinService {
     private final TeamMemberRepository teamMemberRepository;
 
     @Transactional
-    public void joinClub(Integer userId, String code) {
+    public JoinRespDTO joinClub(Integer userId, String code) {
         String keyId = inviteCodeService.getKeyId(code);
         Club club = inviteUtilService.getClub(keyId);
 
@@ -36,10 +37,11 @@ public class JoinService {
         Users user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
         createNewClubMember(user, club);
+        return new JoinRespDTO(club.getId());
     }
 
     @Transactional
-    public void joinTeam(Integer userId, String code) {
+    public JoinRespDTO joinTeam(Integer userId, String code) {
         String keyId = inviteCodeService.getKeyId(code);
         Team team = inviteUtilService.getTeam(keyId);
 
@@ -50,6 +52,7 @@ public class JoinService {
         Users user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
         createNewTeamMember(user, team);
+        return new JoinRespDTO(team.getId());
     }
 
     private void createNewClubMember(Users user, Club club) {

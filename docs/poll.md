@@ -294,11 +294,100 @@ curl -X DELETE "http://localhost:8080/api/polls/1/songs/1/votes/LIKE" \
 
 ---
 
+## 7. 투표 곡 목록 조회 (정렬)
+### GET `/api/polls/{pollId}/songs`
+
+결과 보기용으로 투표 결과를 정렬하여 조회합니다.
+
+#### 요청
+```bash
+# 좋아요 많은 순 (기본값)
+curl -X GET "http://localhost:8080/api/polls/1/songs" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+
+# 종합 점수 높은 순
+curl -X GET "http://localhost:8080/api/polls/1/songs?sortBy=SCORE&order=desc" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+
+# 별로에요 적은 순
+curl -X GET "http://localhost:8080/api/polls/1/songs?sortBy=DISLIKE&order=asc" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+```
+
+#### 쿼리 파라미터
+- `sortBy` (string, 선택): 정렬 기준 (기본값: LIKE)
+  - `LIKE`: 좋아요 수 기준
+  - `DISLIKE`: 별로에요 수 기준
+  - `SCORE`: 종합 점수 기준
+- `order` (string, 선택): 정렬 순서 (기본값: desc)
+  - `desc`: 내림차순 (높은 값부터)
+  - `asc`: 오름차순 (낮은 값부터)
+
+#### 종합 점수 계산 방식
+```
+점수 = (긍정 투표 수) - (부정 투표 수)
+긍정: LIKE + HAJJ
+부정: DISLIKE + CANT
+```
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "투표 곡 목록을 조회했습니다.",
+  "data": [
+    {
+      "id": 1,
+      "pollId": 1,
+      "songName": "Bohemian Rhapsody",
+      "artistName": "Queen",
+      "createdAt": "2024-03-15T11:00:00",
+      "likeCount": 8,
+      "dislikeCount": 1,
+      "cantCount": 2,
+      "hajjCount": 3
+    },
+    {
+      "id": 2,
+      "pollId": 1,
+      "songName": "Welcome To The Black Parade",
+      "artistName": "My Chemical Romance",
+      "createdAt": "2024-03-15T12:00:00",
+      "likeCount": 5,
+      "dislikeCount": 2,
+      "cantCount": 1,
+      "hajjCount": 1
+    }
+  ]
+}
+```
+
+#### 정렬 예시
+**SCORE 기준 정렬**:
+- 곡 1: (8 + 3) - (1 + 2) = 8점
+- 곡 2: (5 + 1) - (2 + 1) = 3점
+→ 곡 1이 먼저 나옴
+
+---
+
 ## 응답 필드 설명
 
 ### PollSongRespDTO 필드
 - `suggesterProfilePhoto` (string): 곡 제안자의 프로필 사진 URL (없으면 null)
 - `userVoteType` (string): 현재 사용자의 투표 타입 ("LIKE", "DISLIKE", "CANT", "HAJJ" 중 하나, 투표하지 않았으면 null)
+
+### PollSongResultRespDTO 필드 (결과 조회용)
+- `id` (integer): 곡 ID
+- `pollId` (integer): 투표 ID
+- `songName` (string): 곡 제목
+- `artistName` (string): 아티스트명
+- `createdAt` (string): 곡 등록 시간
+- `likeCount` (integer): 좋아요 투표 수
+- `dislikeCount` (integer): 별로에요 투표 수
+- `cantCount` (integer): 실력부족 투표 수
+- `hajjCount` (integer): 하고싶지_않은데_존중해요 투표 수
+
+> **PollSongResultRespDTO는 결과 보기 전용**으로 YouTube URL, 설명, 제안자 정보, 사용자 투표 상태 등의 필드가 제거되어 가볍습니다.
 
 ---
 
@@ -332,3 +421,6 @@ curl -X DELETE "http://localhost:8080/api/polls/1/songs/1/votes/LIKE" \
 - **페이지네이션**: 기본 크기 5개, PagedRespDTO 구조 사용
 - **인증**: 투표 상세 조회는 인증 없이도 가능하지만 사용자 투표 상태(`userVoteType`)는 보이지 않음
 - **투표 타입**: 영어명과 한국어명 모두 지원 (대소문자 구분 없음)
+- **결과 조회**: 정렬 기능(`GET /songs`)은 결과 보기 전용으로 간소화된 응답 제공
+- **정렬 기본값**: 좋아요 순 내림차순 (`sortBy=LIKE&order=desc`)
+- **종합 점수**: SCORE는 긍정 투표(LIKE+HAJJ)에서 부정 투표(DISLIKE+CANT)를 뺀 값

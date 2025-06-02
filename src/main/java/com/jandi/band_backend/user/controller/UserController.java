@@ -39,12 +39,23 @@ public class UserController {
     @PatchMapping("/me/info")
     public CommonRespDTO<?> updateMyInfo(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @ModelAttribute UpdateUserInfoReqDTO updateDTO
+            @RequestParam(value = "nickname", required = false) String nickname,
+            @RequestParam(value = "university", required = false) String university,
+            @RequestParam(value = "position", required = false) String position,
+            @RequestParam(value = "profilePhoto", required = false) MultipartFile profilePhoto
     ) {
         Integer userId = userDetails.getUserId();
+
+        // DTO 생성
+        UpdateUserInfoReqDTO updateDTO = new UpdateUserInfoReqDTO();
+        updateDTO.setNickname(nickname);
+        updateDTO.setUniversity(university);
+        updateDTO.setPosition(position);
+        updateDTO.setProfilePhoto(profilePhoto);
+
         Integer mask = 0;
         mask += userService.updateMyInfo(userId, updateDTO);
-        mask += userPhotoService.updateMyPhoto(userId, updateDTO.getProfilePhoto());
+        mask += userPhotoService.updateMyPhoto(userId, profilePhoto);
 
         int maskCopy = mask;
         String updateList = "";

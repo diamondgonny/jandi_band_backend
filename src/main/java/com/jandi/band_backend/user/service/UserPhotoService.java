@@ -34,10 +34,10 @@ public class UserPhotoService {
 
     /// 유저 프로필 사진 수정
     @Transactional
-    public void updateMyPhoto(Integer userId, MultipartFile newProfileFile) {
+    public Integer updateMyPhoto(Integer userId, MultipartFile newProfileFile) {
         // 프로필 사진이 없을 경우 수정하지 않음
         if (newProfileFile == null || newProfileFile.isEmpty()) {
-            return;
+            return 0;
         }
 
         // 프로필 조회
@@ -49,5 +49,6 @@ public class UserPhotoService {
         s3FileManagementUtil.deleteFileWithKakaoCheck(originalUrl);
         profile.setImageUrl(newUrl);
         userPhotoRepository.save(profile);
+        return 1000;
     }
 }

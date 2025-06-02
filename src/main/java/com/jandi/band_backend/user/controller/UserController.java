@@ -39,15 +39,13 @@ public class UserController {
     @PatchMapping("/me/info")
     public CommonRespDTO<UserInfoDTO> updateMyInfo(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @ModelAttribute UpdateUserInfoReqDTO updateDTO,
-            @RequestPart(value = "profilePhoto", required = false) MultipartFile profilePhoto
-
+            @ModelAttribute UpdateUserInfoReqDTO updateDTO
     ) {
         Integer userId = userDetails.getUserId();
 
         UserInfoDTO updatedInfoDTO = new UserInfoDTO(
                 userService.updateMyInfo(userId, updateDTO),
-            userPhotoService.updateMyPhoto(userId, profilePhoto)
+                userPhotoService.updateMyPhoto(userId, updateDTO.getProfilePhoto())
         );
         return CommonRespDTO.success("내 정보 수정 성공", updatedInfoDTO);
     }

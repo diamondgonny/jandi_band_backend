@@ -32,9 +32,10 @@ public class UserService {
 
     /// 내 기본 정보 수정 (userId 기반)
     @Transactional
-    public void updateMyInfo(Integer userId, UpdateUserInfoReqDTO updateDTO) {
+    public Users updateMyInfo(Integer userId, UpdateUserInfoReqDTO updateDTO) {
         Users user = getMyInfo(userId);
         updateUser(user, updateDTO);
+        return user;
     }
 
     /// 내부 메서드

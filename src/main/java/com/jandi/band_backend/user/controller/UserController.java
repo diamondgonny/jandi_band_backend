@@ -45,8 +45,10 @@ public class UserController {
     ) {
         Integer userId = userDetails.getUserId();
 
-        userService.updateMyInfo(userId, updateDTO);
-        userPhotoService.updateMyPhoto(userId, profilePhoto);
-        return CommonRespDTO.success("내 정보 수정 성공");
+        UserInfoDTO updatedInfoDTO = new UserInfoDTO(
+                userService.updateMyInfo(userId, updateDTO),
+            userPhotoService.updateMyPhoto(userId, profilePhoto)
+        );
+        return CommonRespDTO.success("내 정보 수정 성공", updatedInfoDTO);
     }
 }

@@ -102,12 +102,16 @@ docker-compose -f docker-compose.deploy.yml up -d
 
 - **Grafana**: http://your-server-ip:3000 (admin/admin123)
 - **Prometheus**: http://your-server-ip:9090
+- **Alertmanager**: http://your-server-ip:9093
 - **Spring Boot App**: http://your-server-ip:8080
 
 ## 모니터링 중지
 
 ```bash
 cd ~/home/spring-app/monitoring
+./scripts/stop-deploy.sh
+
+# 또는 직접 Docker Compose 실행
 docker-compose -f docker-compose.deploy.yml down
 
 # 데이터까지 삭제하려면

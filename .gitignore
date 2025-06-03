@@ -77,6 +77,11 @@ monitoring-temp/
 monitoring/docker-compose.production.yml
 monitoring/config/prometheus/prometheus.production.yml
 monitoring/scripts/start-production.sh
+monitoring/docker-compose.deploy.yml
+monitoring/docker-compose.local.yml
+monitoring/config/prometheus/prometheus.deploy.yml
+monitoring/scripts/start-deploy.sh
+monitoring/scripts/stop-deploy.sh
 
 ### Docker ###
 # Docker Compose override files

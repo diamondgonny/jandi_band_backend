@@ -1,5 +1,6 @@
 package com.jandi.band_backend.club.service;
 
+import com.jandi.band_backend.club.dto.CalendarEventRespDTO;
 import com.jandi.band_backend.club.dto.ClubEventReqDTO;
 import com.jandi.band_backend.club.dto.ClubEventRespDTO;
 import com.jandi.band_backend.club.entity.Club;
@@ -9,6 +10,10 @@ import com.jandi.band_backend.club.repository.ClubEventRepository;
 import com.jandi.band_backend.club.repository.ClubRepository;
 import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.global.util.UserValidationUtil;
+import com.jandi.band_backend.team.entity.Team;
+import com.jandi.band_backend.team.entity.TeamEvent;
+import com.jandi.band_backend.team.repository.TeamRepository;
+import com.jandi.band_backend.team.repository.TeamEventRepository;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -27,6 +34,8 @@ public class ClubEventService {
     private final UserRepository userRepository;
     private final ClubEventRepository clubEventRepository;
     private final ClubMemberRepository clubMemberRepository;
+    private final TeamRepository teamRepository;
+    private final TeamEventRepository teamEventRepository;
     private final UserValidationUtil userValidationUtil;
 
     @Transactional
@@ -64,10 +73,16 @@ public class ClubEventService {
         return convertToClubEventRespDTO(event);
     }
 
+    // 캘린더용 통합 일정 조회 (동아리 일정 + 모든 하위 팀 일정)
     @Transactional(readOnly = true)
-    public List<ClubEventRespDTO> getClubEventListByMonth(Integer clubId, Integer userId, int year, int month) {
+    public List<CalendarEventRespDTO> getCalendarEventsForClub(Integer clubId, Integer userId, int year, int month) {
+        // 사용자 검증
         userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 동아리 존재 확인
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(() -> new IllegalArgumentException("동아리를 찾을 수 없습니다."));
 
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
@@ -75,11 +90,29 @@ public class ClubEventService {
         LocalDateTime start = startDate.atStartOfDay();
         LocalDateTime end = endDate.atTime(23, 59, 59);
 
-        List<ClubEvent> events = clubEventRepository.findByClubIdAndOverlappingDate(clubId, start, end);
+        List<CalendarEventRespDTO> calendarEvents = new ArrayList<>();
 
-        return events.stream()
-                .map(this::convertToClubEventRespDTO)
-                .toList();
+        // 1. 동아리 일정 조회
+        List<ClubEvent> clubEvents = clubEventRepository.findByClubIdAndOverlappingDate(clubId, start, end);
+        clubEvents.stream()
+                .map(CalendarEventRespDTO::fromClubEvent)
+                .forEach(calendarEvents::add);
+
+        // 2. 해당 동아리의 모든 팀 조회
+        List<Team> teams = teamRepository.findAllByClubIdAndDeletedAtIsNull(clubId);
+
+        // 3. 각 팀의 일정 조회
+        for (Team team : teams) {
+            List<TeamEvent> teamEvents = teamEventRepository.findTeamEventsByTeamIdAndDateRange(team.getId(), start, end);
+            teamEvents.stream()
+                    .map(CalendarEventRespDTO::fromTeamEvent)
+                    .forEach(calendarEvents::add);
+        }
+
+        // 4. 시작 시간 순으로 정렬
+        calendarEvents.sort(Comparator.comparing(CalendarEventRespDTO::getStartDatetime));
+
+        return calendarEvents;
     }
 
     // 클럽 이벤트 삭제 (ADMIN은 모든 이벤트 삭제 가능)

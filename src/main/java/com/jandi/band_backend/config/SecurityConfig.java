@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/health",
+                                "/api/clubs/**",
                                 "/api/images/**",
                                 "/api/promos",           // 공연 홍보 목록 조회
                                 "/api/promos/{promoId}", // 공연 홍보 상세 조회
@@ -61,8 +62,6 @@ public class SecurityConfig {
                                 // Actuator 모니터링 엔드포인트 (Prometheus & Grafana)
                                 "/actuator/**"
                         ).permitAll()
-                        // 동아리 관련 API 중 공개적으로 접근 가능한 것들 (동아리 목록 조회 등)
-                        .requestMatchers(HttpMethod.GET, "/api/clubs", "/api/clubs/{clubId}").permitAll()
                         // CORS preflight 요청 허용
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()

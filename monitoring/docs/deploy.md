@@ -100,7 +100,7 @@ docker-compose -f docker-compose.deploy.yml up -d
 
 ## 접속 정보
 
-- **Grafana**: http://your-server-ip:3000 (admin/admin123)
+- **Grafana**: http://your-server-ip:3000
 - **Prometheus**: http://your-server-ip:9090
 - **Alertmanager**: http://your-server-ip:9093
 - **Spring Boot App**: http://your-server-ip:8080

@@ -58,7 +58,7 @@ public class ClubService {
     private final UserValidationUtil userValidationUtil;
 
     private static final String CLUB_PHOTO_DIR = "club-photo";
-    private static final String DEFAULT_CLUB_PHOTO_URL = "https://jandi-rhythmeet.s3.ap-northeast-2.amazonaws.com/user-photo/31eef3b5-c915-4142-9b7f-1ff6a96a35a1.jpeg";
+    private static final String DEFAULT_CLUB_PHOTO_URL = "https://jandi-rhythmeet.s3.ap-northeast-2.amazonaws.com/club-photo/rhythmeet.webp";
 
     @Transactional
     public ClubDetailRespDTO createClub(ClubReqDTO request, Integer userId) {

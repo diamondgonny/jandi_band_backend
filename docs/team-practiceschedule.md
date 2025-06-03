@@ -147,8 +147,6 @@ curl -X POST "http://localhost:8080/api/teams/1/practice-schedules" \
 - `endDatetime` (string, 필수): 연습 종료 일시 (ISO 8601)
 - `noPosition` (string, 선택): 연습에서 제외되는 포지션 (VOCAL, GUITAR, KEYBOARD, BASS, DRUM, NONE)
 
-**참고**: `teamId`는 URL 경로에서 제공되므로 요청 바디에 포함하지 않습니다.
-
 #### 응답 (200 OK)
 ```json
 {

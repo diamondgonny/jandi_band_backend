@@ -18,14 +18,14 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Practice Schedule API")
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/teams/{teamId}")
 @RequiredArgsConstructor
 public class PracticeScheduleController {
 
     private final PracticeScheduleService practiceScheduleService;
 
     @Operation(summary = "팀별 연습 일정 목록 조회")
-    @GetMapping("/teams/{teamId}/practice-schedules")
+    @GetMapping("/practice-schedules")
     public ResponseEntity<CommonRespDTO<PagedRespDTO<PracticeScheduleRespDTO>>> getPracticeSchedulesByTeam(
             @PathVariable Integer teamId,
             Pageable pageable,
@@ -38,15 +38,16 @@ public class PracticeScheduleController {
     @Operation(summary = "연습 일정 상세 조회")
     @GetMapping("/practice-schedules/{scheduleId}")
     public ResponseEntity<CommonRespDTO<PracticeScheduleRespDTO>> getPracticeSchedule(
+            @PathVariable Integer teamId,
             @PathVariable Integer scheduleId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         return ResponseEntity.ok(CommonRespDTO.success("곡 연습 일정 상세 조회 성공",
-                practiceScheduleService.getPracticeSchedule(scheduleId, userId)));
+                practiceScheduleService.getPracticeScheduleDetail(teamId, scheduleId, userId)));
     }
 
     @Operation(summary = "연습 일정 생성")
-    @PostMapping("/teams/{teamId}/practice-schedules")
+    @PostMapping("/practice-schedules")
     public ResponseEntity<CommonRespDTO<PracticeScheduleRespDTO>> createPracticeSchedule(
             @PathVariable Integer teamId,
             @Valid @RequestBody PracticeScheduleReqDTO request,
@@ -62,10 +63,11 @@ public class PracticeScheduleController {
     @Operation(summary = "연습 일정 삭제")
     @DeleteMapping("/practice-schedules/{scheduleId}")
     public ResponseEntity<CommonRespDTO<Void>> deletePracticeSchedule(
+            @PathVariable Integer teamId,
             @PathVariable Integer scheduleId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
-        practiceScheduleService.deletePracticeSchedule(scheduleId, userId);
+        practiceScheduleService.deletePracticeScheduleByTeam(teamId, scheduleId, userId);
         return ResponseEntity.ok(CommonRespDTO.success("곡 연습 일정 삭제 성공"));
     }
 }

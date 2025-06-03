@@ -81,17 +81,23 @@ curl -X GET "http://localhost:8080/api/clubs/1/events/15" \
 
 ---
 
-## 3. 동아리 일정 목록 조회 (월별)
-### GET `/api/clubs/{clubId}/events/list/{year}/{month}`
+## 3. 캘린더용 통합 일정 조회 (동아리 일정 + 하위 팀 일정)
+### GET `/api/clubs/{clubId}/calendar`
+
+#### 설명
+동아리의 모든 일정(동아리 일정 + 모든 하위 팀의 연습 일정)을 통합하여 조회합니다. 
+이 API 하나로 모든 일정을 확인할 수 있으며, 프론트엔드에서 `eventType` 필드로 필터링이 가능합니다.
 
 #### 경로 파라미터
 - `clubId` (integer, 필수): 동아리 ID
+
+#### 쿼리 파라미터
 - `year` (integer, 필수): 조회할 연도 (예: 2024)
-- `month` (integer, 필수): 조회할 월(1-12)
+- `month` (integer, 필수): 조회할 월 (1-12)
 
 #### 요청
 ```bash
-curl -X GET "http://localhost:8080/api/clubs/1/events/list/2024/3" \
+curl -X GET "http://localhost:8080/api/clubs/1/calendar?year=2024&month=3" \
   -H "Authorization: Bearer {JWT_TOKEN}"
 ```
 
@@ -99,23 +105,54 @@ curl -X GET "http://localhost:8080/api/clubs/1/events/list/2024/3" \
 ```json
 {
   "success": true,
-  "message": "동아리 일정 목록 조회 성공",
+  "message": "캘린더 일정 조회 성공",
   "data": [
     {
       "id": 15,
       "name": "2024년 정기 공연",
       "startDatetime": "2024-03-15T19:00:00",
-      "endDatetime": "2024-03-15T21:30:00"
+      "endDatetime": "2024-03-15T21:30:00",
+      "eventType": "CLUB_EVENT",
+      "teamId": null,
+      "teamName": null,
+      "noPosition": null
     },
     {
-      "id": 16,
-      "name": "주간 연습",
-      "startDatetime": "2024-03-20T18:00:00",
-      "endDatetime": "2024-03-20T20:00:00"
+      "id": 3,
+      "name": "Bohemian Rhapsody - Queen",
+      "startDatetime": "2024-03-16T19:00:00",
+      "endDatetime": "2024-03-16T21:00:00",
+      "eventType": "TEAM_EVENT",
+      "teamId": 1,
+      "teamName": "락밴드 A팀",
+      "noPosition": "VOCAL"
+    },
+    {
+      "id": 4,
+      "name": "Hotel California - Eagles",
+      "startDatetime": "2024-03-18T20:00:00",
+      "endDatetime": "2024-03-18T22:00:00",
+      "eventType": "TEAM_EVENT",
+      "teamId": 2,
+      "teamName": "락밴드 B팀",
+      "noPosition": "NONE"
     }
   ]
 }
 ```
+
+#### 응답 필드
+- `id` (integer): 일정 ID
+- `name` (string): 일정명
+- `startDatetime` (string): 시작 일시
+- `endDatetime` (string): 종료 일시
+- `eventType` (string): 일정 유형
+  - `CLUB_EVENT`: 동아리 일정
+  - `TEAM_EVENT`: 팀 연습 일정
+- `teamId` (integer, nullable): 팀 ID (팀 일정인 경우만)
+- `teamName` (string, nullable): 팀 이름 (팀 일정인 경우만)
+- `noPosition` (string, nullable): 제외 포지션 (팀 일정인 경우만)
+  - 가능한 값: `VOCAL`, `GUITAR`, `KEYBOARD`, `BASS`, `DRUM`, `NONE`
 
 ---
 
@@ -214,20 +251,16 @@ interface ClubEventRespDTO {
 }
 ```
 
----
-
-## 에러 응답
-```json
-{
-  "success": false,
-  "message": "에러 메시지",
-  "data": null
+### CalendarEventRespDTO (캘린더 응답)
+```typescript
+interface CalendarEventRespDTO {
+  id: number;
+  name: string;
+  startDatetime: string;
+  endDatetime: string;
+  eventType: 'CLUB_EVENT' | 'TEAM_EVENT';
+  teamId?: number;       // 팀 일정인 경우만
+  teamName?: string;     // 팀 일정인 경우만
+  noPosition?: string;   // 팀 일정인 경우만
 }
 ```
-
-### HTTP 상태 코드
-- `200 OK`: 성공
-- `400 Bad Request`: 잘못된 요청
-- `401 Unauthorized`: 인증 실패
-- `403 Forbidden`: 권한 없음
-- `404 Not Found`: 리소스 없음

@@ -1,7 +1,7 @@
 # Practice Schedule API
 
 ## Base URL
-`/api`
+`/api/teams/{teamId}/practice-schedules`
 
 ## 인증
 **모든 API는 JWT 인증 필요** (Spring Security + @AuthenticationPrincipal CustomUserDetails)
@@ -42,6 +42,9 @@
 curl -X GET "http://localhost:8080/api/teams/1/practice-schedules?page=0&size=20" \
   -H "Authorization: Bearer {JWT_TOKEN}"
 ```
+
+#### 경로 파라미터
+- `teamId` (integer, 필수): 팀 ID
 
 #### 쿼리 파라미터
 - `page` (integer): 페이지 번호 (기본값: 0)
@@ -84,13 +87,17 @@ curl -X GET "http://localhost:8080/api/teams/1/practice-schedules?page=0&size=20
 ---
 
 ## 2. 연습 일정 상세 조회
-### GET `/api/practice-schedules/{scheduleId}`
+### GET `/api/teams/{teamId}/practice-schedules/{scheduleId}`
 
 #### 요청
 ```bash
-curl -X GET "http://localhost:8080/api/practice-schedules/1" \
+curl -X GET "http://localhost:8080/api/teams/1/practice-schedules/1" \
   -H "Authorization: Bearer {JWT_TOKEN}"
 ```
+
+#### 경로 파라미터
+- `teamId` (integer, 필수): 팀 ID
+- `scheduleId` (integer, 필수): 연습 일정 ID
 
 #### 응답 (200 OK)
 ```json
@@ -131,6 +138,9 @@ curl -X POST "http://localhost:8080/api/teams/1/practice-schedules" \
   }'
 ```
 
+#### 경로 파라미터
+- `teamId` (integer, 필수): 팀 ID
+
 #### 요청 필드
 - `name` (string, 필수): 연습 일정명 (최대 255자)
 - `startDatetime` (string, 필수): 연습 시작 일시 (ISO 8601)
@@ -161,13 +171,17 @@ curl -X POST "http://localhost:8080/api/teams/1/practice-schedules" \
 ---
 
 ## 4. 연습 일정 삭제
-### DELETE `/api/practice-schedules/{scheduleId}`
+### DELETE `/api/teams/{teamId}/practice-schedules/{scheduleId}`
 
 #### 요청
 ```bash
-curl -X DELETE "http://localhost:8080/api/practice-schedules/1" \
+curl -X DELETE "http://localhost:8080/api/teams/1/practice-schedules/1" \
   -H "Authorization: Bearer {JWT_TOKEN}"
 ```
+
+#### 경로 파라미터
+- `teamId` (integer, 필수): 팀 ID
+- `scheduleId` (integer, 필수): 삭제할 연습 일정 ID
 
 #### 응답 (200 OK)
 ```json
@@ -218,3 +232,4 @@ curl -X DELETE "http://localhost:8080/api/practice-schedules/1" \
 - **페이지네이션**: 기본 크기 20개, 최신 생성순으로 정렬
 - **소프트 삭제**: 실제 삭제가 아닌 deletedAt 설정으로 소프트 삭제
 - **자동 필터링**: 모든 조회 API에서 삭제된 일정은 자동으로 제외
+- **URL 일관성**: 모든 엔드포인트가 `/api/teams/{teamId}/practice-schedules` 패턴을 따름

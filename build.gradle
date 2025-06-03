@@ -47,6 +47,8 @@ dependencies {
     // Prometheus & Grafana 모니터링
     implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation 'io.micrometer:micrometer-core'
+    // Prometheus exposition formats 추가 (Spring Boot 3.4.5 호환성을 위해)
+    implementation 'io.prometheus:prometheus-metrics-exposition-formats'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'

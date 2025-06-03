@@ -1,11 +1,13 @@
 package com.jandi.band_backend.club.controller;
 
+import com.jandi.band_backend.club.dto.CalendarEventRespDTO;
 import com.jandi.band_backend.club.dto.ClubEventReqDTO;
 import com.jandi.band_backend.club.dto.ClubEventRespDTO;
 import com.jandi.band_backend.club.service.ClubEventService;
 import com.jandi.band_backend.global.dto.CommonRespDTO;
 import com.jandi.band_backend.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -48,19 +50,19 @@ public class ClubEventController {
         return ResponseEntity.ok(CommonRespDTO.success("동아리 일정 상세 조회 성공", response));
     }
 
-    @Operation(summary = "동아리 일정 목록 조회")
-    @GetMapping("/events/list/{year}/{month}")
-    public ResponseEntity<CommonRespDTO<List<ClubEventRespDTO>>> getClubEventsByMonth(
+    @Operation(summary = "캘린더용 통합 일정 조회 (동아리 일정 + 하위 팀 일정)")
+    @GetMapping("/calendar")
+    public ResponseEntity<CommonRespDTO<List<CalendarEventRespDTO>>> getCalendarEvents(
             @PathVariable Integer clubId,
-            @PathVariable int year,
-            @PathVariable int month,
+            @Parameter(description = "조회할 연도 (예: 2024)") @RequestParam int year,
+            @Parameter(description = "조회할 월 (1-12)") @RequestParam int month,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Integer userId = userDetails.getUserId();
 
-        List<ClubEventRespDTO> response = clubEventService.getClubEventListByMonth(clubId, userId, year, month);
+        List<CalendarEventRespDTO> response = clubEventService.getCalendarEventsForClub(clubId, userId, year, month);
 
-        return ResponseEntity.ok(CommonRespDTO.success("동아리 일정 목록 조회 성공", response));
+        return ResponseEntity.ok(CommonRespDTO.success("캘린더 일정 조회 성공", response));
     }
 
     @Operation(summary = "동아리 일정 삭제")

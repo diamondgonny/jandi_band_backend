@@ -5,16 +5,16 @@ global:
   scrape_interval: 15s # 15초마다 메트릭 수집
   evaluation_interval: 15s # 15초마다 규칙 평가
 
-# 규칙 파일 경로 (선택사항)
+# 규칙 파일 경로
 rule_files:
-  # - "alert_rules.yml"
+  - "alert-rules.yml"
 
-# 알림 관리자 설정 (선택사항)
-# alerting:
-#   alertmanagers:
-#     - static_configs:
-#         - targets:
-#           - alertmanager:9093
+# 알림 관리자 설정
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
 
 # 메트릭 수집 대상 설정
 scrape_configs:

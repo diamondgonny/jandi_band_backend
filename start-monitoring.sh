@@ -1,87 +1,148 @@
 #!/bin/bash
 
-# Jandi Band Backend 모니터링 시스템 시작 스크립트
+# 🔍 Jandi Band Backend - 모니터링 시스템 시작 스크립트
+# Prometheus + Grafana + Alertmanager를 Docker Compose로 실행합니다.
 
-echo "🔍 Jandi Band Backend 모니터링 시스템을 시작합니다..."
-echo "=============================================="
+set -e
 
-# 현재 디렉토리 확인
-if [ ! -f "docker-compose.monitoring.yml" ]; then
-    echo "❌ docker-compose.monitoring.yml 파일을 찾을 수 없습니다."
-    echo "프로젝트 루트 디렉토리에서 실행해주세요."
-    exit 1
-fi
+# 색상 정의
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# 로그 함수
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+log_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# 제목 출력
+echo -e "${BLUE}"
+echo "=================================================================="
+echo "🔍 Jandi Band Backend - 모니터링 시스템 시작"
+echo "=================================================================="
+echo -e "${NC}"
 
 # Docker 및 Docker Compose 확인
+log_info "Docker 및 Docker Compose 확인 중..."
 if ! command -v docker &> /dev/null; then
-    echo "❌ Docker가 설치되어 있지 않습니다."
-    echo "Docker를 설치한 후 다시 시도해주세요."
+    log_error "Docker가 설치되지 않았습니다."
     exit 1
 fi
 
-if ! command -v docker-compose &> /dev/null; then
-    echo "❌ Docker Compose가 설치되어 있지 않습니다."
-    echo "Docker Compose를 설치한 후 다시 시도해주세요."
+if ! command -v docker-compose &> /dev/null && ! command -v docker compose &> /dev/null; then
+    log_error "Docker Compose가 설치되지 않았습니다."
     exit 1
 fi
 
-# Spring Boot 애플리케이션 상태 확인
-echo "📡 Spring Boot 애플리케이션 상태 확인 중..."
-if curl -s http://localhost:8080/health > /dev/null 2>&1; then
-    echo "✅ Spring Boot 애플리케이션이 실행 중입니다."
+# Docker 서비스 확인
+if ! docker info &> /dev/null; then
+    log_error "Docker 서비스가 실행되지 않았습니다. Docker를 시작해주세요."
+    exit 1
+fi
+
+log_success "Docker 환경 확인 완료"
+
+# 필요한 디렉토리 생성
+log_info "필요한 디렉토리 생성 중..."
+mkdir -p monitoring/{prometheus,grafana/{provisioning/{datasources,dashboards},dashboards},alertmanager}
+
+# 권한 설정 (Grafana용)
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    log_info "Linux 환경에서 Grafana 권한 설정 중..."
+    sudo chown -R 472:472 monitoring/grafana 2>/dev/null || log_warning "Grafana 권한 설정에 실패했습니다. 수동으로 설정이 필요할 수 있습니다."
+fi
+
+# Spring Boot 애플리케이션 확인
+log_info "Spring Boot 애플리케이션 상태 확인 중..."
+if curl -sf http://localhost:8080/health &> /dev/null; then
+    log_success "Spring Boot 애플리케이션이 실행 중입니다."
+elif curl -sf http://localhost:8080/actuator/health &> /dev/null; then
+    log_success "Spring Boot 애플리케이션이 실행 중입니다."
 else
-    echo "⚠️  Spring Boot 애플리케이션이 실행되지 않았습니다."
-    echo "다음 명령어로 애플리케이션을 먼저 실행해주세요:"
-    echo "  ./gradlew bootRun"
-    echo ""
-    echo "계속해서 모니터링 스택만 실행하시겠습니까? (y/N)"
-    read -r response
-    if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-        exit 1
+    log_warning "Spring Boot 애플리케이션이 실행되지 않았거나 헬스체크에 실패했습니다."
+    log_warning "모니터링 스택은 시작되지만 애플리케이션 메트릭을 수집할 수 없습니다."
+    
+    read -p "계속 진행하시겠습니까? (y/N): " continue_choice
+    if [[ ! $continue_choice =~ ^[Yy]$ ]]; then
+        log_info "모니터링 시작을 취소했습니다."
+        exit 0
     fi
 fi
 
-# 기존 컨테이너 정리
-echo "🧹 기존 모니터링 컨테이너 정리 중..."
-docker-compose -f docker-compose.monitoring.yml down
+# 기존 컨테이너 정리 (선택사항)
+read -p "기존 모니터링 컨테이너를 정리하시겠습니까? (y/N): " cleanup_choice
+if [[ $cleanup_choice =~ ^[Yy]$ ]]; then
+    log_info "기존 모니터링 컨테이너 정리 중..."
+    docker-compose -f docker-compose.monitoring.yml down -v 2>/dev/null || true
+    log_success "기존 컨테이너 정리 완료"
+fi
 
 # 모니터링 스택 시작
-echo "🚀 모니터링 스택 시작 중..."
-docker-compose -f docker-compose.monitoring.yml up -d
+log_info "모니터링 스택 시작 중..."
+if command -v docker-compose &> /dev/null; then
+    docker-compose -f docker-compose.monitoring.yml up -d
+else
+    docker compose -f docker-compose.monitoring.yml up -d
+fi
 
 # 컨테이너 상태 확인
-echo "⏳ 컨테이너 시작 대기 중..."
+log_info "컨테이너 상태 확인 중..."
 sleep 10
 
-# Prometheus 상태 확인
-echo "📊 Prometheus 상태 확인 중..."
-if curl -s http://localhost:9090/-/healthy > /dev/null 2>&1; then
-    echo "✅ Prometheus가 정상적으로 실행 중입니다."
+# 각 서비스 헬스체크
+services=("prometheus:9090" "grafana:3000" "alertmanager:9093")
+all_healthy=true
+
+for service in "${services[@]}"; do
+    name=$(echo $service | cut -d: -f1)
+    port=$(echo $service | cut -d: -f2)
+    
+    if curl -sf http://localhost:$port &> /dev/null; then
+        log_success "$name이 정상적으로 실행 중입니다 (포트: $port)"
+    else
+        log_error "$name이 실행되지 않았습니다 (포트: $port)"
+        all_healthy=false
+    fi
+done
+
+# 결과 출력
+echo -e "\n${BLUE}=================================================================="
+echo "🔍 모니터링 시스템 시작 완료"
+echo "=================================================================="
+echo -e "${NC}"
+
+if $all_healthy; then
+    log_success "모든 모니터링 서비스가 정상적으로 시작되었습니다!"
 else
-    echo "❌ Prometheus 실행에 문제가 있습니다."
+    log_warning "일부 서비스에 문제가 있습니다. 로그를 확인해주세요."
 fi
 
-# Grafana 상태 확인
-echo "📈 Grafana 상태 확인 중..."
-if curl -s http://localhost:3000/api/health > /dev/null 2>&1; then
-    echo "✅ Grafana가 정상적으로 실행 중입니다."
-else
-    echo "❌ Grafana 실행에 문제가 있습니다."
-fi
+echo -e "\n📊 접속 정보:"
+echo -e "• Grafana:      ${GREEN}http://localhost:3000${NC} (admin/admin123)"
+echo -e "• Prometheus:   ${GREEN}http://localhost:9090${NC}"
+echo -e "• Alertmanager: ${GREEN}http://localhost:9093${NC}"
 
-echo ""
-echo "🎉 모니터링 시스템이 성공적으로 시작되었습니다!"
-echo "=============================================="
-echo "📍 접속 정보:"
-echo "  • Spring Boot App: http://localhost:8080"
-echo "  • Prometheus:      http://localhost:9090"
-echo "  • Grafana:         http://localhost:3000"
-echo "    - 사용자명: admin"
-echo "    - 비밀번호: admin123"
-echo ""
-echo "📋 유용한 명령어:"
-echo "  • 로그 확인: docker-compose -f docker-compose.monitoring.yml logs -f"
-echo "  • 중지:     docker-compose -f docker-compose.monitoring.yml down"
-echo "  • 재시작:   docker-compose -f docker-compose.monitoring.yml restart"
-echo ""
-echo "📚 자세한 사용법은 MONITORING_GUIDE.md 파일을 참고하세요." 
+echo -e "\n🔧 유용한 명령어:"
+echo -e "• 로그 확인:    ${YELLOW}docker-compose -f docker-compose.monitoring.yml logs -f${NC}"
+echo -e "• 컨테이너 상태: ${YELLOW}docker-compose -f docker-compose.monitoring.yml ps${NC}"
+echo -e "• 모니터링 중지: ${YELLOW}docker-compose -f docker-compose.monitoring.yml down${NC}"
+
+echo -e "\n📈 모니터링 메트릭 테스트:"
+echo -e "• API 호출 테스트: ${YELLOW}curl http://localhost:8080/health${NC}"
+echo -e "• 메트릭 확인:     ${YELLOW}curl http://localhost:8080/actuator/prometheus${NC}"
+
+echo -e "\n✅ 모니터링 시스템이 준비되었습니다!" 

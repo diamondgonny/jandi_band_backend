@@ -53,6 +53,8 @@ public class SecurityConfig {
                                 "/api/promos/search",    // 공연 홍보 검색
                                 "/api/promos/filter",    // 공연 홍보 필터링
                                 "/api/promos/*/comments", // 공연 홍보 댓글 목록 조회
+                                "/api/promos/reports", // 공연 홍보 신고
+                                "/api/promos/comments/reports", // 공연 홍보 댓글 신고
                                 // Swagger UI 관련 경로
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",

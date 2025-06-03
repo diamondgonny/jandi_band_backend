@@ -9,25 +9,26 @@ volumes:
 services:
   prometheus:
     image: prom/prometheus:v2.45.0
-    container_name: jandi-prometheus
+    container_name: jandi-prometheus-local
     restart: unless-stopped
     ports:
       - "9090:9090"
     volumes:
-      - ./config/prometheus/prometheus.deploy.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/prometheus/prometheus.local.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/prometheus/alert-rules.yml:/etc/prometheus/alert-rules.yml:ro
       - prometheus-data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=30d'
-      - '--storage.tsdb.retention.size=10GB'
+      - '--storage.tsdb.retention.time=7d'
+      - '--storage.tsdb.retention.size=2GB'
       - '--web.enable-lifecycle'
     networks:
       - jandi_band_backend_monitoring
 
   grafana:
     image: grafana/grafana:10.0.0
-    container_name: jandi-grafana
+    container_name: jandi-grafana-local
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -42,4 +43,19 @@ services:
     networks:
       - jandi_band_backend_monitoring
     depends_on:
-      - prometheus 
+      - prometheus
+
+  alertmanager:
+    image: prom/alertmanager:v0.25.0
+    container_name: jandi-alertmanager-local
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./config/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    networks:
+      - jandi_band_backend_monitoring 

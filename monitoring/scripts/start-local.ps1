@@ -63,8 +63,17 @@ Set-Location -Path "monitoring"
 
 # Clean up existing monitoring containers
 Write-Host "`n6. Cleaning up existing monitoring containers..." -ForegroundColor Yellow
-docker-compose -f docker-compose.yml down -v 2>$null
-Write-Host "Existing containers cleaned up." -ForegroundColor Green
+$cleanup = Read-Host "Clean up existing monitoring containers? (y/N)"
+if ($cleanup -eq "y" -or $cleanup -eq "Y") {
+    Write-Host "[INFO] Cleaning up existing monitoring containers..." -ForegroundColor Blue
+    try {
+        docker-compose -f docker-compose.local.yml down -v 2>$null
+        Write-Host "[SUCCESS] Existing containers cleaned up" -ForegroundColor Green
+    }
+    catch {
+        Write-Host "[WARNING] No existing containers to clean up" -ForegroundColor Yellow
+    }
+}
 
 # Create Docker network
 Write-Host "`n7. Creating Docker network..." -ForegroundColor Yellow
@@ -75,7 +84,18 @@ Write-Host "Docker network is ready." -ForegroundColor Green
 Write-Host "`n8. Starting monitoring stack..." -ForegroundColor Yellow
 Write-Host "Starting Prometheus, Grafana, and Alertmanager..." -ForegroundColor Cyan
 
-docker-compose -f docker-compose.yml up -d
+try {
+    if (Get-Command docker-compose -ErrorAction SilentlyContinue) {
+        docker-compose -f docker-compose.local.yml up -d
+    }
+    else {
+        docker compose -f docker-compose.local.yml up -d
+    }
+}
+catch {
+    Write-Host "[ERROR] Failed to start monitoring stack: $($_.Exception.Message)" -ForegroundColor Red
+    exit 1
+}
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "`nMonitoring stack started successfully!" -ForegroundColor Green
@@ -85,7 +105,7 @@ if ($LASTEXITCODE -eq 0) {
     Start-Sleep -Seconds 30
     
     Write-Host "`n9. Checking container status..." -ForegroundColor Yellow
-    docker-compose -f docker-compose.yml ps
+    docker-compose -f docker-compose.local.yml ps
     
     Write-Host "`n===========================================" -ForegroundColor Green
     Write-Host "Monitoring Dashboard Access Information" -ForegroundColor Green
@@ -122,13 +142,14 @@ if ($LASTEXITCODE -eq 0) {
 } else {
     Write-Host "`nFailed to start monitoring stack." -ForegroundColor Red
     Write-Host "Please check docker-compose logs:" -ForegroundColor Red
-    Write-Host "docker-compose -f docker-compose.yml logs" -ForegroundColor White
+    Write-Host "docker-compose -f docker-compose.local.yml logs" -ForegroundColor White
     exit 1
 }
 
 # Return to project root
 Set-Location -Path ".."
 
-Write-Host "`nUseful commands:" -ForegroundColor Cyan
-Write-Host "View logs: cd monitoring && docker-compose logs -f" -ForegroundColor White
-Write-Host "Stop monitoring: cd monitoring && docker-compose down" -ForegroundColor White 
+Write-Host "`n🔧 Useful Commands:" -ForegroundColor Blue
+Write-Host "• View logs:       " -NoNewline; Write-Host "docker-compose -f docker-compose.local.yml logs -f" -ForegroundColor Yellow
+Write-Host "• Container status:" -NoNewline; Write-Host "docker-compose -f docker-compose.local.yml ps" -ForegroundColor Yellow
+Write-Host "• Stop monitoring: " -NoNewline; Write-Host "docker-compose -f docker-compose.local.yml down" -ForegroundColor Yellow 

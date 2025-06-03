@@ -29,14 +29,17 @@ Spring Boot App → Micrometer → Prometheus → Grafana
 
 ### 3. 모니터링 스택 실행
 ```bash
-# 자동 시작 스크립트 사용 (권장)
-./start-monitoring.sh
+# Windows 환경에서 PowerShell 스크립트 사용 (권장)
+./monitoring/scripts/start-local.ps1
+
+# Linux/Mac 환경에서 Bash 스크립트 사용 (권장)  
+./monitoring/scripts/start-local.sh
 
 # 또는 직접 Docker Compose 실행
-docker-compose -f docker-compose.monitoring.yml up -d
+docker-compose -f monitoring/docker-compose.local.yml up -d
 
 # 로그 확인
-docker-compose -f docker-compose.monitoring.yml logs -f
+docker-compose -f monitoring/docker-compose.local.yml logs -f
 ```
 
 ### 4. 접속 URL
@@ -90,7 +93,7 @@ docker-compose -f docker-compose.monitoring.yml logs -f
 
 ## 설정 상세
 
-### Prometheus 설정 (`monitoring/prometheus/prometheus.yml`)
+### Prometheus 설정 (`monitoring/config/prometheus/prometheus.local.yml`)
 ```yaml
 scrape_configs:
   - job_name: 'jandi-band-backend'
@@ -204,19 +207,19 @@ docker restart jandi-grafana
 
 ```bash
 # 모니터링 스택 중지
-docker-compose -f docker-compose.monitoring.yml down
+docker-compose -f monitoring/docker-compose.local.yml down
 
 # 볼륨 포함 완전 삭제
-docker-compose -f docker-compose.monitoring.yml down -v
+docker-compose -f monitoring/docker-compose.local.yml down -v
 
 # 컨테이너 상태 확인
-docker-compose -f docker-compose.monitoring.yml ps
+docker-compose -f monitoring/docker-compose.local.yml ps
 
 # 실시간 로그 확인
-docker-compose -f docker-compose.monitoring.yml logs -f
+docker-compose -f monitoring/docker-compose.local.yml logs -f
 
 # 특정 서비스 재시작
-docker-compose -f docker-compose.monitoring.yml restart grafana
+docker-compose -f monitoring/docker-compose.local.yml restart grafana
 ```
 
 ## 다음 단계

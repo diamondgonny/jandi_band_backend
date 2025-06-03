@@ -10,15 +10,15 @@
 ~/home/spring-app/
 ├── jandi-band-backend.jar          # Spring Boot 애플리케이션
 ├── monitoring/                     # 모니터링 시스템
-│   ├── docker-compose.production.yml
+│   ├── docker-compose.deploy.yml
 │   ├── config/
 │   │   ├── prometheus/
-│   │   │   └── prometheus.production.yml
+│   │   │   └── prometheus.deploy.yml
 │   │   └── grafana/
 │   │       ├── provisioning/
 │   │       └── dashboards/
 │   └── scripts/
-│       └── start-production.sh
+│       └── start-deploy.sh
 └── logs/                           # 애플리케이션 로그
 ```
 
@@ -66,15 +66,15 @@ cd ~/home/spring-app
 scp -r monitoring/ user@your-server:~/home/spring-app/
 
 # 또는 개별 파일 전송
-scp monitoring/docker-compose.production.yml user@your-server:~/home/spring-app/monitoring/
-scp monitoring/config/prometheus/prometheus.production.yml user@your-server:~/home/spring-app/monitoring/config/prometheus/
-scp monitoring/scripts/start-production.sh user@your-server:~/home/spring-app/monitoring/scripts/
+scp monitoring/docker-compose.deploy.yml user@your-server:~/home/spring-app/monitoring/
+scp monitoring/config/prometheus/prometheus.deploy.yml user@your-server:~/home/spring-app/monitoring/config/prometheus/
+scp monitoring/scripts/start-deploy.sh user@your-server:~/home/spring-app/monitoring/scripts/
 ```
 
 ### 2. 스크립트 실행 권한 부여
 
 ```bash
-chmod +x ~/home/spring-app/monitoring/scripts/start-production.sh
+chmod +x ~/home/spring-app/monitoring/scripts/start-deploy.sh
 ```
 
 ### 3. Spring Boot 애플리케이션 시작
@@ -88,14 +88,14 @@ java -jar jandi-band-backend.jar --spring.profiles.active=prod &
 
 ```bash
 cd ~/home/spring-app/monitoring
-./scripts/start-production.sh
+./scripts/start-deploy.sh
 ```
 
 또는 직접 Docker Compose 실행:
 
 ```bash
 cd ~/home/spring-app/monitoring
-docker-compose -f docker-compose.production.yml up -d
+docker-compose -f docker-compose.deploy.yml up -d
 ```
 
 ## 접속 정보
@@ -108,10 +108,10 @@ docker-compose -f docker-compose.production.yml up -d
 
 ```bash
 cd ~/home/spring-app/monitoring
-docker-compose -f docker-compose.production.yml down
+docker-compose -f docker-compose.deploy.yml down
 
 # 데이터까지 삭제하려면
-docker-compose -f docker-compose.production.yml down -v
+docker-compose -f docker-compose.deploy.yml down -v
 ```
 
 ## 백업 및 복구
@@ -154,8 +154,8 @@ After=docker.service
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=/home/ubuntu/home/spring-app/monitoring
-ExecStart=/usr/local/bin/docker-compose -f docker-compose.production.yml up -d
-ExecStop=/usr/local/bin/docker-compose -f docker-compose.production.yml down
+ExecStart=/usr/local/bin/docker-compose -f docker-compose.deploy.yml up -d
+ExecStop=/usr/local/bin/docker-compose -f docker-compose.deploy.yml down
 TimeoutStartSec=0
 
 [Install]
@@ -174,7 +174,7 @@ sudo systemctl start jandi-monitoring.service
 
 ```bash
 # 로그 확인
-docker-compose -f docker-compose.production.yml logs
+docker-compose -f docker-compose.deploy.yml logs
 
 # 개별 컨테이너 로그 확인
 docker logs jandi-prometheus
@@ -199,7 +199,7 @@ curl http://localhost:9090/api/v1/targets
 sudo netstat -tulpn | grep :3000
 sudo netstat -tulpn | grep :9090
 
-# 포트 변경이 필요한 경우 docker-compose.production.yml 수정
+# 포트 변경이 필요한 경우 docker-compose.deploy.yml 수정
 ```
 
 ## 보안 설정
@@ -219,7 +219,7 @@ sudo ufw enable
 
 ```bash
 # Grafana 설정 파일에서 admin 비밀번호 변경
-# docker-compose.production.yml 파일의 GF_SECURITY_ADMIN_PASSWORD 수정
+# docker-compose.deploy.yml 파일의 GF_SECURITY_ADMIN_PASSWORD 수정
 ```
 
 ---

@@ -15,20 +15,19 @@ Write-Host "`nStopping monitoring stack..." -ForegroundColor Yellow
 # Navigate to monitoring directory
 Set-Location -Path "monitoring"
 
-# Stop and remove monitoring containers
-docker-compose -f docker-compose.yml down
+# 컨테이너 정지
+Write-Host "Stopping monitoring containers..." -ForegroundColor Cyan
+docker-compose -f docker-compose.local.yml down
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "`n✓ Monitoring stack stopped successfully." -ForegroundColor Green
+    Write-Host "Monitoring containers stopped successfully." -ForegroundColor Green
     
-    # Ask about removing volumes
-    $removeVolumes = Read-Host "`nDo you want to remove data volumes as well? (y/N)"
-    
+    # 볼륨 삭제 옵션
+    $removeVolumes = Read-Host "`nRemove data volumes as well? (y/N)"
     if ($removeVolumes -eq "y" -or $removeVolumes -eq "Y") {
-        Write-Host "`nRemoving data volumes..." -ForegroundColor Yellow
-        docker-compose -f docker-compose.yml down -v
-        docker volume prune -f
-        Write-Host "✓ Data volumes removed." -ForegroundColor Green
+        Write-Host "Removing volumes..." -ForegroundColor Yellow
+        docker-compose -f docker-compose.local.yml down -v
+        Write-Host "Volumes removed." -ForegroundColor Green
     }
     
     # Clean up unused networks

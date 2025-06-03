@@ -84,19 +84,19 @@ else
 fi
 
 # 기존 컨테이너 정리 (선택사항)
-read -p "기존 모니터링 컨테이너를 정리하시겠습니까? (y/N): " cleanup_choice
+read -p "Clean up existing monitoring containers? (y/N): " cleanup_choice
 if [[ $cleanup_choice =~ ^[Yy]$ ]]; then
-    log_info "기존 모니터링 컨테이너 정리 중..."
-    docker-compose -f docker-compose.monitoring.yml down -v 2>/dev/null || true
-    log_success "기존 컨테이너 정리 완료"
+    log_info "Cleaning up existing monitoring containers..."
+    docker-compose -f docker-compose.local.yml down -v 2>/dev/null || true
+    log_success "Existing containers cleaned up"
 fi
 
 # 모니터링 스택 시작
-log_info "모니터링 스택 시작 중..."
+log_info "Starting monitoring stack..."
 if command -v docker-compose &> /dev/null; then
-    docker-compose -f docker-compose.monitoring.yml up -d
+    docker-compose -f docker-compose.local.yml up -d
 else
-    docker compose -f docker-compose.monitoring.yml up -d
+    docker compose -f docker-compose.local.yml up -d
 fi
 
 # 컨테이너 상태 확인
@@ -136,10 +136,10 @@ echo -e "• Grafana:      ${GREEN}http://localhost:3000${NC} (admin/admin123)"
 echo -e "• Prometheus:   ${GREEN}http://localhost:9090${NC}"
 echo -e "• Alertmanager: ${GREEN}http://localhost:9093${NC}"
 
-echo -e "\n🔧 유용한 명령어:"
-echo -e "• 로그 확인:    ${YELLOW}docker-compose -f docker-compose.monitoring.yml logs -f${NC}"
-echo -e "• 컨테이너 상태: ${YELLOW}docker-compose -f docker-compose.monitoring.yml ps${NC}"
-echo -e "• 모니터링 중지: ${YELLOW}docker-compose -f docker-compose.monitoring.yml down${NC}"
+echo -e "\n🔧 Useful Commands:"
+echo -e "• View logs:    ${YELLOW}docker-compose -f docker-compose.local.yml logs -f${NC}"
+echo -e "• Container status: ${YELLOW}docker-compose -f docker-compose.local.yml ps${NC}"
+echo -e "• Stop monitoring: ${YELLOW}docker-compose -f docker-compose.local.yml down${NC}"
 
 echo -e "\n📈 모니터링 메트릭 테스트:"
 echo -e "• API 호출 테스트: ${YELLOW}curl http://localhost:8080/health${NC}"

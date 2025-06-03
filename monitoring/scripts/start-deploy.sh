@@ -77,16 +77,16 @@ fi
 read -p "Clean up existing monitoring containers? (y/N): " cleanup_choice
 if [[ $cleanup_choice =~ ^[Yy]$ ]]; then
     log_info "Cleaning up existing monitoring containers..."
-    docker-compose -f docker-compose.production.yml down -v 2>/dev/null || true
+    docker-compose -f docker-compose.deploy.yml down -v 2>/dev/null || true
     log_success "Existing containers cleaned up"
 fi
 
 # 모니터링 스택 시작
 log_info "Starting monitoring stack..."
 if command -v docker-compose &> /dev/null; then
-    docker-compose -f docker-compose.production.yml up -d
+    docker-compose -f docker-compose.deploy.yml up -d
 else
-    docker compose -f docker-compose.production.yml up -d
+    docker compose -f docker-compose.deploy.yml up -d
 fi
 
 # 컨테이너 상태 확인
@@ -126,9 +126,9 @@ echo -e "• Grafana:      ${GREEN}http://your-server-ip:3000${NC} (admin/admin1
 echo -e "• Prometheus:   ${GREEN}http://your-server-ip:9090${NC}"
 
 echo -e "\n🔧 Useful Commands:"
-echo -e "• View logs:    ${YELLOW}docker-compose -f docker-compose.production.yml logs -f${NC}"
-echo -e "• Container status: ${YELLOW}docker-compose -f docker-compose.production.yml ps${NC}"
-echo -e "• Stop monitoring: ${YELLOW}docker-compose -f docker-compose.production.yml down${NC}"
+echo -e "• View logs:    ${YELLOW}docker-compose -f docker-compose.deploy.yml logs -f${NC}"
+echo -e "• Container status: ${YELLOW}docker-compose -f docker-compose.deploy.yml ps${NC}"
+echo -e "• Stop monitoring: ${YELLOW}docker-compose -f docker-compose.deploy.yml down${NC}"
 
 echo -e "\n📈 Test Monitoring:"
 echo -e "• API test: ${YELLOW}curl http://localhost:8080/health${NC}"

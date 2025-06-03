@@ -73,6 +73,11 @@ docker-volumes/
 *.temp
 monitoring-temp/
 
+# Production deployment files (수동 관리)
+monitoring/docker-compose.production.yml
+monitoring/config/prometheus/prometheus.production.yml
+monitoring/scripts/start-production.sh
+
 ### Docker ###
 # Docker Compose override files
 docker-compose.override.yml

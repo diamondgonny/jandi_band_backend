@@ -1,5 +1,5 @@
 # Prometheus 설정 파일
-# Spring Boot 애플리케이션과 시스템 메트릭을 수집합니다.
+# Spring Boot 애플리케이션 메트릭을 수집합니다.
 
 global:
   scrape_interval: 15s # 15초마다 메트릭 수집
@@ -23,7 +23,7 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  # Spring Boot 애플리케이션 메트릭 (메인)
+  # Spring Boot 애플리케이션 메트릭 (로컬 개발 환경)
   - job_name: 'jandi-band-backend'
     metrics_path: '/actuator/prometheus'
     scrape_interval: 15s

@@ -88,8 +88,8 @@ public class PracticeScheduleService {
 
     // 곡 연습 일정 생성 (팀 멤버만 가능)
     @Transactional
-    public PracticeScheduleRespDTO createPracticeSchedule(PracticeScheduleReqDTO request, Integer creatorId) {
-        Team team = teamRepository.findByIdAndDeletedAtIsNull(request.getTeamId())
+    public PracticeScheduleRespDTO createPracticeSchedule(Integer teamId, PracticeScheduleReqDTO request, Integer creatorId) {
+        Team team = teamRepository.findByIdAndDeletedAtIsNull(teamId)
                 .orElseThrow(() -> new TeamNotFoundException("팀을 찾을 수 없습니다."));
 
         Users creator = userRepository.findById(creatorId)
@@ -97,7 +97,7 @@ public class PracticeScheduleService {
 
         // 팀 멤버십 확인 (ADMIN은 자동 통과)
         permissionValidationUtil.validateTeamMemberAccess(
-            request.getTeamId(),
+            teamId,
             creatorId,
             "해당 팀에 연습 일정을 생성할 권한이 없습니다."
         );

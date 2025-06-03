@@ -11,9 +11,6 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class PracticeScheduleReqDTO {
-    @NotNull(message = "팀 ID는 필수입니다")
-    private Integer teamId;
-
     @NotBlank(message = "연습 일정명은 필수입니다")
     @Size(max = 255, message = "연습 일정명은 255자를 초과할 수 없습니다")
     private String name;

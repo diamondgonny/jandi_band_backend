@@ -52,12 +52,10 @@ public class PracticeScheduleController {
             @PathVariable Integer teamId,
             @Valid @RequestBody PracticeScheduleReqDTO request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        // teamId를 request에 설정
-        request.setTeamId(teamId);
         Integer userId = userDetails.getUserId();
 
         return ResponseEntity.ok(CommonRespDTO.success("곡 연습 일정 생성 성공",
-                practiceScheduleService.createPracticeSchedule(request, userId)));
+                practiceScheduleService.createPracticeSchedule(teamId, request, userId)));
     }
 
     @Operation(summary = "연습 일정 삭제")

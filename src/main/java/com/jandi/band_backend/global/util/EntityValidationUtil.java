@@ -5,6 +5,12 @@ import com.jandi.band_backend.club.repository.ClubRepository;
 import com.jandi.band_backend.global.exception.ClubNotFoundException;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
 import com.jandi.band_backend.global.exception.TeamNotFoundException;
+import com.jandi.band_backend.global.exception.PollNotFoundException;
+import com.jandi.band_backend.global.exception.PollSongNotFoundException;
+import com.jandi.band_backend.poll.entity.Poll;
+import com.jandi.band_backend.poll.entity.PollSong;
+import com.jandi.band_backend.poll.repository.PollRepository;
+import com.jandi.band_backend.poll.repository.PollSongRepository;
 import com.jandi.band_backend.team.entity.Team;
 import com.jandi.band_backend.team.entity.TeamEvent;
 import com.jandi.band_backend.team.repository.TeamEventRepository;
@@ -18,6 +24,8 @@ public class EntityValidationUtil {
     private final TeamRepository teamRepository;
     private final ClubRepository clubRepository;
     private final TeamEventRepository teamEventRepository;
+    private final PollRepository pollRepository;
+    private final PollSongRepository pollSongRepository;
 
     /**
      * 팀 존재 확인
@@ -33,6 +41,35 @@ public class EntityValidationUtil {
     public Club validateClubExists(Integer clubId) {
         return clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
+    }
+
+    /**
+     * 투표 존재 확인
+     */
+    public Poll validatePollExists(Integer pollId) {
+        return pollRepository.findByIdAndDeletedAtIsNull(pollId)
+                .orElseThrow(() -> new PollNotFoundException("해당 투표를 찾을 수 없습니다."));
+    }
+
+    /**
+     * 투표 노래 존재 확인
+     */
+    public PollSong validatePollSongExists(Integer songId) {
+        return pollSongRepository.findById(songId)
+                .orElseThrow(() -> new PollSongNotFoundException("해당 노래를 찾을 수 없습니다."));
+    }
+
+    /**
+     * 특정 투표에 속한 노래인지 확인
+     */
+    public PollSong validatePollSongBelongsToPoll(Integer pollId, Integer songId) {
+        PollSong pollSong = validatePollSongExists(songId);
+
+        if (!pollSong.getPoll().getId().equals(pollId)) {
+            throw new PollSongNotFoundException("해당 투표에 속한 노래가 아닙니다.");
+        }
+
+        return pollSong;
     }
 
     /**

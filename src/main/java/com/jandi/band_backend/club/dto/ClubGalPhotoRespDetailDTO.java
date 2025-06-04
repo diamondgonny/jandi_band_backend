@@ -14,6 +14,7 @@ public class ClubGalPhotoRespDetailDTO {
     private String imageUrl;
     private String description;
     private Boolean isPinned;
+    private Boolean isPublic;
     private LocalDateTime uploadedAt;
 
     public ClubGalPhotoRespDetailDTO(ClubGalPhoto photo) {
@@ -22,6 +23,7 @@ public class ClubGalPhotoRespDetailDTO {
         imageUrl = photo.getImageUrl();
         description = photo.getDescription();
         isPinned = photo.getIsPinned();
+        isPublic = photo.getIsPublic();
         uploadedAt = photo.getUploadedAt();
     }
 }

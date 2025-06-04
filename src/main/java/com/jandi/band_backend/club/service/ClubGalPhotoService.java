@@ -78,6 +78,22 @@ public class ClubGalPhotoService {
         }
     }
 
+    public ClubGalPhotoRespDetailDTO updateClubGalPhoto(Integer clubId, Integer userId, Integer photoId, ClubGalPhotoReqDTO reqDTO) {
+        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
+                .orElseThrow(() -> new ClubNotFoundException("존재하지 않는 동아리입니다."));
+        Users user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        ClubGalPhoto photo = clubGalPhotoRepository.findByIdAndClubAndDeletedAtIsNull(photoId, club)
+                .orElseThrow(()->new ResourceNotFoundException("존재하지 않는 사진입니다"));
+
+        // 업로더만 수정 가능
+        Users uploader = photo.getUploader();
+        if(uploader != null && uploader.getId().equals(user.getId())) {
+            return new ClubGalPhotoRespDetailDTO(updateMyGalPhoto(photo, reqDTO));
+        }else {
+            throw new InvalidAccessException("권한이 없습니다: 본인만 수정할 수 있습니다");
+        }
+    }
+
     /// 내부 메서드
     private Page<ClubGalPhotoRespDTO> getPublicPhoto(Integer clubId, Pageable pageable) {
         Page<ClubGalPhoto> publicPhotoPage = clubGalPhotoRepository.findByClubIdAndIsPublicAndDeletedAtIsNullFetchUploader(clubId, true, pageable);
@@ -115,5 +131,20 @@ public class ClubGalPhotoService {
         } catch (IOException e) {
             throw new RuntimeException("이미지 업로드 실패: " + e);
         }
+    }
+
+    private ClubGalPhoto updateMyGalPhoto(ClubGalPhoto photo, ClubGalPhotoReqDTO reqDTO) {
+        if(reqDTO.getImage() != null && !reqDTO.getImage().isEmpty()) {
+            String imageUrl = uploadImage(reqDTO.getImage());
+            photo.setImageUrl(imageUrl);
+        }
+        if(reqDTO.getDescription() != null) {
+            photo.setDescription(reqDTO.getDescription());
+        }
+        if(reqDTO.getIsPublic() != null) {
+            photo.setIsPublic(reqDTO.getIsPublic());
+        }
+
+        return clubGalPhotoRepository.save(photo);
     }
 }

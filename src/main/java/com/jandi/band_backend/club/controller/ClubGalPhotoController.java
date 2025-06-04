@@ -66,4 +66,21 @@ public class ClubGalPhotoController {
         ClubGalPhotoRespDTO response = clubGalPhotoService.createClubGalPhotoList(clubId, userId, reqDTO);
         return ResponseEntity.ok(CommonRespDTO.success("동아리 사진 생성 성공", response));
     }
+
+    @Operation(summary = "동아리 사진 수정")
+    @PatchMapping("/photo/{photoId}")
+    public ResponseEntity<CommonRespDTO<ClubGalPhotoRespDetailDTO>> updateClubGalPhotoList(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Integer clubId,
+            @PathVariable Integer photoId,
+            @RequestParam(required = false, defaultValue = "") MultipartFile image,
+            @RequestParam(required = false, defaultValue = "") String description,
+            @RequestParam(required = false, defaultValue = "true") Boolean isPublic
+    ) {
+        Integer userId = userDetails.getUserId();
+        ClubGalPhotoReqDTO reqDTO = new ClubGalPhotoReqDTO(image, description, isPublic);
+
+        ClubGalPhotoRespDetailDTO response = clubGalPhotoService.updateClubGalPhoto(clubId, userId, photoId, reqDTO);
+        return ResponseEntity.ok(CommonRespDTO.success("동아리 사진 수정 성공", response));
+    }
 }

@@ -33,4 +33,6 @@ public interface ClubMemberRepository extends JpaRepository<ClubMember, Integer>
       AND cm.club.deletedAt IS NULL
 """)
     List<String> findClubNamesByUserRole(@Param("userId") Integer userId, @Param("role") ClubMember.MemberRole role);
+
+    Integer user(Users user);
 }

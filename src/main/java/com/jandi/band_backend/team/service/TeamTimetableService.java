@@ -21,6 +21,8 @@ import com.jandi.band_backend.team.util.TeamTimetableUtil;
 import com.jandi.band_backend.user.util.UserTimetableUtil;
 import com.jandi.band_backend.global.util.PermissionValidationUtil;
 import com.jandi.band_backend.global.util.UserValidationUtil;
+import com.jandi.band_backend.global.util.TimetableValidationUtil;
+import com.jandi.band_backend.global.util.EntityValidationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,14 +44,15 @@ public class TeamTimetableService {
     private final UserTimetableUtil userTimetableUtil;
     private final PermissionValidationUtil permissionValidationUtil;
     private final UserValidationUtil userValidationUtil;
+    private final TimetableValidationUtil timetableValidationUtil;
+    private final EntityValidationUtil entityValidationUtil;
 
     /**
      * 팀내 스케줄 조율 제안 ('시간 언제 돼? 모드' 시작)
      */
     @Transactional
     public ScheduleSuggestionRespDTO startScheduleSuggestion(Integer teamId, Integer currentUserId) {
-        Team team = teamRepository.findByIdAndDeletedAtIsNull(teamId)
-                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
+        Team team = entityValidationUtil.validateTeamExists(teamId);
 
         TeamMember teamMember = permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "팀원만 접근할 수 있습니다.");
 
@@ -72,7 +75,7 @@ public class TeamTimetableService {
     public TimetableRespDTO registerMyTimetable(Integer teamId, TimetableReqDTO reqDTO, Integer currentUserId) {
         TeamMember teamMember = validateTeamAndGetTeamMember(teamId, currentUserId);
         UserTimetable userTimetable = getUserTimetableWithPermissionCheck(currentUserId, reqDTO.getUserTimetableId());
-        JsonNode timetableData = userTimetableUtil.stringToJson(userTimetable.getTimetableData());
+        JsonNode timetableData = timetableValidationUtil.stringToJson(userTimetable.getTimetableData());
 
         return saveTeamMemberTimetableAndBuildResponse(teamMember, timetableData, currentUserId, teamId);
     }
@@ -93,9 +96,7 @@ public class TeamTimetableService {
      * 팀 존재 확인 및 팀멤버 권한 검증
      */
     private TeamMember validateTeamAndGetTeamMember(Integer teamId, Integer currentUserId) {
-        teamRepository.findByIdAndDeletedAtIsNull(teamId)
-                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 팀입니다."));
-
+        entityValidationUtil.validateTeamExists(teamId);
         return permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "본인의 시간표만 입력할 수 있습니다.");
     }
 
@@ -117,24 +118,10 @@ public class TeamTimetableService {
 
         Integer ownerId = userTimetable.getUser().getId();
 
-        if (!isAdminUser(currentUserId) && !ownerId.equals(currentUserId)) {
-            throw new InvalidAccessException("권한이 없습니다: 본인의 시간표가 아닙니다");
-        }
+        // PermissionValidationUtil의 validateContentOwnership 활용
+        permissionValidationUtil.validateContentOwnership(ownerId, currentUserId, "권한이 없습니다: 본인의 시간표가 아닙니다");
 
         return userTimetable;
-    }
-
-    /**
-     * ADMIN 권한 확인
-     */
-    private boolean isAdminUser(Integer userId) {
-        try {
-            return userValidationUtil.getUserById(userId).getAdminRole() ==
-                   com.jandi.band_backend.user.entity.Users.AdminRole.ADMIN;
-        } catch (Exception e) {
-            log.error("ADMIN 권한 확인 중 오류 발생: {}", e.getMessage());
-            return false;
-        }
     }
 
     /**

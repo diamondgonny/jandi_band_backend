@@ -165,7 +165,7 @@ public class ClubGalPhotoService {
             try {
                 if (oldImageUrl != null) s3Service.deleteImage(oldImageUrl);
             } catch (Exception e) {
-                log.error("기존 이미지 삭제 실패: {}", oldImageUrl, e);
+                log.warn("기존 이미지 삭제 실패: {}", oldImageUrl, e);
             }
         }
         if(reqDTO.getDescription() != null) {
@@ -185,7 +185,6 @@ public class ClubGalPhotoService {
         try {
             s3Service.deleteImage(photo.getImageUrl());
         } catch (Exception e) {
-            log.error("S3 이미지 삭제 실패: {}, 오류 원인: {}", imageUrl, e.getMessage(), e);
             throw new RuntimeException("S3 이미지 삭제 실패: " + imageUrl, e);
         }
 

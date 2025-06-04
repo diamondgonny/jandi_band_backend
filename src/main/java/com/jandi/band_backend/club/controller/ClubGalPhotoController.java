@@ -83,4 +83,17 @@ public class ClubGalPhotoController {
         ClubGalPhotoRespDetailDTO response = clubGalPhotoService.updateClubGalPhoto(clubId, userId, photoId, reqDTO);
         return ResponseEntity.ok(CommonRespDTO.success("동아리 사진 수정 성공", response));
     }
+
+    @Operation(summary = "동아리 사진 삭제")
+    @DeleteMapping("/photo/{photoId}")
+    public ResponseEntity<CommonRespDTO<?>> deleteClubGalPhotoList(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Integer clubId,
+            @PathVariable Integer photoId
+    ) {
+        Integer userId = userDetails.getUserId();
+
+        clubGalPhotoService.deleteClubGalPhoto(clubId, userId, photoId);
+        return ResponseEntity.ok(CommonRespDTO.success("동아리 사진 삭제 성공"));
+    }
 }

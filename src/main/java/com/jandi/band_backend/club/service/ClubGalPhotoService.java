@@ -5,6 +5,7 @@ import com.jandi.band_backend.club.dto.ClubGalPhotoRespDTO;
 import com.jandi.band_backend.club.dto.ClubGalPhotoRespDetailDTO;
 import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.entity.ClubGalPhoto;
+import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.club.repository.ClubGalPhotoRepository;
 import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.club.repository.ClubRepository;
@@ -16,6 +17,7 @@ import com.jandi.band_backend.image.S3Service;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,7 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ClubGalPhotoService {
@@ -94,6 +98,25 @@ public class ClubGalPhotoService {
         }
     }
 
+    @Transactional
+    public void deleteClubGalPhoto(Integer clubId, Integer userId, Integer photoId) {
+        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
+                .orElseThrow(() -> new ClubNotFoundException("존재하지 않는 동아리입니다."));
+        Users user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        ClubGalPhoto photo = clubGalPhotoRepository.findByIdAndClubAndDeletedAtIsNull(photoId, club)
+                .orElseThrow(()->new ResourceNotFoundException("존재하지 않는 사진입니다"));
+
+        // 업로더 혹은 동아리 대표만 삭제 가능
+        Users uploader = photo.getUploader();
+        Boolean isUploader = uploader != null && uploader.getId().equals(user.getId());
+        Boolean isRepresentative = clubMemberRepository.existsByUserIdAndClub_IdAndDeletedAtIsNullAndRole(userId, clubId, ClubMember.MemberRole.REPRESENTATIVE);
+        if(isUploader || isRepresentative) {
+            deleteGalPhoto(photo);
+        }else {
+            throw new InvalidAccessException("권한이 없습니다: 본인 혹은 동아리 대표만 삭제할 수 있습니다");
+        }
+    }
+
     /// 내부 메서드
     private Page<ClubGalPhotoRespDTO> getPublicPhoto(Integer clubId, Pageable pageable) {
         Page<ClubGalPhoto> publicPhotoPage = clubGalPhotoRepository.findByClubIdAndIsPublicAndDeletedAtIsNullFetchUploader(clubId, true, pageable);
@@ -146,5 +169,25 @@ public class ClubGalPhotoService {
         }
 
         return clubGalPhotoRepository.save(photo);
+    }
+
+    private void deleteGalPhoto(ClubGalPhoto photo) {
+        String imageUrl = photo.getImageUrl();
+
+        // s3 삭제
+        try {
+            s3Service.deleteImage(photo.getImageUrl());
+        } catch (Exception e) {
+            log.error("S3 이미지 삭제 실패: {}, 오류 원인: {}", imageUrl, e.getMessage(), e);
+            throw new RuntimeException("S3 이미지 삭제 실패: " + imageUrl, e);
+        }
+
+        // soft delete 처리
+        try {
+            photo.setDeletedAt(LocalDateTime.now());
+            clubGalPhotoRepository.save(photo);
+        } catch (Exception e) {
+            throw new RuntimeException("DB 삭제 실패", e);
+        }
     }
 }

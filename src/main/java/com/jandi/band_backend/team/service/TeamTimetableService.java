@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jandi.band_backend.global.exception.BadRequestException;
+import com.jandi.band_backend.global.exception.InvalidAccessException;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
+import com.jandi.band_backend.global.exception.TimetableNotFoundException;
 import com.jandi.band_backend.team.dto.ScheduleSuggestionRespDTO;
 import com.jandi.band_backend.team.dto.TimetableReqDTO;
 import com.jandi.band_backend.team.dto.TimetableUpdateReqDTO;
@@ -13,9 +15,10 @@ import com.jandi.band_backend.team.entity.Team;
 import com.jandi.band_backend.team.entity.TeamMember;
 import com.jandi.band_backend.team.repository.TeamMemberRepository;
 import com.jandi.band_backend.team.repository.TeamRepository;
-import com.jandi.band_backend.user.service.UserTimetableService;
-import com.jandi.band_backend.user.dto.UserTimetableDetailsRespDTO;
+import com.jandi.band_backend.user.entity.UserTimetable;
+import com.jandi.band_backend.user.repository.UserTimetableRepository;
 import com.jandi.band_backend.team.util.TeamTimetableUtil;
+import com.jandi.band_backend.user.util.UserTimetableUtil;
 import com.jandi.band_backend.global.util.PermissionValidationUtil;
 import com.jandi.band_backend.global.util.UserValidationUtil;
 import lombok.RequiredArgsConstructor;
@@ -33,9 +36,10 @@ public class TeamTimetableService {
 
     private final TeamRepository teamRepository;
     private final TeamMemberRepository teamMemberRepository;
-    private final UserTimetableService userTimetableService;
+    private final UserTimetableRepository userTimetableRepository;
     private final ObjectMapper objectMapper;
     private final TeamTimetableUtil teamTimetableUtil;
+    private final UserTimetableUtil userTimetableUtil;
     private final PermissionValidationUtil permissionValidationUtil;
     private final UserValidationUtil userValidationUtil;
 
@@ -49,13 +53,9 @@ public class TeamTimetableService {
 
         TeamMember teamMember = permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "팀원만 접근할 수 있습니다.");
 
-        // suggested_schedule_at을 현재 시간으로 설정
         LocalDateTime now = LocalDateTime.now();
         team.setSuggestedScheduleAt(now);
         teamRepository.save(team);
-
-        // TODO: 팀원들에게 카카오톡 알림 발송 로직 추가
-        // (팀원 수가 1이면 알림 안 보내게 할 것?)
 
         return ScheduleSuggestionRespDTO.builder()
                 .teamId(teamId)
@@ -71,10 +71,10 @@ public class TeamTimetableService {
     @Transactional
     public TimetableRespDTO registerMyTimetable(Integer teamId, TimetableReqDTO reqDTO, Integer currentUserId) {
         TeamMember teamMember = validateTeamAndGetTeamMember(teamId, currentUserId);
+        UserTimetable userTimetable = getUserTimetableWithPermissionCheck(currentUserId, reqDTO.getUserTimetableId());
+        JsonNode timetableData = userTimetableUtil.stringToJson(userTimetable.getTimetableData());
 
-        UserTimetableDetailsRespDTO userTimetable = userTimetableService.getMyTimetableById(currentUserId, reqDTO.getUserTimetableId());
-
-        return saveTeamMemberTimetableAndBuildResponse(teamMember, userTimetable.getTimetableData(), currentUserId, teamId);
+        return saveTeamMemberTimetableAndBuildResponse(teamMember, timetableData, currentUserId, teamId);
     }
 
     /**
@@ -100,6 +100,44 @@ public class TeamTimetableService {
     }
 
     /**
+     * 사용자 시간표 조회 및 권한 검증
+     */
+    private UserTimetable getUserTimetableWithPermissionCheck(Integer currentUserId, Integer userTimetableId) {
+        if (userTimetableId == null) {
+            throw new BadRequestException("시간표 ID는 필수입니다.");
+        }
+
+        // JOIN FETCH를 사용하여 User 정보도 함께 조회
+        UserTimetable userTimetable = userTimetableRepository.findByIdWithUserAndDeletedAtIsNull(userTimetableId)
+                .orElseThrow(() -> new TimetableNotFoundException("존재하지 않는 시간표입니다."));
+
+        if (userTimetable.getUser() == null || userTimetable.getUser().getId() == null) {
+            throw new BadRequestException("시간표 소유자 정보를 찾을 수 없습니다.");
+        }
+
+        Integer ownerId = userTimetable.getUser().getId();
+
+        if (!isAdminUser(currentUserId) && !ownerId.equals(currentUserId)) {
+            throw new InvalidAccessException("권한이 없습니다: 본인의 시간표가 아닙니다");
+        }
+
+        return userTimetable;
+    }
+
+    /**
+     * ADMIN 권한 확인
+     */
+    private boolean isAdminUser(Integer userId) {
+        try {
+            return userValidationUtil.getUserById(userId).getAdminRole() ==
+                   com.jandi.band_backend.user.entity.Users.AdminRole.ADMIN;
+        } catch (Exception e) {
+            log.error("ADMIN 권한 확인 중 오류 발생: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * 팀멤버 시간표 데이터 저장 및 응답 DTO 생성
      */
     private TimetableRespDTO saveTeamMemberTimetableAndBuildResponse(TeamMember teamMember, JsonNode timetableData, Integer currentUserId, Integer teamId) {
@@ -110,9 +148,6 @@ public class TeamTimetableService {
             teamMember.setUpdatedTimetableAt(LocalDateTime.now());
 
             teamMemberRepository.save(teamMember);
-
-            // TODO: 모든 팀원이 시간표를 제출했는지 확인하고, 완료되면 카카오톡 알림 발송
-            // (팀원 수가 1이면 알림 안 보내게 할 것?)
 
             return TimetableRespDTO.builder()
                     .userId(currentUserId)

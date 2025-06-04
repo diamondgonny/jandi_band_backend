@@ -32,20 +32,15 @@ public class PollService {
     private final PollRepository pollRepository;
     private final PollSongRepository pollSongRepository;
     private final VoteRepository voteRepository;
-
-    // 공통 유틸 추가
     private final EntityValidationUtil entityValidationUtil;
     private final UserValidationUtil userValidationUtil;
 
     @Transactional
     public PollRespDTO createPoll(PollReqDTO requestDto, Integer currentUserId) {
-        // 동아리 조회 - 공통 유틸 활용
         Club club = entityValidationUtil.validateClubExists(requestDto.getClubId());
 
-        // 사용자 조회 - 공통 유틸 활용
         Users creator = userValidationUtil.getUserById(currentUserId);
 
-        // 투표 생성
         Poll poll = new Poll();
         poll.setClub(club);
         poll.setTitle(requestDto.getTitle());
@@ -60,10 +55,8 @@ public class PollService {
 
     @Transactional(readOnly = true)
     public Page<PollRespDTO> getPollsByClub(Integer clubId, Pageable pageable) {
-        // 동아리 조회 - 공통 유틸 활용
         Club club = entityValidationUtil.validateClubExists(clubId);
 
-        // 동아리에 해당하는 투표 조회
         Page<Poll> polls = pollRepository.findAllByClubAndDeletedAtIsNullOrderByCreatedAtDesc(club, pageable);
 
         return polls.map(this::convertToPollRespDTO);
@@ -71,13 +64,10 @@ public class PollService {
 
     @Transactional(readOnly = true)
     public PollDetailRespDTO getPollDetail(Integer pollId, Integer currentUserId) {
-        // 투표 조회 - 공통 유틸 활용
         Poll poll = entityValidationUtil.validatePollExists(pollId);
 
-        // 투표에 해당하는 노래 목록 조회
         List<PollSong> pollSongs = pollSongRepository.findAllByPollAndDeletedAtIsNullOrderByCreatedAtDesc(poll);
 
-        // PollSongResponseDto로 변환
         List<PollSongRespDTO> songResponseDtos = pollSongs.stream()
                 .map(pollSong -> convertToPollSongRespDTO(pollSong, currentUserId))
                 .collect(Collectors.toList());
@@ -87,30 +77,22 @@ public class PollService {
 
     @Transactional(readOnly = true)
     public List<PollSongResultRespDTO> getPollSongs(Integer pollId, String sortBy, String order, Integer currentUserId) {
-        // 투표 조회 - 공통 유틸 활용
-        Poll poll = entityValidationUtil.validatePollExists(pollId);
 
-        // 투표에 해당하는 노래 목록 조회
         List<PollSong> pollSongs = pollSongRepository.findAllByPollAndDeletedAtIsNullOrderByCreatedAtDesc(poll);
 
-        // PollSongResultRespDTO로 변환
         List<PollSongResultRespDTO> songResultDtos = pollSongs.stream()
                 .map(this::convertToPollSongResultRespDTO)
                 .collect(Collectors.toList());
 
-        // 정렬 적용
         return applySortingForResult(songResultDtos, sortBy, order);
     }
 
     @Transactional
     public PollSongRespDTO addSongToPoll(Integer pollId, PollSongReqDTO requestDto, Integer currentUserId) {
-        // 투표 조회 - 공통 유틸 활용
         Poll poll = entityValidationUtil.validatePollExists(pollId);
 
-        // 사용자 조회 - 공통 유틸 활용
         Users suggester = userValidationUtil.getUserById(currentUserId);
 
-        // 노래 추가
         PollSong pollSong = new PollSong();
         pollSong.setPoll(poll);
         pollSong.setSongName(requestDto.getSongName());
@@ -126,23 +108,17 @@ public class PollService {
 
     @Transactional
     public PollSongRespDTO setVoteForSong(Integer pollId, Integer songId, String voteType, Integer currentUserId) {
-        // 사용자 조회 - 공통 유틸 활용
         Users user = userValidationUtil.getUserById(currentUserId);
 
-        // 노래 조회 및 투표 소속 확인 - 공통 유틸 활용
         PollSong pollSong = entityValidationUtil.validatePollSongBelongsToPoll(pollId, songId);
 
-        // 투표 타입 변환
         VotedMark votedMark = convertToVotedMark(voteType);
 
-        // 사용자가 이 곡에 대한 투표를 했는지 확인 (타입 상관없이)
         List<Vote> userVotesForSong = voteRepository.findByPollSongIdAndUserId(songId, currentUserId);
 
-        // 같은 타입의 투표가 있는지 확인
         boolean hasSameTypeVote = userVotesForSong.stream()
                 .anyMatch(v -> v.getVotedMark() == votedMark);
 
-        // 이미 같은 타입 투표가 있으면 예외 발생
         if (hasSameTypeVote) {
             throw new VoteAlreadyExistsException(
                 "이미 이 노래에 대한 '" + voteType + "' 투표가 존재합니다. " +
@@ -152,10 +128,8 @@ public class PollService {
 
         // 다른 타입의 투표가 있으면 기존 투표의 타입을 업데이트
         if (!userVotesForSong.isEmpty()) {
-            // 첫 번째 투표 가져오기 (한 곡에 최대 한 개의 투표만 가능)
             Vote existingVote = userVotesForSong.getFirst();
             existingVote.setVotedMark(votedMark);
-            // 추가 투표가 있으면 삭제 (혹시 모를 중복 투표 제거)
             if (userVotesForSong.size() > 1) {
                 for (int i = 1; i < userVotesForSong.size(); i++) {
                     voteRepository.delete(userVotesForSong.get(i));
@@ -171,19 +145,15 @@ public class PollService {
             voteRepository.save(vote);
         }
 
-        // 업데이트된 노래 정보 반환
         return convertToPollSongRespDTO(pollSong, currentUserId);
     }
 
     @Transactional
     public PollSongRespDTO removeVoteFromSong(Integer pollId, Integer songId, String voteType, Integer currentUserId) {
-        // 노래 조회 및 투표 소속 확인 - 공통 유틸 활용
         PollSong pollSong = entityValidationUtil.validatePollSongBelongsToPoll(pollId, songId);
 
-        // 투표 타입 변환
         VotedMark votedMark = convertToVotedMark(voteType);
 
-        // 사용자의 해당 타입 투표 찾기
         Vote vote = voteRepository.findByPollSongIdAndUserIdAndVotedMark(
                 songId,
                 currentUserId,
@@ -192,16 +162,13 @@ public class PollService {
                 "사용자의 해당 노래에 대한 " + voteType + " 타입의 투표를 찾을 수 없습니다."
         ));
 
-        // 투표 삭제
         voteRepository.delete(vote);
 
-        // 투표 타입 계산
         int likeCount = calculateVoteCount(pollSong, "LIKE");
         int dislikeCount = calculateVoteCount(pollSong, "DISLIKE");
         int cantCount = calculateVoteCount(pollSong, "CANT");
         int hajjCount = calculateVoteCount(pollSong, "HAJJ");
 
-        // 삭제한 투표 타입의 카운트 조정
         switch (voteType.toUpperCase()) {
             case "LIKE", "좋아요" -> likeCount -= 1;
             case "DISLIKE", "별로에요" -> dislikeCount -= 1;
@@ -209,7 +176,6 @@ public class PollService {
             case "HAJJ", "하고싶지_않은데_존중해요" -> hajjCount -= 1;
         }
 
-        // 제안자의 현재 프로필 사진 URL 조회
         String suggesterProfilePhoto = pollSong.getSuggester().getPhotos().stream()
                 .filter(photo -> photo.getIsCurrent() && photo.getDeletedAt() == null)
                 .map(photo -> photo.getImageUrl())
@@ -303,18 +269,15 @@ public class PollService {
     private PollSongRespDTO convertToPollSongRespDTO(PollSong pollSong, Integer currentUserId) {
         String userVoteType = null;
         if (currentUserId != null) {
-            // 현재 사용자의 투표 조회
             Optional<Vote> userVote = pollSong.getVotes().stream()
                     .filter(vote -> vote.getUser().getId().equals(currentUserId))
                     .findFirst();
 
-            // 투표가 있으면 투표 타입 설정
             if (userVote.isPresent()) {
                 userVoteType = userVote.get().getVotedMark().name();
             }
         }
 
-        // 제안자의 현재 프로필 사진 URL 조회
         String suggesterProfilePhoto = pollSong.getSuggester().getPhotos().stream()
                 .filter(photo -> photo.getIsCurrent() && photo.getDeletedAt() == null)
                 .map(photo -> photo.getImageUrl())

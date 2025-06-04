@@ -26,6 +26,7 @@ import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.global.exception.ClubNotFoundException;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
 import com.jandi.band_backend.global.exception.UniversityNotFoundException;
+import com.jandi.band_backend.global.util.EntityValidationUtil;
 import com.jandi.band_backend.global.util.S3FileManagementUtil;
 import com.jandi.band_backend.global.util.PermissionValidationUtil;
 import com.jandi.band_backend.global.util.UserValidationUtil;
@@ -53,6 +54,7 @@ public class ClubService {
     private final TeamMemberRepository teamMemberRepository;
     private final TeamEventRepository teamEventRepository;
     private final UniversityRepository universityRepository;
+    private final EntityValidationUtil entityValidationUtil;
     private final S3FileManagementUtil s3FileManagementUtil;
     private final PermissionValidationUtil permissionValidationUtil;
     private final UserValidationUtil userValidationUtil;
@@ -119,9 +121,7 @@ public class ClubService {
 
     @Transactional(readOnly = true)
     public ClubDetailRespDTO getClubDetail(Integer clubId) {
-        // 동아리 상세 조회
-        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
-                .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
+        Club club = entityValidationUtil.validateClubExists(clubId);
 
         String photoUrl = getClubMainPhotoUrl(club.getId());
         int memberCount = clubMemberRepository.countByClubIdAndDeletedAtIsNull(clubId);
@@ -132,8 +132,7 @@ public class ClubService {
 
     @Transactional(readOnly = true)
     public ClubMembersRespDTO getClubMembers(Integer clubId) {
-        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
-                .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
+        Club club = entityValidationUtil.validateClubExists(clubId);
 
         // 동아리 멤버 목록 조회
         List<ClubMember> clubMembers = clubMemberRepository.findByClubIdAndDeletedAtIsNull(clubId);
@@ -175,8 +174,7 @@ public class ClubService {
 
     @Transactional
     public ClubDetailRespDTO updateClub(Integer clubId, ClubUpdateReqDTO request, Integer userId) {
-        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
-                .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
+        Club club = entityValidationUtil.validateClubExists(clubId);
 
         // 권한 확인 (동아리 회원이면 수정 가능)
         permissionValidationUtil.validateClubMemberAccess(clubId, userId, "동아리 정보 수정 권한이 없습니다.");
@@ -207,9 +205,7 @@ public class ClubService {
 
     @Transactional
     public void transferRepresentative(Integer clubId, Integer currentUserId, Integer newRepresentativeUserId) {
-        // 동아리 존재 확인
-        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
-                .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
+        Club club = entityValidationUtil.validateClubExists(clubId);
 
         // 현재 사용자가 대표자인지 확인 (ADMIN 권한도 허용)
         permissionValidationUtil.validateClubRepresentativeAccess(clubId, currentUserId, "동아리 대표자만 권한을 위임할 수 있습니다.");
@@ -241,8 +237,7 @@ public class ClubService {
 
     @Transactional
     public void deleteClub(Integer clubId, Integer userId) {
-        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
-                .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
+        Club club = entityValidationUtil.validateClubExists(clubId);
 
         // 권한 확인 (대표자만 삭제 가능)
         permissionValidationUtil.validateClubRepresentativeAccess(clubId, userId, "동아리 삭제 권한이 없습니다.");
@@ -301,9 +296,7 @@ public class ClubService {
 
     @Transactional
     public void leaveClub(Integer clubId, Integer currentUserId) {
-        // 동아리 존재 확인
-        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
-                .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
+        Club club = entityValidationUtil.validateClubExists(clubId);
 
         // 동아리 멤버 권한 확인
         ClubMember clubMember = clubMemberRepository.findByClubIdAndUserIdAndDeletedAtIsNull(clubId, currentUserId)
@@ -321,9 +314,7 @@ public class ClubService {
 
     @Transactional
     public void kickMember(Integer clubId, Integer currentUserId, Integer targetUserId) {
-        // 동아리 존재 확인
-        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
-                .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
+        Club club = entityValidationUtil.validateClubExists(clubId);
 
         // 현재 사용자가 대표자인지 확인 (PermissionValidationUtil 사용)
         permissionValidationUtil.validateClubRepresentativeAccess(clubId, currentUserId, "동아리 대표자만 부원을 강퇴할 수 있습니다.");
@@ -344,8 +335,7 @@ public class ClubService {
 
     @Transactional
     public String uploadClubPhoto(Integer clubId, MultipartFile image, Integer userId) {
-        clubRepository.findByIdAndDeletedAtIsNull(clubId)
-                .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
+        entityValidationUtil.validateClubExists(clubId);
 
         // 권한 확인 (동아리 회원이면 업로드 가능)
         permissionValidationUtil.validateClubMemberAccess(clubId, userId, "동아리 사진 업로드 권한이 없습니다.");
@@ -368,8 +358,7 @@ public class ClubService {
 
     @Transactional
     public void deleteClubPhoto(Integer clubId, Integer userId) {
-        clubRepository.findByIdAndDeletedAtIsNull(clubId)
-                .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
+        entityValidationUtil.validateClubExists(clubId);
 
         // 권한 확인 (동아리 회원이면 삭제 가능)
         permissionValidationUtil.validateClubMemberAccess(clubId, userId, "동아리 사진 삭제 권한이 없습니다.");

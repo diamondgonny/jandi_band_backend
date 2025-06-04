@@ -2,6 +2,7 @@ package com.jandi.band_backend.club.service;
 
 import com.jandi.band_backend.club.dto.ClubGalPhotoReqDTO;
 import com.jandi.band_backend.club.dto.ClubGalPhotoRespDTO;
+import com.jandi.band_backend.club.dto.ClubGalPhotoRespDetailDTO;
 import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.entity.ClubGalPhoto;
 import com.jandi.band_backend.club.repository.ClubGalPhotoRepository;
@@ -9,6 +10,7 @@ import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.club.repository.ClubRepository;
 import com.jandi.band_backend.global.exception.ClubNotFoundException;
 import com.jandi.band_backend.global.exception.InvalidAccessException;
+import com.jandi.band_backend.global.exception.ResourceNotFoundException;
 import com.jandi.band_backend.global.exception.UserNotFoundException;
 import com.jandi.band_backend.image.S3Service;
 import com.jandi.band_backend.user.entity.Users;
@@ -41,6 +43,24 @@ public class ClubGalPhotoService {
         boolean isMember = clubMemberRepository.existsByClubAndUserAndDeletedAtIsNull(club, user);
         return isMember ?
                 getAllPhoto(clubId, pageable) : getPublicPhoto(clubId, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public ClubGalPhotoRespDetailDTO getClubGalPhotoDetail(Integer clubId, Integer userId, Integer photoId) {
+        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
+                .orElseThrow(() -> new ClubNotFoundException("존재하지 않는 동아리입니다."));
+        Users user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        ClubGalPhoto photo = clubGalPhotoRepository.findByIdAndClubAndDeletedAtIsNull(photoId, club)
+                .orElseThrow(()->new ResourceNotFoundException("존재하지 않는 사진입니다"));
+
+        // 동아리원이라면 모든 사진 조회, 동아리원이 아니라면 공개된 것만
+        boolean isMember = clubMemberRepository.existsByClubAndUserAndDeletedAtIsNull(club, user);
+        boolean isPublic = photo.getIsPublic();
+        if(isPublic || isMember) {
+            return new ClubGalPhotoRespDetailDTO(photo);
+        }else {
+            throw new InvalidAccessException("권한이 없습니다: 동아리원에게만 공개된 사진입니다.");
+        }
     }
 
     @Transactional
@@ -96,5 +116,4 @@ public class ClubGalPhotoService {
             throw new RuntimeException("이미지 업로드 실패: " + e);
         }
     }
-
 }

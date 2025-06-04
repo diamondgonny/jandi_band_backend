@@ -2,6 +2,7 @@ package com.jandi.band_backend.club.controller;
 
 import com.jandi.band_backend.club.dto.ClubGalPhotoReqDTO;
 import com.jandi.band_backend.club.dto.ClubGalPhotoRespDTO;
+import com.jandi.band_backend.club.dto.ClubGalPhotoRespDetailDTO;
 import com.jandi.band_backend.club.service.ClubGalPhotoService;
 import com.jandi.band_backend.global.dto.CommonRespDTO;
 import com.jandi.band_backend.global.dto.PagedRespDTO;
@@ -37,6 +38,19 @@ public class ClubGalPhotoController {
         return ResponseEntity.ok(CommonRespDTO.success("동아리 사진 목록 조회 성공", PagedRespDTO.from(response)));
     }
 
+    @Operation(summary = "동아리 사진 상세 조회")
+    @GetMapping("/photo/{photoId}")
+    public ResponseEntity<CommonRespDTO<ClubGalPhotoRespDetailDTO>> getClubGalPhotoDetail(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Integer clubId,
+            @PathVariable Integer photoId
+    ) {
+        Integer userId = userDetails.getUserId();
+
+        ClubGalPhotoRespDetailDTO response = clubGalPhotoService.getClubGalPhotoDetail(clubId, userId, photoId);
+        return ResponseEntity.ok(CommonRespDTO.success("동아리 사진 상세 조회 성공", response));
+    }
+
     @Operation(summary = "동아리 사진 생성")
     @PostMapping("/photo")
     public ResponseEntity<CommonRespDTO<ClubGalPhotoRespDTO>> createClubGalPhotoList(
@@ -52,5 +66,4 @@ public class ClubGalPhotoController {
         ClubGalPhotoRespDTO response = clubGalPhotoService.createClubGalPhotoList(clubId, userId, reqDTO);
         return ResponseEntity.ok(CommonRespDTO.success("동아리 사진 생성 성공", response));
     }
-
 }

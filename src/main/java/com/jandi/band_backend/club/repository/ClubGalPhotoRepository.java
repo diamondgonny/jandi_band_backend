@@ -1,5 +1,6 @@
 package com.jandi.band_backend.club.repository;
 
+import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.entity.ClubGalPhoto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ClubGalPhotoRepository extends JpaRepository<ClubGalPhoto, Integer> {
@@ -21,4 +23,6 @@ public interface ClubGalPhotoRepository extends JpaRepository<ClubGalPhoto, Inte
 
     @Query("SELECT p FROM ClubGalPhoto p JOIN FETCH p.uploader WHERE p.club.id = :clubId AND p.deletedAt IS NULL")
     Page<ClubGalPhoto> findByClubIdAndDeletedAtIsNullFetchUploader(@Param("clubId") Integer clubId, Pageable pageable);
+
+    Optional<ClubGalPhoto> findByIdAndClubAndDeletedAtIsNull(Integer id, Club club);
 }

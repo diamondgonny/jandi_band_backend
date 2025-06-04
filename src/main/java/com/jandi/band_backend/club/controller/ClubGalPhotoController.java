@@ -1,5 +1,6 @@
 package com.jandi.band_backend.club.controller;
 
+import com.jandi.band_backend.club.dto.ClubGalPhotoReqDTO;
 import com.jandi.band_backend.club.dto.ClubGalPhotoRespDTO;
 import com.jandi.band_backend.club.service.ClubGalPhotoService;
 import com.jandi.band_backend.global.dto.CommonRespDTO;
@@ -14,6 +15,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "Club Photo API")
 @RestController
@@ -34,4 +36,21 @@ public class ClubGalPhotoController {
         Page<ClubGalPhotoRespDTO> response = clubGalPhotoService.getClubGalPhotoList(clubId, userId, pageable);
         return ResponseEntity.ok(CommonRespDTO.success("동아리 사진 목록 조회 성공", PagedRespDTO.from(response)));
     }
+
+    @Operation(summary = "동아리 사진 생성")
+    @PostMapping("/photo")
+    public ResponseEntity<CommonRespDTO<ClubGalPhotoRespDTO>> createClubGalPhotoList(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Integer clubId,
+            @RequestParam MultipartFile image,
+            @RequestParam(required = false, defaultValue = "") String description,
+            @RequestParam(required = false, defaultValue = "true") Boolean isPublic
+    ) {
+        Integer userId = userDetails.getUserId();
+        ClubGalPhotoReqDTO reqDTO = new ClubGalPhotoReqDTO(image, description, isPublic);
+
+        ClubGalPhotoRespDTO response = clubGalPhotoService.createClubGalPhotoList(clubId, userId, reqDTO);
+        return ResponseEntity.ok(CommonRespDTO.success("동아리 사진 생성 성공", response));
+    }
+
 }

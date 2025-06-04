@@ -10,10 +10,12 @@ public class ClubGalPhotoRespDTO {
     private Integer id;
     private String imageUrl;
     private Boolean isPinned;
+    private Boolean isPublic;
 
     public ClubGalPhotoRespDTO(ClubGalPhoto photo) {
         id = photo.getId();
         imageUrl = photo.getImageUrl();
         isPinned = photo.getIsPinned();
+        isPublic = photo.getIsPublic();
     }
 }

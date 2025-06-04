@@ -64,10 +64,8 @@ public class ClubService {
 
     @Transactional
     public ClubDetailRespDTO createClub(ClubReqDTO request, Integer userId) {
-        // 사용자 확인
         Users user = userValidationUtil.getUserById(userId);
 
-        // 동아리 생성
         Club club = new Club();
         club.setName(request.getName());
         club.setChatroomUrl(request.getChatroomUrl());
@@ -76,7 +74,6 @@ public class ClubService {
         club.setCreatedAt(LocalDateTime.now());
         club.setUpdatedAt(LocalDateTime.now());
 
-        // 대학 정보 설정 (연합 동아리인 경우 null)
         if (request.getUniversityId() != null) {
             String errorMessage = "대학을 찾을 수 없습니다. ID: " + request.getUniversityId();
             University university = universityRepository.findById(request.getUniversityId())
@@ -86,14 +83,12 @@ public class ClubService {
 
         Club savedClub = clubRepository.save(club);
 
-        // 동아리 기본 사진 설정
         ClubPhoto defaultPhoto = new ClubPhoto();
         defaultPhoto.setClub(savedClub);
         defaultPhoto.setImageUrl(DEFAULT_CLUB_PHOTO_URL);
         defaultPhoto.setIsCurrent(true);
         clubPhotoRepository.save(defaultPhoto);
 
-        // 동아리 멤버 추가 (생성자를 대표자로 설정)
         ClubMember clubMember = new ClubMember();
         clubMember.setClub(savedClub);
         clubMember.setUser(user);
@@ -108,7 +103,6 @@ public class ClubService {
 
     @Transactional(readOnly = true)
     public Page<ClubRespDTO> getClubList(Pageable pageable) {
-        // 동아리 목록 조회
         Page<Club> clubPage = clubRepository.findAllByDeletedAtIsNull(pageable);
 
         return clubPage.map(club -> {
@@ -134,15 +128,12 @@ public class ClubService {
     public ClubMembersRespDTO getClubMembers(Integer clubId) {
         Club club = entityValidationUtil.validateClubExists(clubId);
 
-        // 동아리 멤버 목록 조회
         List<ClubMember> clubMembers = clubMemberRepository.findByClubIdAndDeletedAtIsNull(clubId);
 
-        // 멤버 정보 변환
         List<ClubMembersRespDTO.MemberInfoDTO> memberInfos = clubMembers.stream()
             .map(this::convertToMemberInfoDTO)
             .toList();
 
-        // 포지션별 카운트 계산
         Map<String, Long> positionCountMap = clubMembers.stream()
                 .map(member -> member.getUser().getPosition())
                 .filter(java.util.Objects::nonNull)
@@ -151,7 +142,6 @@ public class ClubService {
                         Collectors.counting()
                 ));
 
-        // 포지션별 카운트 매핑 (기본값 0으로 설정)
         Map<String, Integer> positionCounts = Map.of(
                 "VOCAL", positionCountMap.getOrDefault("VOCAL", 0L).intValue(),
                 "GUITAR", positionCountMap.getOrDefault("GUITAR", 0L).intValue(),
@@ -176,10 +166,8 @@ public class ClubService {
     public ClubDetailRespDTO updateClub(Integer clubId, ClubUpdateReqDTO request, Integer userId) {
         Club club = entityValidationUtil.validateClubExists(clubId);
 
-        // 권한 확인 (동아리 회원이면 수정 가능)
         permissionValidationUtil.validateClubMemberAccess(clubId, userId, "동아리 정보 수정 권한이 없습니다.");
 
-        // 동아리 정보 수정
         if (request.getName() != null) {
             club.setName(request.getName());
         }
@@ -207,30 +195,24 @@ public class ClubService {
     public void transferRepresentative(Integer clubId, Integer currentUserId, Integer newRepresentativeUserId) {
         Club club = entityValidationUtil.validateClubExists(clubId);
 
-        // 현재 사용자가 대표자인지 확인 (ADMIN 권한도 허용)
         permissionValidationUtil.validateClubRepresentativeAccess(clubId, currentUserId, "동아리 대표자만 권한을 위임할 수 있습니다.");
 
-        // 새 대표자가 동아리 멤버인지 확인
         ClubMember newRepresentative = clubMemberRepository.findByClubIdAndUserIdAndDeletedAtIsNull(clubId, newRepresentativeUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("위임할 사용자가 해당 동아리의 멤버가 아닙니다."));
 
-        // 자기 자신에게 위임하는 경우 예외 처리
         if (currentUserId.equals(newRepresentativeUserId)) {
             throw new IllegalArgumentException("자기 자신에게는 권한을 위임할 수 없습니다.");
         }
 
-        // 기존 대표자 찾아서 해임
         ClubMember currentRepresentative = clubMemberRepository.findByClubIdAndDeletedAtIsNull(clubId).stream()
                 .filter(member -> member.getRole() == ClubMember.MemberRole.REPRESENTATIVE)
                 .findFirst()
                 .orElse(null);
-
         if (currentRepresentative != null) {
             currentRepresentative.setRole(ClubMember.MemberRole.MEMBER);
             clubMemberRepository.save(currentRepresentative);
         }
 
-        // 새 대표자 역할 설정
         newRepresentative.setRole(ClubMember.MemberRole.REPRESENTATIVE);
         clubMemberRepository.save(newRepresentative);
     }
@@ -239,10 +221,9 @@ public class ClubService {
     public void deleteClub(Integer clubId, Integer userId) {
         Club club = entityValidationUtil.validateClubExists(clubId);
 
-        // 권한 확인 (대표자만 삭제 가능)
         permissionValidationUtil.validateClubRepresentativeAccess(clubId, userId, "동아리 삭제 권한이 없습니다.");
 
-        // 동아리에 속한 팀들 연쇄 삭제 처리
+        // 동아리에 속한 팀들 소환
         LocalDateTime deletedTime = LocalDateTime.now();
         List<Team> teams = teamRepository.findAllByClubIdAndDeletedAtIsNull(clubId);
         for (Team team : teams) {
@@ -289,7 +270,7 @@ public class ClubService {
             clubEventRepository.save(clubEvent);
         });
 
-        // 동아리 삭제 (소프트 삭제)
+        // 동아리 소프트 삭제
         club.setDeletedAt(deletedTime);
         clubRepository.save(club);
     }
@@ -298,16 +279,13 @@ public class ClubService {
     public void leaveClub(Integer clubId, Integer currentUserId) {
         Club club = entityValidationUtil.validateClubExists(clubId);
 
-        // 동아리 멤버 권한 확인
         ClubMember clubMember = clubMemberRepository.findByClubIdAndUserIdAndDeletedAtIsNull(clubId, currentUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("해당 동아리의 멤버가 아닙니다."));
 
-        // 대표자인 경우 탈퇴할 수 없음
         if (clubMember.getRole() == ClubMember.MemberRole.REPRESENTATIVE) {
             throw new IllegalStateException("동아리 대표자는 탈퇴할 수 없습니다. 먼저 다른 멤버에게 대표자 권한을 위임해주세요.");
         }
 
-        // 동아리 멤버 소프트 삭제
         clubMember.setDeletedAt(LocalDateTime.now());
         clubMemberRepository.save(clubMember);
     }
@@ -316,19 +294,15 @@ public class ClubService {
     public void kickMember(Integer clubId, Integer currentUserId, Integer targetUserId) {
         Club club = entityValidationUtil.validateClubExists(clubId);
 
-        // 현재 사용자가 대표자인지 확인 (PermissionValidationUtil 사용)
         permissionValidationUtil.validateClubRepresentativeAccess(clubId, currentUserId, "동아리 대표자만 부원을 강퇴할 수 있습니다.");
 
-        // 강퇴 대상이 동아리 멤버인지 확인
         ClubMember targetMember = clubMemberRepository.findByClubIdAndUserIdAndDeletedAtIsNull(clubId, targetUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("해당 사용자는 동아리 멤버가 아닙니다."));
 
-        // 대표자를 강퇴할 수 없음
         if (targetMember.getRole() == ClubMember.MemberRole.REPRESENTATIVE) {
-            throw new IllegalStateException("동아리 대표자를 강퇴할 수 없습니다. 먼저 권한을 위임해주세요.");
+            throw new IllegalStateException("동아리 대표자를 강퇴할 수 없습니다.");
         }
 
-        // 동아리 멤버 소프트 삭제 (강퇴 처리)
         targetMember.setDeletedAt(LocalDateTime.now());
         clubMemberRepository.save(targetMember);
     }
@@ -337,10 +311,8 @@ public class ClubService {
     public String uploadClubPhoto(Integer clubId, MultipartFile image, Integer userId) {
         entityValidationUtil.validateClubExists(clubId);
 
-        // 권한 확인 (동아리 회원이면 업로드 가능)
-        permissionValidationUtil.validateClubMemberAccess(clubId, userId, "동아리 사진 업로드 권한이 없습니다.");
+        permissionValidationUtil.validateClubMemberAccess(clubId, userId, "동아리 회원이 아닙니다.");
 
-        // 이전 사진 URL 조회
         ClubPhoto clubPhoto = clubPhotoRepository
                 .findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ResourceNotFoundException("이미지를 찾을 수 없습니다."));
@@ -360,10 +332,8 @@ public class ClubService {
     public void deleteClubPhoto(Integer clubId, Integer userId) {
         entityValidationUtil.validateClubExists(clubId);
 
-        // 권한 확인 (동아리 회원이면 삭제 가능)
         permissionValidationUtil.validateClubMemberAccess(clubId, userId, "동아리 사진 삭제 권한이 없습니다.");
 
-        // 이전 사진 URL 조회
         ClubPhoto clubPhoto = clubPhotoRepository
                 .findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ResourceNotFoundException("이미지를 찾을 수 없습니다."));
@@ -404,7 +374,6 @@ public class ClubService {
     }
 
     private ClubRespDTO convertToClubRespDTO(Club club, String photoUrl, int memberCount) {
-        // 대학 정보와 연합 동아리 여부 설정
         String universityName = null;
         boolean isUnionClub = (club.getUniversity() == null);
 
@@ -422,14 +391,12 @@ public class ClubService {
                 .build();
     }
 
-    // 동아리 대표 사진 URL 조회 헬퍼 메서드
     private String getClubMainPhotoUrl(Integer clubId) {
         return clubPhotoRepository.findByClubIdAndIsCurrentTrueAndDeletedAtIsNull(clubId)
                 .map(ClubPhoto::getImageUrl)
                 .orElse(null);
     }
 
-    // 동아리 대표자 ID 조회 헬퍼 메서드
     private Integer getClubRepresentativeId(Integer clubId) {
         return clubMemberRepository.findByClubIdAndDeletedAtIsNull(clubId).stream()
                 .filter(member -> member.getRole() == ClubMember.MemberRole.REPRESENTATIVE)
@@ -438,7 +405,6 @@ public class ClubService {
                 .orElse(null);
     }
 
-    // ClubMember를 MemberInfoDTO로 변환하는 헬퍼 메서드
     private ClubMembersRespDTO.MemberInfoDTO convertToMemberInfoDTO(ClubMember member) {
         Users user = member.getUser();
         String position = user.getPosition() != null ? user.getPosition().name() : null;

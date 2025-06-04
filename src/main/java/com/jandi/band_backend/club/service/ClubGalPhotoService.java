@@ -158,8 +158,15 @@ public class ClubGalPhotoService {
 
     private ClubGalPhoto updateMyGalPhoto(ClubGalPhoto photo, ClubGalPhotoReqDTO reqDTO) {
         if(reqDTO.getImage() != null && !reqDTO.getImage().isEmpty()) {
-            String imageUrl = uploadImage(reqDTO.getImage());
-            photo.setImageUrl(imageUrl);
+            String oldImageUrl = photo.getImageUrl();
+            String newImageUrl = uploadImage(reqDTO.getImage());
+            photo.setImageUrl(newImageUrl);
+
+            try {
+                if (oldImageUrl != null) s3Service.deleteImage(oldImageUrl);
+            } catch (Exception e) {
+                log.error("기존 이미지 삭제 실패: {}", oldImageUrl, e);
+            }
         }
         if(reqDTO.getDescription() != null) {
             photo.setDescription(reqDTO.getDescription());

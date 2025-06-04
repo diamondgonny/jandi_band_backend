@@ -48,15 +48,16 @@ public class TeamService {
     private final EntityValidationUtil entityValidationUtil;
     private final TimetableValidationUtil timetableValidationUtil;
 
-    /**
-     * 곡 팀 생성
-     */
     @Transactional
     public TeamDetailRespDTO createTeam(Integer clubId, TeamReqDTO teamReqDTO, Integer currentUserId) {
         Club club = entityValidationUtil.validateClubExists(clubId);
         Users currentUser = userValidationUtil.getUserById(currentUserId);
 
-        permissionValidationUtil.validateClubMemberAccess(clubId, currentUserId, "동아리 부원만 팀을 생성할 수 있습니다.");
+        permissionValidationUtil.validateClubMemberAccess(
+                clubId,
+                currentUserId,
+                "동아리 부원만 팀을 생성할 수 있습니다."
+        );
 
         Team team = createNewTeam(club, currentUser, teamReqDTO);
         Team savedTeam = teamRepository.save(team);
@@ -69,13 +70,14 @@ public class TeamService {
         return createTeamDetailRespDTO(savedTeam, teamMembers);
     }
 
-    /**
-     * 동아리별 팀 목록 조회
-     */
     public Page<TeamRespDTO> getTeamsByClub(Integer clubId, Pageable pageable, Integer currentUserId) {
         Club club = entityValidationUtil.validateClubExists(clubId);
 
-        permissionValidationUtil.validateClubMemberAccess(clubId, currentUserId, "동아리 부원만 팀 목록을 조회할 수 있습니다.");
+        permissionValidationUtil.validateClubMemberAccess(
+                clubId,
+                currentUserId,
+                "동아리 부원만 팀 목록을 조회할 수 있습니다."
+        );
 
         Page<Team> teams = teamRepository.findAllByClubAndDeletedAtIsNullOrderByCreatedAtDesc(club, pageable);
 
@@ -85,27 +87,29 @@ public class TeamService {
         });
     }
 
-    /**
-     * 팀 상세 조회
-     */
     public TeamDetailRespDTO getTeamDetail(Integer teamId, Integer currentUserId) {
         Team team = entityValidationUtil.validateTeamExists(teamId);
 
-        permissionValidationUtil.validateClubMemberAccess(team.getClub().getId(), currentUserId, "해당 동아리 부원만 팀 정보를 조회할 수 있습니다.");
+        permissionValidationUtil.validateClubMemberAccess(
+                team.getClub().getId(),
+                currentUserId,
+                "해당 동아리 부원만 팀 정보를 조회할 수 있습니다."
+        );
 
         List<TeamMember> teamMembers = teamMemberRepository.findByTeamIdAndDeletedAtIsNull(teamId);
 
         return createTeamDetailRespDTOWithTimetable(team, teamMembers);
     }
 
-    /**
-     * 팀 이름 수정
-     */
     @Transactional
     public TeamRespDTO updateTeam(Integer teamId, TeamReqDTO teamReqDTO, Integer currentUserId) {
         Team team = entityValidationUtil.validateTeamExists(teamId);
 
-        permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "팀 멤버만 팀 이름을 수정할 수 있습니다.");
+        permissionValidationUtil.validateTeamMemberAccess(
+                teamId,
+                currentUserId,
+                "팀 멤버만 팀 이름을 수정할 수 있습니다."
+        );
 
         team.setName(teamReqDTO.getName());
 
@@ -116,26 +120,28 @@ public class TeamService {
         return createTeamRespDTO(updatedTeam, memberCount);
     }
 
-    /**
-     * 팀 삭제
-     */
     @Transactional
     public void deleteTeam(Integer teamId, Integer currentUserId) {
         Team team = entityValidationUtil.validateTeamExists(teamId);
 
-        permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "팀 멤버만 팀을 삭제할 수 있습니다.");
+        permissionValidationUtil.validateTeamMemberAccess(
+                teamId,
+                currentUserId,
+                "팀 멤버만 팀을 삭제할 수 있습니다."
+        );
 
         performTeamSoftDelete(teamId);
     }
 
-    /**
-     * 팀 탈퇴
-     */
     @Transactional
     public void leaveTeam(Integer teamId, Integer currentUserId) {
         Team team = entityValidationUtil.validateTeamExists(teamId);
 
-        TeamMember teamMember = permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "해당 팀의 멤버가 아닙니다.");
+        TeamMember teamMember = permissionValidationUtil.validateTeamMemberAccess(
+                teamId,
+                currentUserId,
+                "해당 팀의 멤버가 아닙니다."
+        );
 
         if (teamMemberRepository.countByTeamIdAndDeletedAtIsNull(teamId) == 1) {
             throw new TeamLeaveNotAllowedException("마지막 남은 팀원은 탈퇴할 수 없습니다. 팀을 삭제해주세요.");
@@ -145,9 +151,6 @@ public class TeamService {
         teamMemberRepository.save(teamMember);
     }
 
-    /**
-     * 새로운 팀 생성
-     */
     private Team createNewTeam(Club club, Users creator, TeamReqDTO teamReqDTO) {
         Team team = new Team();
         team.setClub(club);
@@ -157,9 +160,6 @@ public class TeamService {
         return team;
     }
 
-    /**
-     * 팀 멤버 생성
-     */
     private TeamMember createTeamMember(Team team, Users user) {
         TeamMember teamMember = new TeamMember();
         teamMember.setTeam(team);
@@ -167,31 +167,22 @@ public class TeamService {
         return teamMember;
     }
 
-    /**
-     * 팀 및 관련 엔티티들 소프트 삭제 수행
-     */
     private void performTeamSoftDelete(Integer teamId) {
         LocalDateTime deletedTime = LocalDateTime.now();
 
-        // 팀 멤버들 소프트 삭제
         List<TeamMember> teamMembers = teamMemberRepository.findByTeamIdAndDeletedAtIsNull(teamId);
         teamMembers.forEach(teamMember -> teamMember.setDeletedAt(deletedTime));
         teamMemberRepository.saveAll(teamMembers);
 
-        // 팀 이벤트들 소프트 삭제
         List<TeamEvent> teamEvents = teamEventRepository.findAllByTeamIdAndDeletedAtIsNull(teamId);
         teamEvents.forEach(teamEvent -> teamEvent.setDeletedAt(deletedTime));
         teamEventRepository.saveAll(teamEvents);
 
-        // 팀 소프트 삭제
         Team team = entityValidationUtil.validateTeamExists(teamId);
         team.setDeletedAt(deletedTime);
         teamRepository.save(team);
     }
 
-    /**
-     * TeamRespDTO 생성
-     */
     private TeamRespDTO createTeamRespDTO(Team team, Integer memberCount) {
         return TeamRespDTO.builder()
                 .id(team.getId())
@@ -205,9 +196,6 @@ public class TeamService {
                 .build();
     }
 
-    /**
-     * TeamDetailRespDTO 생성
-     */
     private TeamDetailRespDTO createTeamDetailRespDTO(Team team, List<TeamMember> teamMembers) {
         return TeamDetailRespDTO.builder()
                 .id(team.getId())
@@ -225,11 +213,7 @@ public class TeamService {
                 .build();
     }
 
-    /**
-     * TeamDetailRespDTO 생성 (시간표 정보 포함)
-     */
     private TeamDetailRespDTO createTeamDetailRespDTOWithTimetable(Team team, List<TeamMember> teamMembers) {
-        // 제출 현황 계산
         int submittedCount = calculateSubmittedCount(teamMembers, team.getSuggestedScheduleAt());
 
         TeamDetailRespDTO.SubmissionProgressDTO submissionProgress = TeamDetailRespDTO.SubmissionProgressDTO.builder()
@@ -245,7 +229,10 @@ public class TeamService {
                 .creatorId(team.getCreator().getId())
                 .creatorName(team.getCreator().getNickname())
                 .members(teamMembers.stream()
-                        .map(teamMember -> createMemberInfoDTOWithTimetable(teamMember, team.getSuggestedScheduleAt()))
+                        .map(teamMember -> createMemberInfoDTOWithTimetable(
+                                teamMember,
+                                team.getSuggestedScheduleAt()
+                        ))
                         .collect(Collectors.toList()))
                 .suggestedScheduleAt(team.getSuggestedScheduleAt())
                 .submissionProgress(submissionProgress)
@@ -254,9 +241,6 @@ public class TeamService {
                 .build();
     }
 
-    /**
-     * 제출된 멤버 수 계산
-     */
     private int calculateSubmittedCount(List<TeamMember> teamMembers, LocalDateTime suggestedScheduleAt) {
         int submittedCount = 0;
         if (suggestedScheduleAt != null) {
@@ -271,9 +255,6 @@ public class TeamService {
         return submittedCount;
     }
 
-    /**
-     * MemberInfoDTO 생성
-     */
     private TeamDetailRespDTO.MemberInfoDTO createMemberInfoDTO(TeamMember teamMember) {
         return TeamDetailRespDTO.MemberInfoDTO.builder()
                 .userId(teamMember.getUser().getId())
@@ -283,17 +264,15 @@ public class TeamService {
                 .build();
     }
 
-    /**
-     * MemberInfoDTO 생성 (시간표 정보 포함)
-     */
-    private TeamDetailRespDTO.MemberInfoDTO createMemberInfoDTOWithTimetable(TeamMember teamMember, LocalDateTime suggestedScheduleAt) {
-        // 시간표 데이터 파싱
+    private TeamDetailRespDTO.MemberInfoDTO createMemberInfoDTOWithTimetable(
+            TeamMember teamMember,
+            LocalDateTime suggestedScheduleAt
+    ) {
         JsonNode timetableData = null;
         if (teamMember.getTimetableData() != null) {
             timetableData = timetableValidationUtil.stringToJson(teamMember.getTimetableData());
         }
 
-        // 제출 여부 확인
         boolean isSubmitted = false;
         if (suggestedScheduleAt != null && teamMember.getUpdatedTimetableAt() != null) {
             isSubmitted = teamMember.getUpdatedTimetableAt().isAfter(suggestedScheduleAt);

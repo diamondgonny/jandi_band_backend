@@ -47,14 +47,15 @@ public class TeamTimetableService {
     private final TimetableValidationUtil timetableValidationUtil;
     private final EntityValidationUtil entityValidationUtil;
 
-    /**
-     * 팀내 스케줄 조율 제안 ('시간 언제 돼? 모드' 시작)
-     */
     @Transactional
     public ScheduleSuggestionRespDTO startScheduleSuggestion(Integer teamId, Integer currentUserId) {
         Team team = entityValidationUtil.validateTeamExists(teamId);
 
-        TeamMember teamMember = permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "팀원만 접근할 수 있습니다.");
+        TeamMember teamMember = permissionValidationUtil.validateTeamMemberAccess(
+                teamId,
+                currentUserId,
+                "팀원만 접근할 수 있습니다."
+        );
 
         LocalDateTime now = LocalDateTime.now();
         team.setSuggestedScheduleAt(now);
@@ -68,48 +69,49 @@ public class TeamTimetableService {
                 .build();
     }
 
-    /**
-     * 팀내 내 시간표 등록
-     */
     @Transactional
     public TimetableRespDTO registerMyTimetable(Integer teamId, TimetableReqDTO reqDTO, Integer currentUserId) {
         TeamMember teamMember = validateTeamAndGetTeamMember(teamId, currentUserId);
-        UserTimetable userTimetable = getUserTimetableWithPermissionCheck(currentUserId, reqDTO.getUserTimetableId());
+        UserTimetable userTimetable = getUserTimetableWithPermissionCheck(
+                currentUserId,
+                reqDTO.getUserTimetableId()
+        );
         JsonNode timetableData = timetableValidationUtil.stringToJson(userTimetable.getTimetableData());
 
         return saveTeamMemberTimetableAndBuildResponse(teamMember, timetableData, currentUserId, teamId);
     }
 
-    /**
-     * 팀내 내 시간표 수정
-     */
     @Transactional
     public TimetableRespDTO updateMyTimetable(Integer teamId, TimetableUpdateReqDTO reqDTO, Integer currentUserId) {
         TeamMember teamMember = validateTeamAndGetTeamMember(teamId, currentUserId);
 
         teamTimetableUtil.validateTimetableRequest(reqDTO);
 
-        return saveTeamMemberTimetableAndBuildResponse(teamMember, reqDTO.getTimetableData(), currentUserId, teamId);
+        return saveTeamMemberTimetableAndBuildResponse(
+                teamMember,
+                reqDTO.getTimetableData(),
+                currentUserId,
+                teamId
+        );
     }
 
-    /**
-     * 팀 존재 확인 및 팀멤버 권한 검증
-     */
     private TeamMember validateTeamAndGetTeamMember(Integer teamId, Integer currentUserId) {
         entityValidationUtil.validateTeamExists(teamId);
-        return permissionValidationUtil.validateTeamMemberAccess(teamId, currentUserId, "본인의 시간표만 입력할 수 있습니다.");
+        return permissionValidationUtil.validateTeamMemberAccess(
+                teamId,
+                currentUserId,
+                "본인의 시간표만 입력할 수 있습니다."
+        );
     }
 
-    /**
-     * 사용자 시간표 조회 및 권한 검증
-     */
     private UserTimetable getUserTimetableWithPermissionCheck(Integer currentUserId, Integer userTimetableId) {
         if (userTimetableId == null) {
             throw new BadRequestException("시간표 ID는 필수입니다.");
         }
 
         // JOIN FETCH를 사용하여 User 정보도 함께 조회
-        UserTimetable userTimetable = userTimetableRepository.findByIdWithUserAndDeletedAtIsNull(userTimetableId)
+        UserTimetable userTimetable = userTimetableRepository
+                .findByIdWithUserAndDeletedAtIsNull(userTimetableId)
                 .orElseThrow(() -> new TimetableNotFoundException("존재하지 않는 시간표입니다."));
 
         if (userTimetable.getUser() == null || userTimetable.getUser().getId() == null) {
@@ -118,18 +120,22 @@ public class TeamTimetableService {
 
         Integer ownerId = userTimetable.getUser().getId();
 
-        // PermissionValidationUtil의 validateContentOwnership 활용
-        permissionValidationUtil.validateContentOwnership(ownerId, currentUserId, "권한이 없습니다: 본인의 시간표가 아닙니다");
+        permissionValidationUtil.validateContentOwnership(
+                ownerId,
+                currentUserId,
+                "권한이 없습니다: 본인의 시간표가 아닙니다"
+        );
 
         return userTimetable;
     }
 
-    /**
-     * 팀멤버 시간표 데이터 저장 및 응답 DTO 생성
-     */
-    private TimetableRespDTO saveTeamMemberTimetableAndBuildResponse(TeamMember teamMember, JsonNode timetableData, Integer currentUserId, Integer teamId) {
+    private TimetableRespDTO saveTeamMemberTimetableAndBuildResponse(
+            TeamMember teamMember,
+            JsonNode timetableData,
+            Integer currentUserId,
+            Integer teamId
+    ) {
         try {
-            // 시간표 데이터를 JSON으로 변환하여 저장 (JsonNode를 String으로 변환)
             String timetableJson = objectMapper.writeValueAsString(timetableData);
             teamMember.setTimetableData(timetableJson);
             teamMember.setUpdatedTimetableAt(LocalDateTime.now());

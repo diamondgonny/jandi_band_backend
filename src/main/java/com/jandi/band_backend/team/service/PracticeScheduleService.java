@@ -34,12 +34,9 @@ public class PracticeScheduleService {
     private final EntityValidationUtil entityValidationUtil;
     private final UserValidationUtil userValidationUtil;
 
-    // 팀별 곡 연습 일정 목록 조회 (동아리 멤버면 조회 가능)
     public Page<PracticeScheduleRespDTO> getPracticeSchedulesByTeam(Integer teamId, Pageable pageable, Integer userId) {
-        // 팀 존재 여부 확인
         Team team = entityValidationUtil.validateTeamExists(teamId);
 
-        // 동아리 멤버십 확인 (ADMIN은 자동 통과)
         permissionValidationUtil.validateClubMemberAccess(
             team.getClub().getId(),
             userId,
@@ -50,11 +47,9 @@ public class PracticeScheduleService {
                 .map(PracticeScheduleRespDTO::from);
     }
 
-    // 곡 연습 일정 상세 조회 (동아리 멤버면 조회 가능)
     public PracticeScheduleRespDTO getPracticeSchedule(Integer scheduleId, Integer userId) {
         TeamEvent teamEvent = entityValidationUtil.validateTeamEventExists(scheduleId);
 
-        // 동아리 멤버십 확인 (ADMIN은 자동 통과)
         permissionValidationUtil.validateClubMemberAccess(
             teamEvent.getTeam().getClub().getId(),
             userId,
@@ -64,12 +59,9 @@ public class PracticeScheduleService {
         return PracticeScheduleRespDTO.from(teamEvent);
     }
 
-    // 팀 ID를 포함한 곡 연습 일정 상세 조회 (새로운 URL 패턴용)
     public PracticeScheduleRespDTO getPracticeScheduleDetail(Integer teamId, Integer scheduleId, Integer userId) {
-        // 팀 존재 여부 확인 및 해당 팀의 연습 일정인지 확인
         TeamEvent teamEvent = entityValidationUtil.validateTeamEventBelongsToTeam(teamId, scheduleId);
 
-        // 동아리 멤버십 확인 (ADMIN은 자동 통과)
         permissionValidationUtil.validateClubMemberAccess(
             teamEvent.getTeam().getClub().getId(),
             userId,
@@ -79,13 +71,11 @@ public class PracticeScheduleService {
         return PracticeScheduleRespDTO.from(teamEvent);
     }
 
-    // 곡 연습 일정 생성 (팀 멤버만 가능)
     @Transactional
     public PracticeScheduleRespDTO createPracticeSchedule(Integer teamId, PracticeScheduleReqDTO request, Integer creatorId) {
         Team team = entityValidationUtil.validateTeamExists(teamId);
         Users creator = userValidationUtil.getUserById(creatorId);
 
-        // 팀 멤버십 확인 (ADMIN은 자동 통과)
         permissionValidationUtil.validateTeamMemberAccess(
             teamId,
             creatorId,
@@ -96,12 +86,10 @@ public class PracticeScheduleService {
         return PracticeScheduleRespDTO.from(teamEventRepository.save(teamEvent));
     }
 
-    // 곡 연습 일정 삭제 (팀 멤버만 가능)
     @Transactional
     public void deletePracticeSchedule(Integer scheduleId, Integer userId) {
         TeamEvent teamEvent = entityValidationUtil.validateTeamEventExists(scheduleId);
 
-        // 팀 멤버십 확인 (ADMIN은 자동 통과)
         permissionValidationUtil.validateTeamMemberAccess(
             teamEvent.getTeam().getId(),
             userId,
@@ -111,13 +99,10 @@ public class PracticeScheduleService {
         teamEvent.setDeletedAt(LocalDateTime.now());
     }
 
-    // 팀 ID를 포함한 곡 연습 일정 삭제 (새로운 URL 패턴용)
     @Transactional
     public void deletePracticeScheduleByTeam(Integer teamId, Integer scheduleId, Integer userId) {
-        // 팀 존재 여부 확인 및 해당 팀의 연습 일정인지 확인
         TeamEvent teamEvent = entityValidationUtil.validateTeamEventBelongsToTeam(teamId, scheduleId);
 
-        // 팀 멤버십 확인 (ADMIN은 자동 통과)
         permissionValidationUtil.validateTeamMemberAccess(
             teamId,
             userId,
@@ -127,9 +112,6 @@ public class PracticeScheduleService {
         teamEvent.setDeletedAt(LocalDateTime.now());
     }
 
-    /**
-     * 요청 데이터로부터 TeamEvent 엔티티 생성
-     */
     private TeamEvent createTeamEventFromRequest(Team team, Users creator, PracticeScheduleReqDTO request) {
         TeamEvent teamEvent = new TeamEvent();
         teamEvent.setTeam(team);

@@ -9,6 +9,8 @@ import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.club.repository.ClubEventRepository;
 import com.jandi.band_backend.club.repository.ClubRepository;
 import com.jandi.band_backend.club.repository.ClubMemberRepository;
+import com.jandi.band_backend.global.util.EntityValidationUtil;
+import com.jandi.band_backend.global.util.PermissionValidationUtil;
 import com.jandi.band_backend.global.util.UserValidationUtil;
 import com.jandi.band_backend.team.entity.Team;
 import com.jandi.band_backend.team.entity.TeamEvent;
@@ -36,18 +38,16 @@ public class ClubEventService {
     private final ClubMemberRepository clubMemberRepository;
     private final TeamRepository teamRepository;
     private final TeamEventRepository teamEventRepository;
+    private final EntityValidationUtil entityValidationUtil;
+    private final PermissionValidationUtil permissionValidationUtil;
     private final UserValidationUtil userValidationUtil;
 
     @Transactional
     public ClubEventRespDTO createClubEvent(Integer clubId, Integer userId, ClubEventReqDTO dto) {
-        Club club = clubRepository.findById(clubId)
-                .orElseThrow(() -> new IllegalArgumentException("동아리를 찾을 수 없습니다."));
-        Users creator = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-        boolean isMember = clubMemberRepository.findByClubIdAndUserIdAndDeletedAtIsNull(clubId, userId).isPresent();
-        if (!isMember) {
-            throw new IllegalArgumentException("동아리 부원만 이벤트를 생성할 수 있습니다.");
-        }
+        Club club = entityValidationUtil.validateClubExists(clubId);
+        Users creator = userValidationUtil.getUserById(userId);
+
+        permissionValidationUtil.validateClubMemberAccess(clubId, userId, "동아리 부원만 이벤트를 생성할 수 있습니다.");
 
         ClubEvent clubEvent = new ClubEvent();
         clubEvent.setClub(club);
@@ -67,8 +67,7 @@ public class ClubEventService {
                 .findByIdAndClubIdAndDeletedAtIsNull(eventId, clubId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 동아리에 속한 일정을 찾을 수 없습니다."));
 
-        userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        userValidationUtil.getUserById(userId);
 
         return convertToClubEventRespDTO(event);
     }
@@ -76,13 +75,9 @@ public class ClubEventService {
     // 캘린더용 통합 일정 조회 (동아리 일정 + 모든 하위 팀 일정)
     @Transactional(readOnly = true)
     public List<CalendarEventRespDTO> getCalendarEventsForClub(Integer clubId, Integer userId, int year, int month) {
-        // 사용자 검증
-        userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        userValidationUtil.getUserById(userId);
 
-        // 동아리 존재 확인
-        Club club = clubRepository.findById(clubId)
-                .orElseThrow(() -> new IllegalArgumentException("동아리를 찾을 수 없습니다."));
+        Club club = entityValidationUtil.validateClubExists(clubId);
 
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
@@ -118,23 +113,19 @@ public class ClubEventService {
     // 클럽 이벤트 삭제 (ADMIN은 모든 이벤트 삭제 가능)
     @Transactional
     public void deleteClubEvent(Integer clubId, Integer eventId, Integer userId) {
-        Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        Users user = userValidationUtil.getUserById(userId);
 
         ClubEvent event = clubEventRepository.findByIdAndClubIdAndDeletedAtIsNull(eventId, clubId)
                 .orElseThrow(() -> new IllegalArgumentException("일정을 찾을 수 없습니다."));
 
-        // 권한 체크 (작성자 또는 ADMIN 또는 동아리 대표자)
         if (!canDeleteEvent(clubId, userId, event)) {
             throw new IllegalArgumentException("일정을 삭제할 권한이 없습니다.");
         }
 
-        // 이벤트 소프트 삭제
         event.setDeletedAt(LocalDateTime.now());
         clubEventRepository.save(event);
     }
 
-    // ClubEvent 엔터티를 ClubEventRespDTO로 변환하는 헬퍼 메서드
     private ClubEventRespDTO convertToClubEventRespDTO(ClubEvent event) {
         return ClubEventRespDTO.builder()
                 .id(event.getId().longValue())
@@ -144,23 +135,18 @@ public class ClubEventService {
                 .build();
     }
 
-    // ADMIN 권한 확인
     private boolean isAdmin(Integer userId) {
         Users user = userValidationUtil.getUserById(userId);
         return user.getAdminRole() == Users.AdminRole.ADMIN;
     }
 
-    // 동아리 대표자 또는 이벤트 작성자인지 확인하는 헬퍼 메서드
     private boolean canDeleteEvent(Integer clubId, Integer userId, ClubEvent event) {
-        // ADMIN은 모든 이벤트 삭제 가능
         if (isAdmin(userId)) {
             return true;
         }
-        // 이벤트 작성자인 경우
         if (event.getCreator().getId().equals(userId)) {
             return true;
         }
-        // 동아리 대표자인 경우
         ClubMember member = clubMemberRepository.findByClubIdAndUserIdAndDeletedAtIsNull(clubId, userId)
                 .orElse(null);
         if (member != null && member.getRole() == ClubMember.MemberRole.REPRESENTATIVE) {

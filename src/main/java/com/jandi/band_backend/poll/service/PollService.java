@@ -1,8 +1,9 @@
 package com.jandi.band_backend.poll.service;
 
 import com.jandi.band_backend.club.entity.Club;
-import com.jandi.band_backend.club.repository.ClubRepository;
 import com.jandi.band_backend.global.exception.*;
+import com.jandi.band_backend.global.util.EntityValidationUtil;
+import com.jandi.band_backend.global.util.UserValidationUtil;
 import com.jandi.band_backend.poll.dto.*;
 import com.jandi.band_backend.poll.entity.Poll;
 import com.jandi.band_backend.poll.entity.PollSong;
@@ -12,7 +13,6 @@ import com.jandi.band_backend.poll.repository.PollRepository;
 import com.jandi.band_backend.poll.repository.PollSongRepository;
 import com.jandi.band_backend.poll.repository.VoteRepository;
 import com.jandi.band_backend.user.entity.Users;
-import com.jandi.band_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,19 +31,19 @@ public class PollService {
 
     private final PollRepository pollRepository;
     private final PollSongRepository pollSongRepository;
-    private final ClubRepository clubRepository;
-    private final UserRepository userRepository;
     private final VoteRepository voteRepository;
+
+    // 공통 유틸 추가
+    private final EntityValidationUtil entityValidationUtil;
+    private final UserValidationUtil userValidationUtil;
 
     @Transactional
     public PollRespDTO createPoll(PollReqDTO requestDto, Integer currentUserId) {
-        // 동아리 조회
-        Club club = clubRepository.findById(requestDto.getClubId())
-                .orElseThrow(() -> new ClubNotFoundException("해당 동아리를 찾을 수 없습니다."));
+        // 동아리 조회 - 공통 유틸 활용
+        Club club = entityValidationUtil.validateClubExists(requestDto.getClubId());
 
-        // 사용자 조회
-        Users creator = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new UserNotFoundException());
+        // 사용자 조회 - 공통 유틸 활용
+        Users creator = userValidationUtil.getUserById(currentUserId);
 
         // 투표 생성
         Poll poll = new Poll();
@@ -60,9 +60,8 @@ public class PollService {
 
     @Transactional(readOnly = true)
     public Page<PollRespDTO> getPollsByClub(Integer clubId, Pageable pageable) {
-        // 동아리 조회
-        Club club = clubRepository.findById(clubId)
-                .orElseThrow(() -> new ClubNotFoundException("해당 동아리를 찾을 수 없습니다."));
+        // 동아리 조회 - 공통 유틸 활용
+        Club club = entityValidationUtil.validateClubExists(clubId);
 
         // 동아리에 해당하는 투표 조회
         Page<Poll> polls = pollRepository.findAllByClubAndDeletedAtIsNullOrderByCreatedAtDesc(club, pageable);
@@ -72,9 +71,8 @@ public class PollService {
 
     @Transactional(readOnly = true)
     public PollDetailRespDTO getPollDetail(Integer pollId, Integer currentUserId) {
-        // 투표 조회
-        Poll poll = pollRepository.findByIdAndDeletedAtIsNull(pollId)
-                .orElseThrow(() -> new PollNotFoundException("해당 투표를 찾을 수 없습니다."));
+        // 투표 조회 - 공통 유틸 활용
+        Poll poll = entityValidationUtil.validatePollExists(pollId);
 
         // 투표에 해당하는 노래 목록 조회
         List<PollSong> pollSongs = pollSongRepository.findAllByPollAndDeletedAtIsNullOrderByCreatedAtDesc(poll);
@@ -89,9 +87,8 @@ public class PollService {
 
     @Transactional(readOnly = true)
     public List<PollSongResultRespDTO> getPollSongs(Integer pollId, String sortBy, String order, Integer currentUserId) {
-        // 투표 조회
-        Poll poll = pollRepository.findByIdAndDeletedAtIsNull(pollId)
-                .orElseThrow(() -> new PollNotFoundException("해당 투표를 찾을 수 없습니다."));
+        // 투표 조회 - 공통 유틸 활용
+        Poll poll = entityValidationUtil.validatePollExists(pollId);
 
         // 투표에 해당하는 노래 목록 조회
         List<PollSong> pollSongs = pollSongRepository.findAllByPollAndDeletedAtIsNullOrderByCreatedAtDesc(poll);
@@ -107,13 +104,11 @@ public class PollService {
 
     @Transactional
     public PollSongRespDTO addSongToPoll(Integer pollId, PollSongReqDTO requestDto, Integer currentUserId) {
-        // 투표 조회
-        Poll poll = pollRepository.findByIdAndDeletedAtIsNull(pollId)
-                .orElseThrow(() -> new PollNotFoundException("해당 투표를 찾을 수 없습니다."));
+        // 투표 조회 - 공통 유틸 활용
+        Poll poll = entityValidationUtil.validatePollExists(pollId);
 
-        // 사용자 조회
-        Users suggester = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new UserNotFoundException());
+        // 사용자 조회 - 공통 유틸 활용
+        Users suggester = userValidationUtil.getUserById(currentUserId);
 
         // 노래 추가
         PollSong pollSong = new PollSong();
@@ -131,18 +126,11 @@ public class PollService {
 
     @Transactional
     public PollSongRespDTO setVoteForSong(Integer pollId, Integer songId, String voteType, Integer currentUserId) {
-        // 사용자 조회
-        Users user = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new UserNotFoundException());
+        // 사용자 조회 - 공통 유틸 활용
+        Users user = userValidationUtil.getUserById(currentUserId);
 
-        // 노래 조회
-        PollSong pollSong = pollSongRepository.findById(songId)
-                .orElseThrow(() -> new PollSongNotFoundException("해당 노래를 찾을 수 없습니다."));
-
-        // 투표 조회 (pollId 확인)
-        if (!pollSong.getPoll().getId().equals(pollId)) {
-            throw new PollSongNotFoundException("해당 투표에 속한 노래가 아닙니다.");
-        }
+        // 노래 조회 및 투표 소속 확인 - 공통 유틸 활용
+        PollSong pollSong = entityValidationUtil.validatePollSongBelongsToPoll(pollId, songId);
 
         // 투표 타입 변환
         VotedMark votedMark = convertToVotedMark(voteType);
@@ -189,14 +177,8 @@ public class PollService {
 
     @Transactional
     public PollSongRespDTO removeVoteFromSong(Integer pollId, Integer songId, String voteType, Integer currentUserId) {
-        // 노래 조회
-        PollSong pollSong = pollSongRepository.findById(songId)
-                .orElseThrow(() -> new PollSongNotFoundException("해당 노래를 찾을 수 없습니다."));
-
-        // 투표 조회 (pollId 확인)
-        if (!pollSong.getPoll().getId().equals(pollId)) {
-            throw new PollSongNotFoundException("해당 투표에 속한 노래가 아닙니다.");
-        }
+        // 노래 조회 및 투표 소속 확인 - 공통 유틸 활용
+        PollSong pollSong = entityValidationUtil.validatePollSongBelongsToPoll(pollId, songId);
 
         // 투표 타입 변환
         VotedMark votedMark = convertToVotedMark(voteType);
@@ -228,7 +210,11 @@ public class PollService {
         }
 
         // 제안자의 현재 프로필 사진 URL 조회
-        String suggesterProfilePhoto = getUserProfilePhotoUrl(pollSong.getSuggester());
+        String suggesterProfilePhoto = pollSong.getSuggester().getPhotos().stream()
+                .filter(photo -> photo.getIsCurrent() && photo.getDeletedAt() == null)
+                .map(photo -> photo.getImageUrl())
+                .findFirst()
+                .orElse(null);
 
         return PollSongRespDTO.builder()
                 .id(pollSong.getId())
@@ -329,7 +315,11 @@ public class PollService {
         }
 
         // 제안자의 현재 프로필 사진 URL 조회
-        String suggesterProfilePhoto = getUserProfilePhotoUrl(pollSong.getSuggester());
+        String suggesterProfilePhoto = pollSong.getSuggester().getPhotos().stream()
+                .filter(photo -> photo.getIsCurrent() && photo.getDeletedAt() == null)
+                .map(photo -> photo.getImageUrl())
+                .findFirst()
+                .orElse(null);
 
         return PollSongRespDTO.builder()
                 .id(pollSong.getId())
@@ -382,14 +372,6 @@ public class PollService {
             case "HAJJ", "하고싶지_않은데_존중해요" -> VotedMark.HAJJ;
             default -> throw new IllegalArgumentException("유효하지 않은 투표 타입입니다: " + voteType);
         };
-    }
-
-    private String getUserProfilePhotoUrl(Users user) {
-        return user.getPhotos().stream()
-                .filter(photo -> photo.getIsCurrent() && photo.getDeletedAt() == null)
-                .map(photo -> photo.getImageUrl())
-                .findFirst()
-                .orElse(null);
     }
 
     private List<PollSongResultRespDTO> applySortingForResult(List<PollSongResultRespDTO> songs, String sortBy, String order) {

@@ -53,7 +53,7 @@ public class ClubGalPhotoController {
 
     @Operation(summary = "동아리 사진 생성")
     @PostMapping("/photo")
-    public ResponseEntity<CommonRespDTO<ClubGalPhotoRespDTO>> createClubGalPhotoList(
+    public ResponseEntity<CommonRespDTO<ClubGalPhotoRespDTO>> createClubGalPhoto(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Integer clubId,
             @RequestParam MultipartFile image,
@@ -63,7 +63,7 @@ public class ClubGalPhotoController {
         Integer userId = userDetails.getUserId();
         ClubGalPhotoReqDTO reqDTO = new ClubGalPhotoReqDTO(image, description, isPublic);
 
-        ClubGalPhotoRespDTO response = clubGalPhotoService.createClubGalPhotoList(clubId, userId, reqDTO);
+        ClubGalPhotoRespDTO response = clubGalPhotoService.createClubGalPhoto(clubId, userId, reqDTO);
         return ResponseEntity.ok(CommonRespDTO.success("동아리 사진 생성 성공", response));
     }
 

@@ -73,9 +73,9 @@ public class ClubGalPhotoController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Integer clubId,
             @PathVariable Integer photoId,
-            @RequestParam(required = false, defaultValue = "") MultipartFile image,
-            @RequestParam(required = false, defaultValue = "") String description,
-            @RequestParam(required = false, defaultValue = "true") Boolean isPublic
+            @RequestParam(required = false) MultipartFile image,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) Boolean isPublic
     ) {
         Integer userId = userDetails.getUserId();
         ClubGalPhotoReqDTO reqDTO = new ClubGalPhotoReqDTO(image, description, isPublic);

@@ -37,99 +37,67 @@ public class ClubGalPhotoService {
     private final ClubMemberRepository clubMemberRepository;
     private final S3Service s3Service;
 
+    private static final String S3_DIRNAME = "club-gal-photo";
+
     @Transactional(readOnly = true)
     public Page<ClubGalPhotoRespDTO> getClubGalPhotoList(Integer clubId, Integer userId, Pageable pageable) {
-        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
-                .orElseThrow(() -> new ClubNotFoundException("존재하지 않는 동아리입니다."));
-        Users user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
-
-        // 동아리원이라면 모든 사진 조회, 동아리원이 아니라면 공개된 것만
-        boolean isMember = clubMemberRepository.existsByClubAndUserAndDeletedAtIsNull(club, user);
-        return isMember ?
-                getAllPhoto(clubId, pageable) : getPublicPhoto(clubId, pageable);
+        return isClubMember(clubId, userId) ?
+                getAllPhotoList(clubId, pageable) : getPublicPhotoList(clubId, pageable);
     }
 
     @Transactional(readOnly = true)
     public ClubGalPhotoRespDetailDTO getClubGalPhotoDetail(Integer clubId, Integer userId, Integer photoId) {
-        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
-                .orElseThrow(() -> new ClubNotFoundException("존재하지 않는 동아리입니다."));
-        Users user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
-        ClubGalPhoto photo = clubGalPhotoRepository.findByIdAndClubAndDeletedAtIsNull(photoId, club)
-                .orElseThrow(()->new ResourceNotFoundException("존재하지 않는 사진입니다"));
+        ClubGalPhoto photo = getClubGalPhotoRecord(clubId, photoId);
 
-        // 동아리원이라면 모든 사진 조회, 동아리원이 아니라면 공개된 것만
-        boolean isMember = clubMemberRepository.existsByClubAndUserAndDeletedAtIsNull(club, user);
-        boolean isPublic = photo.getIsPublic();
-        if(isPublic || isMember) {
-            return new ClubGalPhotoRespDetailDTO(photo);
-        }else {
+        if(!isClubMember(clubId, userId) && !photo.getIsPublic())
             throw new InvalidAccessException("권한이 없습니다: 동아리원에게만 공개된 사진입니다.");
-        }
+
+        return new ClubGalPhotoRespDetailDTO(photo);
     }
 
     @Transactional
     public ClubGalPhotoRespDTO createClubGalPhoto(Integer clubId, Integer userId, ClubGalPhotoReqDTO reqDTO) {
-        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
-                .orElseThrow(() -> new ClubNotFoundException("존재하지 않는 동아리입니다."));
-        Users user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        if(!isClubMember(clubId, userId))
+            throw new InvalidAccessException("권한이 없습니다: 동아리원만 업로드할 수 있습니다.");
 
-        // 동아리원이라면 업로드 작업 수행, 동아리원이 아니라면 업로드 못하게 막기
-        boolean isMember = clubMemberRepository.existsByClubAndUserAndDeletedAtIsNull(club, user);
-        if(isMember) {
-            return createClubPhoto(club, user, reqDTO);
-        }else {
-            throw new InvalidAccessException("권한이 없습니다: 동아리원이 아닙니다");
-        }
+        return createClubPhotoRecord(clubId, userId, reqDTO);
     }
 
     @Transactional
     public ClubGalPhotoRespDetailDTO updateClubGalPhoto(Integer clubId, Integer userId, Integer photoId, ClubGalPhotoReqDTO reqDTO) {
-        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
-                .orElseThrow(() -> new ClubNotFoundException("존재하지 않는 동아리입니다."));
-        Users user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
-        ClubGalPhoto photo = clubGalPhotoRepository.findByIdAndClubAndDeletedAtIsNull(photoId, club)
-                .orElseThrow(()->new ResourceNotFoundException("존재하지 않는 사진입니다"));
+        ClubGalPhoto photo = getClubGalPhotoRecord(clubId, photoId);
 
-        // 업로더만 수정 가능
-        Users uploader = photo.getUploader();
-        if(uploader != null && uploader.getId().equals(user.getId())) {
-            return new ClubGalPhotoRespDetailDTO(updateMyGalPhoto(photo, reqDTO));
-        }else {
-            throw new InvalidAccessException("권한이 없습니다: 본인만 수정할 수 있습니다");
-        }
+        if(!isUploader(clubId, photoId, userId))
+            throw new InvalidAccessException("권한이 없습니다: 본인만 수정할 수 있습니다.");
+
+        return new ClubGalPhotoRespDetailDTO(updateMyGalPhotoRecord(photo, reqDTO));
     }
 
     @Transactional
     public void deleteClubGalPhoto(Integer clubId, Integer userId, Integer photoId) {
-        Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
-                .orElseThrow(() -> new ClubNotFoundException("존재하지 않는 동아리입니다."));
-        Users user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
-        ClubGalPhoto photo = clubGalPhotoRepository.findByIdAndClubAndDeletedAtIsNull(photoId, club)
-                .orElseThrow(()->new ResourceNotFoundException("존재하지 않는 사진입니다"));
+        ClubGalPhoto photo = getClubGalPhotoRecord(clubId, photoId);
 
         // 업로더 혹은 동아리 대표만 삭제 가능
-        Users uploader = photo.getUploader();
-        Boolean isUploader = uploader != null && uploader.getId().equals(user.getId());
-        Boolean isRepresentative = clubMemberRepository.existsByUserIdAndClub_IdAndDeletedAtIsNullAndRole(userId, clubId, ClubMember.MemberRole.REPRESENTATIVE);
-        if(isUploader || isRepresentative) {
-            deleteGalPhoto(photo);
-        }else {
-            throw new InvalidAccessException("권한이 없습니다: 본인 혹은 동아리 대표만 삭제할 수 있습니다");
-        }
+        if(!isUploader(clubId, photoId, userId) && !isClubRepresentative(clubId, photoId))
+            throw new InvalidAccessException("권한이 없습니다: 본인 혹은 동아리 대표만 삭제할 수 있습니다.");
+
+        deleteGalPhotoRecord(photo);
     }
 
-    /// 내부 메서드
-    private Page<ClubGalPhotoRespDTO> getPublicPhoto(Integer clubId, Pageable pageable) {
+    /// 비즈니스 로직 메서드
+    private Page<ClubGalPhotoRespDTO> getPublicPhotoList(Integer clubId, Pageable pageable) {
         Page<ClubGalPhoto> publicPhotoPage = clubGalPhotoRepository.findByClubIdAndIsPublicAndDeletedAtIsNullFetchUploader(clubId, true, pageable);
         return publicPhotoPage.map(ClubGalPhotoRespDTO::new);
     }
 
-    private Page<ClubGalPhotoRespDTO> getAllPhoto(Integer clubId, Pageable pageable) {
+    private Page<ClubGalPhotoRespDTO> getAllPhotoList(Integer clubId, Pageable pageable) {
         Page<ClubGalPhoto> allPhotoPage = clubGalPhotoRepository.findByClubIdAndDeletedAtIsNullFetchUploader(clubId, pageable);
         return allPhotoPage.map(ClubGalPhotoRespDTO::new);
     }
 
-    private ClubGalPhotoRespDTO createClubPhoto(Club club, Users user, ClubGalPhotoReqDTO reqDTO) {
+    private ClubGalPhotoRespDTO createClubPhotoRecord(Integer clubId, Integer userId, ClubGalPhotoReqDTO reqDTO) {
+        Club club = getClubRecord(clubId);
+        Users user = getUserRecord(userId);
         String imageUrl = uploadImage(reqDTO.getImage());
 
         ClubGalPhoto clubGalPhoto = new ClubGalPhoto();
@@ -151,13 +119,13 @@ public class ClubGalPhotoService {
 
     private String uploadImage(MultipartFile file){
         try {
-            return s3Service.uploadImage(file, "club-gal-photo");
+            return s3Service.uploadImage(file, S3_DIRNAME);
         } catch (IOException e) {
             throw new RuntimeException("이미지 업로드 실패: " + e);
         }
     }
 
-    private ClubGalPhoto updateMyGalPhoto(ClubGalPhoto photo, ClubGalPhotoReqDTO reqDTO) {
+    private ClubGalPhoto updateMyGalPhotoRecord(ClubGalPhoto photo, ClubGalPhotoReqDTO reqDTO) {
         if(reqDTO.getImage() != null && !reqDTO.getImage().isEmpty()) {
             String oldImageUrl = photo.getImageUrl();
             String newImageUrl = uploadImage(reqDTO.getImage());
@@ -179,7 +147,7 @@ public class ClubGalPhotoService {
         return clubGalPhotoRepository.save(photo);
     }
 
-    private void deleteGalPhoto(ClubGalPhoto photo) {
+    private void deleteGalPhotoRecord(ClubGalPhoto photo) {
         String imageUrl = photo.getImageUrl();
 
         // s3 삭제
@@ -196,5 +164,41 @@ public class ClubGalPhotoService {
         } catch (Exception e) {
             throw new RuntimeException("DB 삭제 실패", e);
         }
+    }
+
+    /// 권한 검증 메서드들
+    private boolean isClubMember(Integer clubId, Integer userId) {
+        Club club = getClubRecord(clubId);
+        Users user = getUserRecord(userId);
+
+        return clubMemberRepository.existsByClubAndUserAndDeletedAtIsNull(club, user);
+    }
+
+    private boolean isClubRepresentative(Integer clubId, Integer userId) {
+        return clubMemberRepository.existsByUserIdAndClub_IdAndDeletedAtIsNullAndRole(
+                userId, clubId, ClubMember.MemberRole.REPRESENTATIVE);
+    }
+
+    private boolean isUploader(Integer clubId, Integer photoId, Integer userId) {
+        ClubGalPhoto photo = getClubGalPhotoRecord(clubId, photoId);
+        Users user = getUserRecord(userId);
+
+        return user.equals(photo.getUploader());
+    }
+
+    private Club getClubRecord(Integer clubId) {
+        return clubRepository.findByIdAndDeletedAtIsNull(clubId)
+                .orElseThrow(() -> new ClubNotFoundException("존재하지 않는 동아리입니다."));
+    }
+
+    private Users getUserRecord(Integer userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+    }
+
+    private ClubGalPhoto getClubGalPhotoRecord(Integer clubId, Integer photoId) {
+        Club club = getClubRecord(clubId);
+        return clubGalPhotoRepository.findByIdAndClubAndDeletedAtIsNull(photoId, club)
+                .orElseThrow(()->new ResourceNotFoundException("존재하지 않는 사진입니다"));
     }
 }

@@ -84,6 +84,21 @@ public class ClubGalPhotoController {
         return ResponseEntity.ok(CommonRespDTO.success("동아리 사진 수정 성공", response));
     }
 
+    @Operation(summary = "동아리 사진 핀 등록/해제")
+    @PatchMapping("/photo/{photoId}/pin")
+    public ResponseEntity<CommonRespDTO<?>> updateClubGalPhotoList(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Integer clubId,
+            @PathVariable Integer photoId
+    ) {
+        Integer userId = userDetails.getUserId();
+
+        boolean isPinned = clubGalPhotoService.pinnedClubGalPhoto(clubId, userId, photoId);
+        String response = isPinned ?
+                "고정되었습니다." : "고정 해제되었습니다";
+        return ResponseEntity.ok(CommonRespDTO.success(response));
+    }
+
     @Operation(summary = "동아리 사진 삭제")
     @DeleteMapping("/photo/{photoId}")
     public ResponseEntity<CommonRespDTO<?>> deleteClubGalPhotoList(

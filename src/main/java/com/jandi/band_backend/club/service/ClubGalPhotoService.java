@@ -74,6 +74,17 @@ public class ClubGalPhotoService {
     }
 
     @Transactional
+    public boolean pinnedClubGalPhoto(Integer clubId, Integer userId, Integer photoId) {
+        ClubGalPhoto photo = getClubGalPhotoRecord(clubId, photoId);
+
+        if(isClubRepresentative(clubId, userId)){
+            return pinnedClubGalPhotoRecord(photo);
+        }
+
+        throw new InvalidAccessException("권한이 없습니다: 동아리장만 고정/고정 해제할 수 있습니다.");
+    }
+
+    @Transactional
     public void deleteClubGalPhoto(Integer clubId, Integer userId, Integer photoId) {
         ClubGalPhoto photo = getClubGalPhotoRecord(clubId, photoId);
 
@@ -147,6 +158,13 @@ public class ClubGalPhotoService {
             throw new RuntimeException("DB 저장 실패: " + e);
         }
         return new ClubGalPhotoRespDetailDTO(photo);
+    }
+
+    private boolean pinnedClubGalPhotoRecord(ClubGalPhoto photo) {
+        photo.setIsPinned(!photo.getIsPinned());
+        clubGalPhotoRepository.save(photo);
+
+        return photo.getIsPinned();
     }
 
     private void deleteGalPhotoRecord(ClubGalPhoto photo) {

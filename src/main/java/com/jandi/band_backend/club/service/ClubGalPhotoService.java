@@ -68,7 +68,7 @@ public class ClubGalPhotoService {
     }
 
     @Transactional
-    public ClubGalPhotoRespDTO createClubGalPhotoList(Integer clubId, Integer userId, ClubGalPhotoReqDTO reqDTO) {
+    public ClubGalPhotoRespDTO createClubGalPhoto(Integer clubId, Integer userId, ClubGalPhotoReqDTO reqDTO) {
         Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ClubNotFoundException("존재하지 않는 동아리입니다."));
         Users user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
@@ -82,6 +82,7 @@ public class ClubGalPhotoService {
         }
     }
 
+    @Transactional
     public ClubGalPhotoRespDetailDTO updateClubGalPhoto(Integer clubId, Integer userId, Integer photoId, ClubGalPhotoReqDTO reqDTO) {
         Club club = clubRepository.findByIdAndDeletedAtIsNull(clubId)
                 .orElseThrow(() -> new ClubNotFoundException("존재하지 않는 동아리입니다."));

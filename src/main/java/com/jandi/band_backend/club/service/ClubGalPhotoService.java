@@ -49,39 +49,40 @@ public class ClubGalPhotoService {
     public ClubGalPhotoRespDetailDTO getClubGalPhotoDetail(Integer clubId, Integer userId, Integer photoId) {
         ClubGalPhoto photo = getClubGalPhotoRecord(clubId, photoId);
 
-        if(!isClubMember(clubId, userId) && !photo.getIsPublic())
-            throw new InvalidAccessException("권한이 없습니다: 동아리원에게만 공개된 사진입니다.");
-
+        if(isClubMember(clubId, userId) || photo.getIsPublic())
             return new ClubGalPhotoRespDetailDTO(photo);
+
+        throw new InvalidAccessException("권한이 없습니다: 동아리원에게만 공개된 사진입니다.");
     }
 
     @Transactional
     public ClubGalPhotoRespDTO createClubGalPhoto(Integer clubId, Integer userId, ClubGalPhotoReqDTO reqDTO) {
-        if(!isClubMember(clubId, userId))
-            throw new InvalidAccessException("권한이 없습니다: 동아리원만 업로드할 수 있습니다.");
-
+        if(isClubMember(clubId, userId))
             return createClubPhotoRecord(clubId, userId, reqDTO);
+
+        throw new InvalidAccessException("권한이 없습니다: 동아리원만 업로드할 수 있습니다.");
     }
 
     @Transactional
     public ClubGalPhotoRespDetailDTO updateClubGalPhoto(Integer clubId, Integer userId, Integer photoId, ClubGalPhotoReqDTO reqDTO) {
         ClubGalPhoto photo = getClubGalPhotoRecord(clubId, photoId);
 
-        if(!isUploader(clubId, photoId, userId))
-            throw new InvalidAccessException("권한이 없습니다: 본인만 수정할 수 있습니다.");
-
+        if(isUploader(clubId, photoId, userId))
             return updateMyGalPhotoRecord(photo, reqDTO);
+
+        throw new InvalidAccessException("권한이 없습니다: 본인만 수정할 수 있습니다.");
     }
 
     @Transactional
     public void deleteClubGalPhoto(Integer clubId, Integer userId, Integer photoId) {
         ClubGalPhoto photo = getClubGalPhotoRecord(clubId, photoId);
 
-        // 업로더 혹은 동아리 대표만 삭제 가능
-        if(!isUploader(clubId, photoId, userId) && !isClubRepresentative(clubId, photoId))
-            throw new InvalidAccessException("권한이 없습니다: 본인 혹은 동아리 대표만 삭제할 수 있습니다.");
-
+        if(isUploader(clubId, photoId, userId) || isClubRepresentative(clubId, userId)){
             deleteGalPhotoRecord(photo);
+            return;
+        }
+
+        throw new InvalidAccessException("권한이 없습니다: 본인 혹은 동아리 대표만 삭제할 수 있습니다.");
     }
 
     /// DB CRUD 관련

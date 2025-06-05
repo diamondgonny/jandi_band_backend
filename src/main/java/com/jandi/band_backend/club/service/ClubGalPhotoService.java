@@ -52,7 +52,7 @@ public class ClubGalPhotoService {
         if(!isClubMember(clubId, userId) && !photo.getIsPublic())
             throw new InvalidAccessException("권한이 없습니다: 동아리원에게만 공개된 사진입니다.");
 
-        return new ClubGalPhotoRespDetailDTO(photo);
+            return new ClubGalPhotoRespDetailDTO(photo);
     }
 
     @Transactional
@@ -60,7 +60,7 @@ public class ClubGalPhotoService {
         if(!isClubMember(clubId, userId))
             throw new InvalidAccessException("권한이 없습니다: 동아리원만 업로드할 수 있습니다.");
 
-        return createClubPhotoRecord(clubId, userId, reqDTO);
+            return createClubPhotoRecord(clubId, userId, reqDTO);
     }
 
     @Transactional
@@ -70,7 +70,7 @@ public class ClubGalPhotoService {
         if(!isUploader(clubId, photoId, userId))
             throw new InvalidAccessException("권한이 없습니다: 본인만 수정할 수 있습니다.");
 
-        return updateMyGalPhotoRecord(photo, reqDTO);
+            return updateMyGalPhotoRecord(photo, reqDTO);
     }
 
     @Transactional
@@ -81,7 +81,7 @@ public class ClubGalPhotoService {
         if(!isUploader(clubId, photoId, userId) && !isClubRepresentative(clubId, photoId))
             throw new InvalidAccessException("권한이 없습니다: 본인 혹은 동아리 대표만 삭제할 수 있습니다.");
 
-        deleteGalPhotoRecord(photo);
+            deleteGalPhotoRecord(photo);
     }
 
     /// DB CRUD 관련
@@ -149,17 +149,19 @@ public class ClubGalPhotoService {
     }
 
     private void deleteGalPhotoRecord(ClubGalPhoto photo) {
-        // s3 삭제
         String imageUrl = photo.getImageUrl();
-        deleteImage(imageUrl);
 
         // soft delete 처리
         try {
+            photo.setImageUrl("DELETED"); // DB 제약조건 상 NOTNULL이라 상태 표시만 하는 걸로
             photo.setDeletedAt(LocalDateTime.now());
             clubGalPhotoRepository.save(photo);
         } catch (Exception e) {
             throw new RuntimeException("DB 삭제 실패", e);
         }
+
+        // DB 반영 후 S3 삭제
+        deleteImage(imageUrl);
     }
 
     /// 권한 검증 관련

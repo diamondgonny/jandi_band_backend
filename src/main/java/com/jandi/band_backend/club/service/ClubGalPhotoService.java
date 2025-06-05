@@ -70,7 +70,7 @@ public class ClubGalPhotoService {
         if(!isUploader(clubId, photoId, userId))
             throw new InvalidAccessException("권한이 없습니다: 본인만 수정할 수 있습니다.");
 
-        return new ClubGalPhotoRespDetailDTO(updateMyGalPhotoRecord(photo, reqDTO));
+        return updateMyGalPhotoRecord(photo, reqDTO);
     }
 
     @Transactional
@@ -84,15 +84,23 @@ public class ClubGalPhotoService {
         deleteGalPhotoRecord(photo);
     }
 
-    /// 비즈니스 로직 메서드
+    /// DB CRUD 관련
     private Page<ClubGalPhotoRespDTO> getPublicPhotoList(Integer clubId, Pageable pageable) {
-        Page<ClubGalPhoto> publicPhotoPage = clubGalPhotoRepository.findByClubIdAndIsPublicAndDeletedAtIsNullFetchUploader(clubId, true, pageable);
+        Page<ClubGalPhoto> publicPhotoPage = clubGalPhotoRepository
+                .findByClubIdAndIsPublicAndDeletedAtIsNullFetchUploader(clubId, true, pageable);
         return publicPhotoPage.map(ClubGalPhotoRespDTO::new);
     }
 
     private Page<ClubGalPhotoRespDTO> getAllPhotoList(Integer clubId, Pageable pageable) {
-        Page<ClubGalPhoto> allPhotoPage = clubGalPhotoRepository.findByClubIdAndDeletedAtIsNullFetchUploader(clubId, pageable);
+        Page<ClubGalPhoto> allPhotoPage = clubGalPhotoRepository
+                .findByClubIdAndDeletedAtIsNullFetchUploader(clubId, pageable);
         return allPhotoPage.map(ClubGalPhotoRespDTO::new);
+    }
+
+    private ClubGalPhoto getClubGalPhotoRecord(Integer clubId, Integer photoId) {
+        Club club = getClubRecord(clubId);
+        return clubGalPhotoRepository.findByIdAndClubAndDeletedAtIsNull(photoId, club)
+                .orElseThrow(()->new ResourceNotFoundException("존재하지 않는 사진입니다"));
     }
 
     private ClubGalPhotoRespDTO createClubPhotoRecord(Integer clubId, Integer userId, ClubGalPhotoReqDTO reqDTO) {
@@ -100,42 +108,29 @@ public class ClubGalPhotoService {
         Users user = getUserRecord(userId);
         String imageUrl = uploadImage(reqDTO.getImage());
 
-        ClubGalPhoto clubGalPhoto = new ClubGalPhoto();
-        clubGalPhoto.setClub(club);
-        clubGalPhoto.setUploader(user);
-        clubGalPhoto.setDescription(reqDTO.getDescription());
-        clubGalPhoto.setIsPublic(reqDTO.getIsPublic());
-        clubGalPhoto.setImageUrl(imageUrl);
+        ClubGalPhoto photo = new ClubGalPhoto();
+        photo.setClub(club);
+        photo.setUploader(user);
+        photo.setDescription(reqDTO.getDescription());
+        photo.setIsPublic(reqDTO.getIsPublic());
+        photo.setImageUrl(imageUrl);
 
         try{
-            clubGalPhotoRepository.save(clubGalPhoto);
+            clubGalPhotoRepository.save(photo);
         }catch (Exception e){
             // DB 저장 실패 시 업로드된 이미지 삭제 (롤백 처리)
-            s3Service.deleteImage(imageUrl);
+            deleteImage(imageUrl);
             throw new RuntimeException("DB 저장 실패: " + e);
         }
-        return new ClubGalPhotoRespDTO(clubGalPhoto);
+        return new ClubGalPhotoRespDTO(photo);
     }
 
-    private String uploadImage(MultipartFile file){
-        try {
-            return s3Service.uploadImage(file, S3_DIRNAME);
-        } catch (IOException e) {
-            throw new RuntimeException("이미지 업로드 실패: " + e);
-        }
-    }
+    private ClubGalPhotoRespDetailDTO updateMyGalPhotoRecord(ClubGalPhoto photo, ClubGalPhotoReqDTO reqDTO) {
+        String oldImageUrl = photo.getImageUrl();
 
-    private ClubGalPhoto updateMyGalPhotoRecord(ClubGalPhoto photo, ClubGalPhotoReqDTO reqDTO) {
         if(reqDTO.getImage() != null && !reqDTO.getImage().isEmpty()) {
-            String oldImageUrl = photo.getImageUrl();
             String newImageUrl = uploadImage(reqDTO.getImage());
             photo.setImageUrl(newImageUrl);
-
-            try {
-                if (oldImageUrl != null) s3Service.deleteImage(oldImageUrl);
-            } catch (Exception e) {
-                log.warn("기존 이미지 삭제 실패: {}", oldImageUrl, e);
-            }
         }
         if(reqDTO.getDescription() != null) {
             photo.setDescription(reqDTO.getDescription());
@@ -144,18 +139,19 @@ public class ClubGalPhotoService {
             photo.setIsPublic(reqDTO.getIsPublic());
         }
 
-        return clubGalPhotoRepository.save(photo);
+        try{
+            clubGalPhotoRepository.save(photo);
+            deleteImage(oldImageUrl);
+        }catch (Exception e){
+            throw new RuntimeException("DB 저장 실패: " + e);
+        }
+        return new ClubGalPhotoRespDetailDTO(photo);
     }
 
     private void deleteGalPhotoRecord(ClubGalPhoto photo) {
-        String imageUrl = photo.getImageUrl();
-
         // s3 삭제
-        try {
-            s3Service.deleteImage(photo.getImageUrl());
-        } catch (Exception e) {
-            throw new RuntimeException("S3 이미지 삭제 실패: " + imageUrl, e);
-        }
+        String imageUrl = photo.getImageUrl();
+        deleteImage(imageUrl);
 
         // soft delete 처리
         try {
@@ -166,7 +162,7 @@ public class ClubGalPhotoService {
         }
     }
 
-    /// 권한 검증 메서드들
+    /// 권한 검증 관련
     private boolean isClubMember(Integer clubId, Integer userId) {
         Club club = getClubRecord(clubId);
         Users user = getUserRecord(userId);
@@ -196,9 +192,21 @@ public class ClubGalPhotoService {
                 .orElseThrow(UserNotFoundException::new);
     }
 
-    private ClubGalPhoto getClubGalPhotoRecord(Integer clubId, Integer photoId) {
-        Club club = getClubRecord(clubId);
-        return clubGalPhotoRepository.findByIdAndClubAndDeletedAtIsNull(photoId, club)
-                .orElseThrow(()->new ResourceNotFoundException("존재하지 않는 사진입니다"));
+    /// S3 이미지 처리 관련
+    private String uploadImage(MultipartFile file){
+        try {
+            return s3Service.uploadImage(file, S3_DIRNAME);
+        } catch (IOException e) {
+            throw new RuntimeException("이미지 업로드 실패: " + e);
+        }
+    }
+
+    private void deleteImage(String imageUrl){
+        try {
+            if (imageUrl != null)
+                s3Service.deleteImage(imageUrl);
+        } catch (Exception e) {
+            log.warn("기존 이미지 삭제 실패: {}", imageUrl, e);
+        }
     }
 }

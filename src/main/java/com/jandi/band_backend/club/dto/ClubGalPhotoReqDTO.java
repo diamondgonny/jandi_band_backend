@@ -1,6 +1,5 @@
 package com.jandi.band_backend.club.dto;
 
-import com.jandi.band_backend.user.entity.Users;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;

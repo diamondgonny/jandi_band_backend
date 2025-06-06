@@ -77,6 +77,7 @@ public class PollService {
 
     @Transactional(readOnly = true)
     public List<PollSongResultRespDTO> getPollSongs(Integer pollId, String sortBy, String order, Integer currentUserId) {
+        Poll poll = entityValidationUtil.validatePollExists(pollId);
 
         List<PollSong> pollSongs = pollSongRepository.findAllByPollAndDeletedAtIsNullOrderByCreatedAtDesc(poll);
 

@@ -36,4 +36,72 @@ out/
 ### VS Code ###
 .vscode/
 
+### Application Properties ###
 application.properties
+application-*.properties
+*.env
+
+### Logs ###
+logs/
+*.log
+*.log.*
+*.out
+
+### Monitoring & Metrics ###
+# Prometheus data
+prometheus-data/
+**/prometheus/data/
+**/prometheus/wal/
+**/prometheus/snapshots/
+
+# Grafana data
+grafana-data/
+**/grafana/data/
+**/grafana/plugins/
+**/grafana/sessions/
+**/grafana/png/
+
+# Alertmanager data
+alertmanager-data/
+**/alertmanager/data/
+
+# Docker volumes
+docker-volumes/
+
+# Temporary monitoring files
+*.tmp
+*.temp
+monitoring-temp/
+
+# Production deployment files (수동 관리)
+monitoring/docker-compose.production.yml
+monitoring/config/prometheus/prometheus.production.yml
+monitoring/scripts/start-production.sh
+monitoring/docker-compose.deploy.yml
+monitoring/docker-compose.local.yml
+monitoring/config/prometheus/prometheus.deploy.yml
+monitoring/scripts/start-deploy.sh
+monitoring/scripts/stop-deploy.sh
+
+### Docker ###
+# Docker Compose override files
+docker-compose.override.yml
+docker-compose.*.local.yml
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+### macOS ###
+.DS_Store
+.AppleDouble
+.LSOverride
+
+### Windows ###
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+### Linux ###
+*~

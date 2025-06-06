@@ -140,6 +140,12 @@ public class PromoService {
         if (request.getAddress() != null) {
             promo.setAddress(request.getAddress());
         }
+        if (request.getLatitude() != null) {
+            promo.setLatitude(request.getLatitude());
+        }
+        if (request.getLongitude() != null) {
+            promo.setLongitude(request.getLongitude());
+        }
         if (request.getDescription() != null) {
             promo.setDescription(request.getDescription());
         }

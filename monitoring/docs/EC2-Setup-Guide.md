@@ -1,19 +1,31 @@
-# EC2에서 프로메테우스와 그라파나 설정 가이드
+# 원격 서버(Ubuntu)에 모니터링 스택 통합 가이드
 
-## 사전 준비사항
+> 이미 Docker, Jenkins, Spring Boot, Nginx가 구성된 환경에 Prometheus와 Grafana를 추가하는 방법을 설명합니다.
 
-### 1. EC2 보안 그룹 설정
+## 사전 확인사항
+
+### 1. 현재 환경 확인
+현재 실행 중인 Docker 환경을 확인하세요:
+
+```bash
+# 현재 환경 분석 스크립트 실행
+cd monitoring
+chmod +x scripts/check-environment.sh
+./scripts/check-environment.sh
+```
+
+### 2. 보안 그룹 설정 (AWS EC2인 경우)
 다음 포트들을 인바운드 규칙에 추가하세요:
 - **3000** (Grafana)
 - **9090** (Prometheus) 
 - **9093** (Alertmanager)
-- **80, 443** (Nginx)
+- **9118** (Jenkins Exporter, 선택사항)
 
-### 2. 스프링부트 애플리케이션 설정 확인
-스프링부트 애플리케이션이 Prometheus 메트릭을 노출하도록 설정되어 있는지 확인:
+### 3. Spring Boot 애플리케이션 메트릭 설정 확인
+Spring Boot 애플리케이션이 Prometheus 메트릭을 노출하도록 설정되어 있는지 확인:
 
 ```yaml
-# application.yml
+# application.yml 또는 application.properties
 management:
   endpoints:
     web:
@@ -30,57 +42,67 @@ management:
         enabled: true
 ```
 
-## 설치 및 설정 과정
+## 빠른 시작 (자동 설치)
 
 ### 1. 모니터링 파일 업로드
-로컬에서 EC2로 monitoring 디렉토리 전체를 업로드:
+로컬에서 원격 서버로 monitoring 디렉토리를 업로드:
 
 ```bash
 # 로컬 터미널에서 실행
-scp -r -i your-key.pem monitoring/ ubuntu@your-ec2-ip:/home/ubuntu/
+scp -r -i your-key.pem monitoring/ ubuntu@your-server-ip:/home/ubuntu/
 ```
 
-### 2. EC2에서 Docker 설치
+### 2. 자동 배포 실행
 ```bash
-# EC2 인스턴스에 SSH 접속 후 실행
-sudo apt update
-sudo apt install -y docker.io docker-compose
-sudo usermod -aG docker $USER
-sudo systemctl start docker
-sudo systemctl enable docker
-
-# 로그아웃 후 재로그인 또는 다음 명령어 실행
-newgrep docker
-```
-
-### 3. 모니터링 스택 배포
-```bash
+# 원격 서버에 SSH 접속 후
 cd monitoring
 chmod +x scripts/deploy-ec2.sh
 ./scripts/deploy-ec2.sh
 ```
 
-### 4. Nginx 리버스 프록시 설정 (선택사항)
+스크립트가 자동으로:
+- 현재 Docker 환경을 분석
+- Spring Boot, Jenkins 컨테이너 감지
+- 네트워크 설정 확인
+- 모니터링 스택 배포
 
-#### 4.1 Nginx 설치
+## 수동 설정 (고급 사용자용)
+
+### 1. 현재 환경 분석
 ```bash
-sudo apt install -y nginx
+# 컨테이너 목록 확인
+docker ps
+
+# 네트워크 확인
+docker network ls
+
+# Spring Boot 컨테이너 정보 확인
+docker inspect <springboot-container-name>
 ```
 
-#### 4.2 설정 파일 추가
-```bash
-# 기존 default 사이트 설정에 추가하거나 새 설정 파일 생성
-sudo cp /home/ubuntu/monitoring/docs/nginx-monitoring.conf /etc/nginx/sites-available/monitoring
+### 2. 설정 파일 수정
 
-# 기존 설정에 추가하는 경우
-sudo nano /etc/nginx/sites-available/default
-# monitoring/docs/nginx-monitoring.conf 내용을 server 블록 안에 복사
+#### 2.1 docker-compose.deploy.yml 수정
+```bash
+# 네트워크명 변경 (실제 사용 중인 네트워크명으로)
+sed -i 's/jandi_backend_network/your-actual-network/g' docker-compose.deploy.yml
+
+# 도메인 설정
+sed -i 's/YOUR_DOMAIN/your-domain.com/g' docker-compose.deploy.yml
 ```
 
-#### 4.3 Nginx 재시작
+#### 2.2 prometheus.deploy.yml 수정
 ```bash
-sudo nginx -t  # 설정 검증
-sudo systemctl reload nginx
+# Spring Boot 컨테이너명 변경
+sed -i 's/springboot-container/your-springboot-container/g' config/prometheus/prometheus.deploy.yml
+
+# Jenkins 컨테이너명 변경 (있는 경우)
+sed -i 's/jenkins-container/your-jenkins-container/g' config/prometheus/prometheus.deploy.yml
+```
+
+### 3. 모니터링 스택 시작
+```bash
+docker-compose -f docker-compose.deploy.yml up -d
 ```
 
 ## 접속 및 확인
@@ -88,7 +110,7 @@ sudo systemctl reload nginx
 ### 1. 서비스 상태 확인
 ```bash
 # 컨테이너 상태 확인
-docker ps
+docker-compose -f docker-compose.deploy.yml ps
 
 # 로그 확인
 docker-compose -f docker-compose.deploy.yml logs -f
@@ -97,58 +119,107 @@ docker-compose -f docker-compose.deploy.yml logs -f
 ### 2. 웹 인터페이스 접속
 
 #### 직접 접속 (포트 기반)
-- **Prometheus**: `http://your-ec2-ip:9090`
-- **Grafana**: `http://your-ec2-ip:3000`
+- **Prometheus**: `http://server-ip:9090`
+- **Grafana**: `http://server-ip:3000`
   - 계정: `admin` / `admin123`
-- **Alertmanager**: `http://your-ec2-ip:9093`
+- **Alertmanager**: `http://server-ip:9093`
 
 #### Nginx 리버스 프록시 사용 시
-- **Prometheus**: `http://your-domain/prometheus/`
-- **Grafana**: `http://your-domain/grafana/`
-- **Alertmanager**: `http://your-domain/alertmanager/`
+기존 Nginx 설정에 다음 location 블록을 추가:
+
+```nginx
+# /etc/nginx/sites-available/default 또는 해당 설정 파일에 추가
+
+# Prometheus
+location /prometheus/ {
+    proxy_pass http://localhost:9090/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+# Grafana
+location /grafana/ {
+    proxy_pass http://localhost:3000/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+설정 후 Nginx 재시작:
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
 
 ### 3. 메트릭 수집 확인
 
-#### Prometheus에서 확인
-1. Prometheus 웹 UI → Status → Targets
-2. `jandi-band-backend` job의 상태가 UP인지 확인
+#### Prometheus 대시보드에서 확인
+1. `http://server-ip:9090` 접속
+2. Status → Targets 메뉴
+3. 다음 job들이 UP 상태인지 확인:
+   - `jandi-band-backend` (Spring Boot)
+   - `jenkins` (Jenkins, 설정한 경우)
 
-#### 스프링부트 애플리케이션 확인
+#### Spring Boot 메트릭 직접 확인
 ```bash
-# 메트릭 엔드포인트 직접 확인
+# Spring Boot 컨테이너 내부에서 확인
+docker exec -it <springboot-container> curl http://localhost:8080/actuator/prometheus
+
+# 또는 호스트에서 확인 (포트가 노출된 경우)
 curl http://localhost:8080/actuator/prometheus
-curl http://localhost:8080/actuator/health
 ```
+
+## Grafana 대시보드 설정
+
+### 1. 데이터 소스 추가
+1. Grafana 접속 (`http://server-ip:3000`)
+2. Configuration → Data Sources
+3. Add data source → Prometheus
+4. URL: `http://prometheus:9090`
+5. Save & Test
+
+### 2. 추천 대시보드
+- **Spring Boot Dashboard**: ID `6756`
+- **Jenkins Dashboard**: ID `9964`
+- **Docker Container Dashboard**: ID `193`
+
+Import 방법:
+1. Dashboard → Import
+2. 대시보드 ID 입력
+3. Prometheus 데이터 소스 선택
 
 ## 문제 해결
 
-### 1. 컨테이너가 시작되지 않는 경우
+### 1. 컨테이너 간 통신 문제
 ```bash
-# 로그 확인
-docker-compose -f docker-compose.deploy.yml logs
+# 네트워크 연결 확인
+docker network inspect <network-name>
 
-# 개별 컨테이너 로그 확인
-docker logs jandi-prometheus-deploy
-docker logs jandi-grafana-deploy
+# 컨테이너 간 연결 테스트
+docker exec -it jandi-prometheus-deploy ping springboot-container
 ```
 
 ### 2. 메트릭 수집이 안 되는 경우
-- 스프링부트 애플리케이션이 실행 중인지 확인
-- 포트 8080이 열려있는지 확인
-- `host.docker.internal` 연결 확인:
-  ```bash
-  # 프로메테우스 컨테이너 내부에서 테스트
-  docker exec -it jandi-prometheus-deploy sh
-  wget -qO- http://host.docker.internal:8080/actuator/health
-  ```
-
-### 3. Grafana 대시보드가 로드되지 않는 경우
 ```bash
-# Grafana 데이터 볼륨 권한 확인
-sudo chown -R 472:472 /var/lib/docker/volumes/monitoring_grafana-data/_data
+# Spring Boot 애플리케이션 상태 확인
+docker logs <springboot-container>
+
+# Prometheus 타겟 상태 확인
+curl http://localhost:9090/api/v1/targets | jq '.data.activeTargets'
 ```
 
-## 유지보수
+### 3. 포트 충돌 해결
+기존 서비스와 포트가 충돌하는 경우 `docker-compose.deploy.yml`에서 포트 번호 변경:
+```yaml
+ports:
+  - "19090:9090"  # 9090 대신 19090 사용
+```
+
+## 모니터링 스택 관리
 
 ### 1. 업데이트
 ```bash
@@ -157,17 +228,16 @@ docker-compose -f docker-compose.deploy.yml pull
 docker-compose -f docker-compose.deploy.yml up -d
 ```
 
-### 2. 백업
+### 2. 중지
 ```bash
-# Prometheus 데이터 백업
-docker run --rm -v monitoring_prometheus-data:/data -v $(pwd):/backup alpine tar czf /backup/prometheus-backup.tar.gz /data
-
-# Grafana 데이터 백업
-docker run --rm -v monitoring_grafana-data:/data -v $(pwd):/backup alpine tar czf /backup/grafana-backup.tar.gz /data
+docker-compose -f docker-compose.deploy.yml down
 ```
 
-### 3. 모니터링 스택 중지
+### 3. 데이터 백업
 ```bash
-cd monitoring
-docker-compose -f docker-compose.deploy.yml down
+# Prometheus 데이터 백업
+docker run --rm -v monitoring_prometheus-data:/data -v $(pwd):/backup alpine tar czf /backup/prometheus-backup-$(date +%Y%m%d).tar.gz /data
+
+# Grafana 데이터 백업  
+docker run --rm -v monitoring_grafana-data:/data -v $(pwd):/backup alpine tar czf /backup/grafana-backup-$(date +%Y%m%d).tar.gz /data
 ``` 

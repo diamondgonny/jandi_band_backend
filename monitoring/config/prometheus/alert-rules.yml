@@ -1,0 +1,106 @@
+groups:
+  - name: jandi-backend-alerts
+    rules:
+      # 애플리케이션 다운
+      - alert: ApplicationDown
+        expr: up{job="jandi-band-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: jandi-backend
+        annotations:
+          summary: "Jandi Band Backend 애플리케이션이 다운되었습니다"
+          description: "{{ $labels.instance }}에서 애플리케이션이 1분 이상 응답하지 않습니다."
+
+      # 높은 응답 시간
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job="jandi-band-backend"}[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: jandi-backend
+        annotations:
+          summary: "높은 응답 시간 감지"
+          description: "95th 백분위수 응답 시간이 {{ $value }}초로 1초를 초과했습니다."
+
+      # 높은 에러율
+      - alert: HighErrorRate
+        expr: (rate(http_server_requests_seconds_count{job="jandi-band-backend",status=~"5.."}[5m]) / rate(http_server_requests_seconds_count{job="jandi-band-backend"}[5m])) * 100 > 5
+        for: 2m
+        labels:
+          severity: critical
+          service: jandi-backend
+        annotations:
+          summary: "높은 에러율 감지"
+          description: "에러율이 {{ $value }}%로 5%를 초과했습니다."
+
+      # 높은 메모리 사용률
+      - alert: HighMemoryUsage
+        expr: (jvm_memory_used_bytes{job="jandi-band-backend"} / jvm_memory_max_bytes{job="jandi-band-backend"}) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: jandi-backend
+        annotations:
+          summary: "높은 JVM 메모리 사용률"
+          description: "JVM 메모리 사용률이 {{ $value }}%로 85%를 초과했습니다."
+
+      # 캘린더 API 높은 응답 시간
+      - alert: CalendarAPIHighResponseTime
+        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job="jandi-band-backend",uri=~".*/calendar.*"}[5m])) > 2
+        for: 3m
+        labels:
+          severity: warning
+          service: jandi-backend
+          api: calendar
+        annotations:
+          summary: "캘린더 API 응답 시간이 높습니다"
+          description: "캘린더 API의 95th 백분위수 응답 시간이 {{ $value }}초로 2초를 초과했습니다."
+
+      # 인증 실패율 높음
+      - alert: HighAuthenticationFailureRate
+        expr: rate(http_server_requests_seconds_count{job="jandi-band-backend",status="401"}[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+          service: jandi-backend
+          type: security
+        annotations:
+          summary: "높은 인증 실패율 감지"
+          description: "분당 {{ $value }}건의 인증 실패가 발생하고 있습니다."
+
+      # 데이터베이스 연결 문제
+      - alert: DatabaseConnectionIssue
+        expr: hikaricp_connections_active{job="jandi-band-backend"} / hikaricp_connections_max{job="jandi-band-backend"} > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: jandi-backend
+          component: database
+        annotations:
+          summary: "데이터베이스 연결 풀 사용률이 높습니다"
+          description: "데이터베이스 연결 풀 사용률이 {{ $value | humanizePercentage }}입니다."
+
+  - name: system-alerts
+    rules:
+      # 높은 CPU 사용률
+      - alert: HighCPUUsage
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+          type: system
+        annotations:
+          summary: "높은 CPU 사용률"
+          description: "CPU 사용률이 {{ $value }}%로 80%를 초과했습니다."
+
+      # 디스크 공간 부족
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+          type: system
+        annotations:
+          summary: "디스크 공간 부족"
+          description: "{{ $labels.mountpoint }}의 디스크 공간이 {{ $value }}% 남았습니다." 

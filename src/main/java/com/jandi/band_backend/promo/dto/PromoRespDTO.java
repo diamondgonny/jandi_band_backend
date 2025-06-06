@@ -41,6 +41,12 @@ public class PromoRespDTO {
     
     @Schema(description = "상세 주소", example = "서울시 마포구 홍익로 123")
     private String address;
+
+    @Schema(description = "위도", example = "126.99597295767953")
+    private BigDecimal latitude;
+
+    @Schema(description = "경도", example = "35.97664845766847")
+    private BigDecimal longitude;
     
     @Schema(description = "공연 설명", example = "락밴드 동아리의 정기 공연입니다.")
     private String description;
@@ -88,6 +94,8 @@ public class PromoRespDTO {
                 .filter(photo -> photo.getDeletedAt() == null)  // 삭제되지 않은 사진만 포함
                 .map(photo -> photo.getImageUrl())
                 .collect(Collectors.toList()));
+        response.setLatitude(promo.getLatitude());
+        response.setLongitude(promo.getLongitude());
         return response;
     }
 

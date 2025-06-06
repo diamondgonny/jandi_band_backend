@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -96,6 +97,8 @@ public class PromoService {
         promo.setLocation(request.getLocation());
         promo.setAddress(request.getAddress());
         promo.setDescription(request.getDescription());
+        promo.setLatitude(request.getLatitude());
+        promo.setLongitude(request.getLongitude());
 
         Promo savedPromo = promoRepository.save(promo);
 
@@ -251,4 +254,23 @@ public class PromoService {
                     return PromoRespDTO.from(promo, isLikedByUser);
                 });
     }
-} 
+
+    // 공연 홍보 필터링 (지도 기반 검색)
+    public Page<PromoRespDTO> filterMapPromos(BigDecimal startLatitude, BigDecimal startLongitude, BigDecimal endLatitude, BigDecimal endLongitude, Integer userId, Pageable pageable) {
+        // 작은 값이 start, 큰 값이 end가 되도록 정렬
+        BigDecimal minLat = startLatitude.compareTo(endLatitude) < 0 ? startLatitude : endLatitude;
+        BigDecimal maxLat = startLatitude.compareTo(endLatitude) > 0 ? startLatitude : endLatitude;
+        BigDecimal minLng = startLongitude.compareTo(endLongitude) < 0 ? startLongitude : endLongitude;
+        BigDecimal maxLng = startLongitude.compareTo(endLongitude) > 0 ? startLongitude : endLongitude;
+
+        Page<Promo> promos = promoRepository.filterPromosInSpecArea(
+                minLat, maxLat, minLng, maxLng, pageable
+        );
+
+        return promos.map(promo -> {
+            Boolean isLikedByUser = userId != null ?
+                    promoLikeService.isLikedByUser(promo.getId(), userId) : null;
+            return PromoRespDTO.from(promo, isLikedByUser);
+        });
+    }
+}

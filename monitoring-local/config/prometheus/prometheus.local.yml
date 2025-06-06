@@ -1,5 +1,5 @@
-# Prometheus 설정 파일
-# Spring Boot 애플리케이션 메트릭을 수집합니다.
+# Prometheus 설정 파일 - 로컬 개발 환경 (Windows)
+# 로컬에서 실행되는 Spring Boot 애플리케이션 메트릭을 수집합니다.
 
 global:
   scrape_interval: 15s # 15초마다 메트릭 수집
@@ -23,16 +23,40 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  # Spring Boot 애플리케이션 메트릭 (로컬 개발 환경)
-  - job_name: 'jandi-band-backend'
+  # 로컬 Spring Boot 애플리케이션 메트릭
+  - job_name: 'jandi-band-backend-local'
     metrics_path: '/actuator/prometheus'
     scrape_interval: 15s
     scrape_timeout: 10s
     static_configs:
+      # 로컬 개발 서버 (보통 8080 포트)
       - targets: ['host.docker.internal:8080']
         labels:
           application: 'jandi_band_backend'
           environment: 'development'
+
+  # 로컬 Spring Boot 헬스체크
+  - job_name: 'jandi-health-check-local'
+    metrics_path: '/actuator/health'
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+        labels:
+          check: 'health'
+          environment: 'development'
+
+  # 다른 포트에서 실행중인 경우 (예: 8081)
+  - job_name: 'jandi-band-backend-alt-port'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['host.docker.internal:8081']
+        labels:
+          application: 'jandi_band_backend'
+          environment: 'development'
+          port: '8081'
 
   # 시스템 메트릭 (Node Exporter)
   - job_name: 'node-exporter'

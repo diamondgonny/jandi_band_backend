@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Repository
@@ -59,4 +60,17 @@ public interface PromoRepository extends JpaRepository<Promo, Integer> {
         @Param("endDate") LocalDateTime endDate,
         @Param("teamName") String teamName,
         Pageable pageable);
+
+    // 특정 지역 범위에 속한 것만 필터링
+    @Query("SELECT p FROM Promo p " +
+            "WHERE p.latitude BETWEEN :minLat AND :maxLat " +
+            "AND p.longitude BETWEEN :minLng AND :maxLng " +
+            "AND p.deletedAt IS NULL")
+    Page<Promo> filterPromosInSpecArea(
+            @Param("minLat") BigDecimal minLat,
+            @Param("maxLat") BigDecimal maxLat,
+            @Param("minLng") BigDecimal minLng,
+            @Param("maxLng") BigDecimal maxLng,
+            Pageable pageable
+    );
 } 

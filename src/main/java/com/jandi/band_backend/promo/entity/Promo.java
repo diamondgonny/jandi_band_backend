@@ -46,10 +46,16 @@ public class Promo {
     
     @Column(name = "location", length = 255)
     private String location;
-    
+
     @Column(name = "address", length = 255)
     private String address;
-    
+
+    @Column(name = "latitude", precision = 17, scale = 14)
+    private BigDecimal latitude;
+
+    @Column(name = "longitude", precision = 17, scale = 14)
+    private BigDecimal longitude;
+
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
     

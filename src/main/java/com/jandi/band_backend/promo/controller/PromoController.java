@@ -68,6 +68,8 @@ public class PromoController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime eventDatetime,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) String address,
+            @RequestParam(required = false) BigDecimal latitude,
+            @RequestParam(required = false) BigDecimal longitude,
             @RequestParam(required = false) String description,
             @RequestParam(value = "image", required = false) MultipartFile image,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -79,6 +81,8 @@ public class PromoController {
         request.setEventDatetime(eventDatetime);
         request.setLocation(location);
         request.setAddress(address);
+        request.setLatitude(latitude);
+        request.setLongitude(longitude);
         request.setDescription(description);
         request.setImage(image);
         
@@ -97,6 +101,8 @@ public class PromoController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime eventDatetime,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) String address,
+            @RequestParam(required = false) BigDecimal latitude,
+            @RequestParam(required = false) BigDecimal longitude,
             @RequestParam(required = false) String description,
             @RequestParam(value = "image", required = false) MultipartFile image,
             @RequestParam(value = "deleteImageUrl", required = false) String deleteImageUrl,
@@ -109,6 +115,8 @@ public class PromoController {
         request.setEventDatetime(eventDatetime);
         request.setLocation(location);
         request.setAddress(address);
+        request.setLatitude(latitude);
+        request.setLongitude(longitude);
         request.setDescription(description);
         request.setImage(image);
         request.setDeleteImageUrl(deleteImageUrl);
@@ -158,6 +166,25 @@ public class PromoController {
         Pageable pageable = createPageable(page, size, sort);
         Integer userId = userDetails != null ? userDetails.getUserId() : null;
         Page<PromoRespDTO> promoPage = promoService.filterPromos(startDate, endDate, teamName, userId, pageable);
+        return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 필터링 성공",
+                PagedRespDTO.from(promoPage)));
+    }
+
+    @Operation(summary = "공연 홍보 지도상 검색")
+    @GetMapping("/map")
+    public ResponseEntity<CommonRespDTO<PagedRespDTO<PromoRespDTO>>> filterMapPromos(
+            @RequestParam BigDecimal startLatitude,
+            @RequestParam BigDecimal startLongitude,
+            @RequestParam BigDecimal endLatitude,
+            @RequestParam BigDecimal endLongitude,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        Pageable pageable = createPageable(page, size, sort);
+        Integer userId = userDetails != null ? userDetails.getUserId() : null;
+        Page<PromoRespDTO> promoPage = promoService.filterMapPromos(startLatitude, startLongitude, endLatitude, endLongitude, userId, pageable);
         return ResponseEntity.ok(CommonRespDTO.success("공연 홍보 필터링 성공",
                 PagedRespDTO.from(promoPage)));
     }

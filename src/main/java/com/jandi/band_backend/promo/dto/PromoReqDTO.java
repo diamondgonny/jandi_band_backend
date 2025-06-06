@@ -39,6 +39,12 @@ public class PromoReqDTO {
     @Size(max = 255, message = "주소는 255자를 초과할 수 없습니다")
     private String address;
 
+    @Schema(description = "위도", example = "37.537183")
+    private BigDecimal latitude;
+
+    @Schema(description = "경도", example = "37.537183")
+    private BigDecimal longitude;
+
     @Schema(description = "공연 설명", example = "락밴드 동아리의 정기 공연입니다. 다양한 장르의 음악을 선보일 예정입니다.")
     private String description;
 

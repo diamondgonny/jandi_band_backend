@@ -9,35 +9,42 @@
 ```
 POST /api/clubs
 Authorization: Bearer {JWT_TOKEN}
-Content-Type: multipart/form-data
+Content-Type: application/json
 ```
 
 ### 요청 예시
 ```bash
 curl -X POST "http://localhost:8080/api/clubs" \
   -H "Authorization: Bearer {JWT_TOKEN}" \
-  -F "name=락밴드 동아리" \
-  -F "description=음악을 사랑하는 사람들의 모임" \
-  -F "universityId=1" \
-  -F "photo=@/path/to/photo.jpg"
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "락밴드 동아리",
+    "description": "음악을 사랑하는 사람들의 모임",
+    "universityId": 1,
+    "chatroomUrl": "https://open.kakao.com/o/example",
+    "instagramId": "rockband_club",
+    "photoUrl": null
+  }'
 ```
 
 ### 요청 필드
-- `name`: 동아리 이름
-- `description`: 동아리 설명
-- `universityId`: 대학교 ID (연합동아리는 null)
-- `photo`: 동아리 사진 (선택)
+- `name` (string, 필수): 동아리 이름 (최대 100자)
+- `description` (string, 선택): 동아리 설명
+- `universityId` (integer, 선택): 대학교 ID (null인 경우 연합동아리)
+- `chatroomUrl` (string, 선택): 카카오톡 채팅방 링크 (최대 255자)
+- `instagramId` (string, 선택): 인스타그램 아이디 (최대 50자)
+- `photoUrl` (string, 선택): 동아리 사진 URL
 
 ### 성공 응답 (201)
 ```json
 {
   "success": true,
-  "message": "동아리가 성공적으로 생성되었습니다.",
+  "message": "동아리가 성공적으로 생성되었습니다",
   "data": {
     "id": 1,
     "name": "락밴드 동아리",
     "description": "음악을 사랑하는 사람들의 모임",
-    "photoUrl": "https://example.com/photo.jpg",
+    "photoUrl": null,
     "universityName": "서울대학교",
     "isUnionClub": false,
     "memberCount": 1,
@@ -115,7 +122,7 @@ curl "http://localhost:8080/api/clubs/1" \
 ```json
 {
   "success": true,
-  "message": "동아리 상세 조회 성공",
+  "message": "동아리 상세 정보 조회 성공",
   "data": {
     "id": 1,
     "name": "락밴드 동아리",
@@ -190,23 +197,35 @@ curl "http://localhost:8080/api/clubs/1/members"
 ```
 PATCH /api/clubs/{clubId}
 Authorization: Bearer {JWT_TOKEN}
-Content-Type: multipart/form-data
+Content-Type: application/json
 ```
 
 ### 요청 예시
 ```bash
 curl -X PATCH "http://localhost:8080/api/clubs/1" \
   -H "Authorization: Bearer {JWT_TOKEN}" \
-  -F "name=수정된 동아리명" \
-  -F "description=수정된 설명"
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "수정된 동아리명",
+    "description": "수정된 설명"
+  }'
 ```
 
 ### 성공 응답 (200)
 ```json
 {
   "success": true,
-  "message": "동아리 정보가 수정되었습니다.",
-  "data": null
+  "message": "동아리 정보가 성공적으로 수정되었습니다",
+  "data": {
+    "id": 1,
+    "name": "수정된 동아리명",
+    "description": "수정된 설명",
+    "photoUrl": "https://example.com/photo.jpg",
+    "universityName": "서울대학교",
+    "isUnionClub": false,
+    "memberCount": 15,
+    "createdAt": "2024-03-15T10:30:00"
+  }
 }
 ```
 
@@ -239,7 +258,7 @@ curl -X PATCH "http://localhost:8080/api/clubs/1/representative" \
 ```json
 {
   "success": true,
-  "message": "동아리 대표자 권한이 성공적으로 위임되었습니다.",
+  "message": "동아리 대표자 권한이 성공적으로 위임되었습니다",
   "data": null
 }
 ```
@@ -267,7 +286,7 @@ curl -X DELETE "http://localhost:8080/api/clubs/1" \
 ```json
 {
   "success": true,
-  "message": "동아리가 삭제되었습니다.",
+  "message": "동아리가 성공적으로 삭제되었습니다",
   "data": null
 }
 ```
@@ -299,7 +318,7 @@ curl -X DELETE "http://localhost:8080/api/clubs/1/members/me" \
 ```json
 {
   "success": true,
-  "message": "동아리에서 성공적으로 탈퇴했습니다.",
+  "message": "동아리에서 성공적으로 탈퇴했습니다",
   "data": null
 }
 ```
@@ -326,7 +345,7 @@ curl -X DELETE "http://localhost:8080/api/clubs/1/members/2" \
 ```json
 {
   "success": true,
-  "message": "해당 부원이 성공적으로 강퇴되었습니다.",
+  "message": "해당 부원이 성공적으로 강퇴되었습니다",
   "data": null
 }
 ```
@@ -359,7 +378,7 @@ curl -X POST "http://localhost:8080/api/clubs/1/main-image" \
 ```json
 {
   "success": true,
-  "message": "동아리 대표 사진이 성공적으로 업로드되었습니다.",
+  "message": "동아리 대표 사진이 성공적으로 업로드되었습니다",
   "data": "https://example.com/images/club-photo.jpg"
 }
 ```
@@ -385,7 +404,7 @@ curl -X DELETE "http://localhost:8080/api/clubs/1/main-image" \
 ```json
 {
   "success": true,
-  "message": "동아리 대표 사진이 성공적으로 삭제되었습니다.",
+  "message": "동아리 대표 사진이 성공적으로 삭제되었습니다",
   "data": null
 }
 ```

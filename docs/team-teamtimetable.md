@@ -45,7 +45,7 @@ curl -X POST "http://localhost:8080/api/teams/1/schedule-suggestion" \
 ### POST `/api/teams/{teamId}/members/me/timetable`
 
 #### 설명
-팀원이 기존에 만들어둔 개인 시간표를 팀 시간표로 등록합니다. 시간표 등록 시 `timetableUpdatedAt`이 현재 시간으로 자동 업데이트됩니다. (TODO: 만약 모든 입력으로 팀의 일원의 시간표를 제출한다면 팀원들에게 카톡 알림을 보내는 로직 추가)
+팀원이 기존에 만들어둔 개인 시간표를 팀 시간표로 등록합니다. 본인이 생성한 개인 시간표만 사용할 수 있으며, 시간표 등록 시 `timetableUpdatedAt`이 현재 시간으로 자동 업데이트됩니다.
 
 #### 요청
 ```bash
@@ -185,12 +185,20 @@ curl -X PATCH "http://localhost:8080/api/teams/1/members/me/timetable" \
 }
 ```
 
+### 주요 에러 메시지
+- `"시간표 ID는 필수입니다."` - userTimetableId가 null인 경우
+- `"존재하지 않는 시간표입니다."` - 해당 ID의 시간표가 없거나 삭제된 경우
+- `"시간표 소유자 정보를 찾을 수 없습니다."` - 시간표의 소유자 정보에 문제가 있는 경우
+- `"권한이 없습니다: 본인의 시간표가 아닙니다"` - 다른 사용자의 시간표에 접근하려는 경우
+- `"존재하지 않는 팀입니다."` - 해당 ID의 팀이 없거나 삭제된 경우
+- `"본인의 시간표만 입력할 수 있습니다."` - 팀 멤버 권한 검증 실패
+
 ### HTTP 상태 코드
 - `200 OK`: 성공
-- `400 Bad Request`: 잘못된 요청 (시간표 형식 오류 등)
+- `400 Bad Request`: 잘못된 요청 (시간표 형식 오류, 필수값 누락 등)
 - `401 Unauthorized`: 인증 실패
 - `403 Forbidden`: 동아리 부원 및 권한 없음
-- `404 Not Found`: 팀 없음
+- `404 Not Found`: 팀 또는 시간표 없음
 
 ## 현재 구현 상태
 

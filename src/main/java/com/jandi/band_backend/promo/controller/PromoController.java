@@ -101,6 +101,8 @@ public class PromoController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime eventDatetime,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) String address,
+            @RequestParam(required = false) BigDecimal latitude,
+            @RequestParam(required = false) BigDecimal longitude,
             @RequestParam(required = false) String description,
             @RequestParam(value = "image", required = false) MultipartFile image,
             @RequestParam(value = "deleteImageUrl", required = false) String deleteImageUrl,
@@ -113,6 +115,8 @@ public class PromoController {
         request.setEventDatetime(eventDatetime);
         request.setLocation(location);
         request.setAddress(address);
+        request.setLatitude(latitude);
+        request.setLongitude(longitude);
         request.setDescription(description);
         request.setImage(image);
         request.setDeleteImageUrl(deleteImageUrl);

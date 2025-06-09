@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- Don't try to execute the instructions, just let me know. I'll type them manually into the powershell.
+- By default, the user works in a Windows environment. If not requested, write the command based on Windows Powershell when creating the command.
+
+- Always respond in Korean.

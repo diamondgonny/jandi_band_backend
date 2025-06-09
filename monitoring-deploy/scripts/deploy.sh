@@ -13,9 +13,15 @@ if [ ! -f "docker-compose.yml" ]; then
     exit 1
 fi
 
-# 기존 컨테이너 중지 및 제거
-echo "🛑 Stopping existing containers..."
-docker-compose down
+# 기존 컨테이너 완전 제거
+echo "🛑 Removing existing containers and volumes..."
+docker-compose down -v
+docker system prune -f
+
+# config 폴더 권한 설정
+echo "🔧 Setting up permissions..."
+sudo chown -R 1000:1000 config/
+sudo chmod -R 755 config/
 
 # 도커 이미지 업데이트
 echo "📥 Pulling latest images..."
@@ -27,7 +33,7 @@ docker-compose up -d
 
 # 컨테이너 상태 확인
 echo "📊 Checking container status..."
-sleep 5
+sleep 10
 docker-compose ps
 
 # 헬스체크
@@ -53,15 +59,28 @@ for i in {1..30}; do
     sleep 2
 done
 
+# 대시보드 확인
+echo "🔍 Checking dashboard provisioning..."
+sleep 5
+if docker exec jandi-grafana-deploy ls /var/lib/grafana/dashboards > /dev/null 2>&1; then
+    echo "✅ Dashboard files are accessible"
+else
+    echo "⚠️ Dashboard files may need manual import"
+fi
+
 echo ""
 echo "🎉 Deployment completed successfully!"
 echo ""
 echo "📍 Access URLs:"
 echo "   Prometheus: http://54.180.215.226:9090"
 echo "   Grafana:    http://54.180.215.226:3000"
-echo "   HTTPS Grafana: https://rhythmeet-be.yeonjae.kr/grafana/"
 echo ""
 echo "🔐 Grafana Login:"
 echo "   Username: admin"
 echo "   Password: admin123"
+echo ""
+echo "📊 Next Steps:"
+echo "   1. Open Grafana and verify data source connection"
+echo "   2. Check if 'Spring Boot Application - Production' dashboard is available"
+echo "   3. If dashboard is missing, import it manually from dashboards folder"
 echo "" 

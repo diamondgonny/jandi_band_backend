@@ -377,10 +377,11 @@
     "list": []
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {},
+  "refresh": "30s",
   "timezone": "",
   "title": "Spring Boot Application - Production",
   "uid": "spring-boot-production",

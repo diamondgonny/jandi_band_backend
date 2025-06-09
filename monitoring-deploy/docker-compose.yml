@@ -43,6 +43,9 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
       - GF_PATHS_DASHBOARDS=/var/lib/grafana/dashboards
+      - GF_PROVISIONING_DATASOURCES_PATH=/etc/grafana/provisioning/datasources
+      - GF_PROVISIONING_DASHBOARDS_PATH=/etc/grafana/provisioning/dashboards
+      - GF_LOG_LEVEL=debug
     volumes:
       - grafana-data:/var/lib/grafana
       - ./config/grafana/provisioning:/etc/grafana/provisioning:ro

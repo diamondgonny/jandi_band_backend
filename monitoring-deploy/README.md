@@ -2,30 +2,30 @@
 
 Prometheus + Grafana를 사용한 운영 환경 모니터링 설정입니다.
 
-## 🏗️ 구성요소
+## 구성요소
 
 - **Prometheus**: 메트릭 수집 및 저장
 - **Grafana**: 데이터 시각화 및 대시보드
 
-## 📋 사전 요구사항
+## 사전 요구사항
 
 - Ubuntu EC2 서버
 - Docker & Docker Compose 설치
 - 기존 Spring Boot 앱 (`rhythmeet-be` 컨테이너) 실행 중
 - Jenkins 컨테이너 실행 중 (선택사항)
 
-## 🚀 배포 방법
+## 배포 방법
 
 ### 1. 파일 업로드
 ```bash
 # 로컬에서 EC2로 파일 전송
-scp -r -i "jandi-band.pem" monitoring-deploy/ ubuntu@54.180.215.226:~/monitoring/
+scp -r -i "jandi-band.pem" monitoring-deploy/ ubuntu@:~/monitoring/
 ```
 
 ### 2. 서버에서 배포
 ```bash
 # EC2 서버 접속
-ssh -i "jandi-band.pem" ubuntu@54.180.215.226
+ssh -i "jandi-band.pem" ubuntu@
 
 # 모니터링 디렉토리로 이동
 cd ~/monitoring
@@ -44,21 +44,13 @@ docker-compose down
 docker-compose up -d
 ```
 
-## 📊 접속 정보
+## 접속 정보
 
 ### 직접 포트 접속
-- Prometheus: http://54.180.215.226:9090
-- Grafana: http://54.180.215.226:3000
+- Prometheus: http://:9090
+- Grafana: http://:3000
 
-### HTTPS 서브패스 접속 (Nginx 설정 필요)
-- Grafana: https://rhythmeet-be.yeonjae.kr/grafana/
-- Prometheus: https://rhythmeet-be.yeonjae.kr/prometheus/
-
-### Grafana 로그인
-- Username: `admin`
-- Password: `admin123`
-
-## 🔧 설정 확인
+## 설정 확인
 
 ### Spring Boot 메트릭 확인
 ```bash
@@ -75,7 +67,7 @@ docker logs jandi-prometheus-deploy
 docker logs jandi-grafana-deploy
 ```
 
-## 📁 파일 구조
+## 파일 구조
 
 ```
 monitoring-deploy/
@@ -91,7 +83,7 @@ monitoring-deploy/
 └── README.md                  # 이 파일
 ```
 
-## 🛠️ 트러블슈팅
+## 트러블슈팅
 
 ### 네트워크 문제
 ```bash

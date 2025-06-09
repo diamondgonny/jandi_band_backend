@@ -1,4 +1,4 @@
-# Grafana 데이터 소스 자동 설정
+# Grafana 데이터 소스 자동 설정 - 로컬 개발 환경
 # Grafana가 시작될 때 Prometheus를 데이터 소스로 자동 등록합니다.
 
 apiVersion: 1
@@ -13,6 +13,6 @@ datasources:
     jsonData:
       httpMethod: POST
       timeInterval: 5s
-    exemplarTraceIdDestinations:
-      - name: trace_id
-        datasourceUid: 'prometheus' 
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: 'prometheus' 

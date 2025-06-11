@@ -25,15 +25,11 @@ curl -X GET "http://localhost:8080/api/users/me/timetables" \
   "data": [
     {
       "id": 1,
-      "name": "2024년 1학기 시간표",
-      "createdAt": "2024-03-01T10:00:00",
-      "updatedAt": "2024-03-01T10:00:00"
+      "name": "2024년 1학기 시간표"
     },
     {
       "id": 2,
-      "name": "개인 연습 시간표",
-      "createdAt": "2024-03-05T14:30:00",
-      "updatedAt": "2024-03-05T14:30:00"
+      "name": "개인 연습 시간표"
     }
   ]
 }
@@ -66,9 +62,7 @@ curl -X GET "http://localhost:8080/api/users/me/timetables/1" \
       "Fri": ["13:00", "14:00"],
       "Sat": [],
       "Sun": []
-    },
-    "createdAt": "2024-03-01T10:00:00",
-    "updatedAt": "2024-03-01T10:00:00"
+    }
   }
 }
 ```
@@ -120,9 +114,7 @@ curl -X POST "http://localhost:8080/api/users/me/timetables" \
       "Fri": ["13:00", "14:00"],
       "Sat": [],
       "Sun": []
-    },
-    "createdAt": "2024-03-15T10:30:00",
-    "updatedAt": "2024-03-15T10:30:00"
+    }
   }
 }
 ```
@@ -171,9 +163,7 @@ curl -X PATCH "http://localhost:8080/api/users/me/timetables/1" \
       "Fri": ["13:00", "14:00"],
       "Sat": ["10:00"],
       "Sun": []
-    },
-    "createdAt": "2024-03-01T10:00:00",
-    "updatedAt": "2024-03-15T11:00:00"
+    }
   }
 }
 ```

@@ -1,6 +1,6 @@
 # Invite & Join API
 
-## 🤝 초대 및 가입
+## 초대 및 가입
 JWT 인증 필요
 
 ---
@@ -67,15 +67,15 @@ curl -X POST "http://localhost:8080/api/invites/teams/1" \
 
 ---
 
-## 3. 초대 코드로 가입
+## 3. 동아리 가입
 ```
-POST /api/joins/{inviteCode}
+POST /api/join/clubs?code={INVITE_CODE}
 Authorization: Bearer {JWT_TOKEN}
 ```
 
 ### 요청 예시
 ```bash
-curl -X POST "http://localhost:8080/api/joins/ABC123DEF" \
+curl -X POST "http://localhost:8080/api/join/clubs?code=ABC123DEF" \
   -H "Authorization: Bearer {JWT_TOKEN}"
 ```
 
@@ -83,20 +83,13 @@ curl -X POST "http://localhost:8080/api/joins/ABC123DEF" \
 ```json
 {
   "success": true,
-  "message": "성공적으로 가입되었습니다.",
+  "message": "동아리 가입 성공",
   "data": {
     "clubId": 1,
-    "clubName": "락밴드 동아리",
-    "teamId": null,
-    "teamName": null,
-    "joinedAt": "2024-03-15T10:30:00"
+    "teamId": null
   }
 }
 ```
-
-### 응답 필드
-- `clubId`/`teamId`: 둘 중 하나만 값이 있음
-- `clubName`/`teamName`: 해당하는 이름만 값이 있음
 
 ### 실패 응답
 - **400**: 만료된 초대 코드
@@ -105,43 +98,62 @@ curl -X POST "http://localhost:8080/api/joins/ABC123DEF" \
 
 ---
 
-## 4. 초대 코드 조회
+## 4. 팀 가입
 ```
-GET /api/invites/{inviteCode}
+POST /api/join/teams?code={INVITE_CODE}
+Authorization: Bearer {JWT_TOKEN}
 ```
 
 ### 요청 예시
 ```bash
-curl "http://localhost:8080/api/invites/ABC123DEF"
+curl -X POST "http://localhost:8080/api/join/teams?code=XYZ789GHI" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
 ```
 
 ### 성공 응답 (200)
 ```json
 {
   "success": true,
-  "message": "초대 정보 조회 성공",
+  "message": "팀 가입 성공",
   "data": {
-    "inviteCode": "ABC123DEF",
     "clubId": 1,
-    "clubName": "락밴드 동아리",
-    "teamId": null,
-    "teamName": null,
-    "expiresAt": "2024-03-22T10:30:00"
+    "teamId": 1
   }
 }
 ```
 
+### 응답 필드
+- `clubId`: 동아리 ID
+- `teamId`: 팀 ID (동아리 가입 시에는 null)
+
 ### 실패 응답
+- **400**: 만료된 초대 코드
 - **404**: 존재하지 않는 초대 코드
+- **409**: 이미 가입된 멤버
 
 ---
 
-## 📋 초대 코드 규칙
+## 에러 응답
+```json
+{
+  "success": false,
+  "message": "에러 메시지",
+  "data": null
+}
+```
+
+### HTTP 상태 코드
+- `200 OK`: 성공
+- `201 Created`: 생성 성공
+- `400 Bad Request`: 잘못된 요청
+- `401 Unauthorized`: 인증 실패
+- `403 Forbidden`: 권한 없음
+- `404 Not Found`: 리소스 없음
+- `409 Conflict`: 이미 가입된 멤버
+
+## 초대 코드 규칙
 - **유효 기간**: 7일
 - **형식**: 9자리 영숫자 (대문자)
 - **일회성**: 사용 후에도 유효 (여러 명 가입 가능)
 - **권한**: 동아리는 대표자만, 팀은 생성자만 생성 가능
-
-## 프론트 예시
-https://github.com/user-attachments/assets/9fe66dad-f867-4843-ab61-ec7f7e8fea76
 

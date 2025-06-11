@@ -71,8 +71,14 @@ curl -X PATCH "http://localhost:8080/api/users/me/info" \
 ```json
 {
   "success": true,
-  "message": "내 정보 수정 성공",
-  "data": null
+  "message": "내 정보 수정 성공: 닉네임 포지션 대학 이미지",
+  "data": {
+    "id": 1,
+    "nickname": "새로운닉네임",
+    "profilePhoto": "https://example.com/new-profile.jpg",
+    "position": "VOCAL",
+    "university": "연세대학교"
+  }
 }
 ```
 

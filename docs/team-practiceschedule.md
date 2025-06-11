@@ -54,7 +54,7 @@ curl -X GET "http://localhost:8080/api/teams/1/practice-schedules?page=0&size=20
 ```json
 {
   "success": true,
-  "message": "팀별 연습 일정 목록 조회 성공",
+  "message": "팀별 곡 연습 일정 목록 조회 성공",
   "data": {
     "content": [
       {

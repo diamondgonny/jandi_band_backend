@@ -61,17 +61,17 @@ curl -X POST "http://localhost:8080/api/clubs" \
 
 ## 2. 동아리 목록 조회
 ```
-GET /api/clubs?page=0&size=10&sort=createdAt,desc
+GET /api/clubs?page=0&size=5&sort=createdAt,desc
 ```
 
 ### 요청 예시
 ```bash
-curl "http://localhost:8080/api/clubs?page=0&size=10"
+curl "http://localhost:8080/api/clubs?page=0&size=5"
 ```
 
 ### 쿼리 파라미터
 - `page`: 페이지 번호 (기본값: 0)
-- `size`: 페이지 크기 (기본값: 10)
+- `size`: 페이지 크기 (기본값: 5)
 - `sort`: 정렬 (기본값: createdAt,desc)
 
 ### 성공 응답 (200)
@@ -84,22 +84,21 @@ curl "http://localhost:8080/api/clubs?page=0&size=10"
       {
         "id": 1,
         "name": "락밴드 동아리",
-        "description": "음악을 사랑하는 사람들의 모임",
-        "photoUrl": "https://example.com/photo.jpg",
         "universityName": "서울대학교",
         "isUnionClub": false,
-        "memberCount": 15,
-        "createdAt": "2024-03-15T10:30:00"
+        "photoUrl": "https://example.com/photo.jpg",
+        "memberCount": 15
       }
     ],
     "pageInfo": {
       "page": 0,
-      "size": 10,
+      "size": 5,
       "totalElements": 1,
       "totalPages": 1,
-      "first": true,
-      "last": true
-    }
+              "first": true,
+        "last": true,
+        "empty": false
+      }
   }
 }
 ```
@@ -109,13 +108,11 @@ curl "http://localhost:8080/api/clubs?page=0&size=10"
 ## 3. 동아리 상세 조회
 ```
 GET /api/clubs/{clubId}
-Authorization: Bearer {JWT_TOKEN}
 ```
 
 ### 요청 예시
 ```bash
-curl "http://localhost:8080/api/clubs/1" \
-  -H "Authorization: Bearer {JWT_TOKEN}"
+curl "http://localhost:8080/api/clubs/1"
 ```
 
 ### 성공 응답 (200)
@@ -126,28 +123,25 @@ curl "http://localhost:8080/api/clubs/1" \
   "data": {
     "id": 1,
     "name": "락밴드 동아리",
-    "description": "음악을 사랑하는 사람들의 모임",
-    "photoUrl": "https://example.com/photo.jpg",
-    "universityName": "서울대학교",
+    "university": {
+      "id": 1,
+      "name": "서울대학교",
+      "region": "서울특별시"
+    },
     "isUnionClub": false,
+    "chatroomUrl": "https://open.kakao.com/o/example",
+    "description": "음악을 사랑하는 사람들의 모임",
+    "instagramId": "rockband_club",
+    "photoUrl": "https://example.com/photo.jpg",
     "memberCount": 15,
+    "representativeId": 1,
     "createdAt": "2024-03-15T10:30:00",
-    "members": [
-      {
-        "userId": 1,
-        "nickname": "홍길동",
-        "profilePhoto": "https://example.com/profile.jpg",
-        "position": "GUITAR",
-        "role": "REPRESENTATIVE",
-        "joinedAt": "2024-03-15T10:30:00"
-      }
-    ]
+    "updatedAt": "2024-03-15T10:30:00"
   }
 }
 ```
 
 ### 실패 응답
-- **403**: 동아리 멤버가 아님
 - **404**: 존재하지 않는 동아리
 
 ---
@@ -375,39 +369,4 @@ curl -X POST "http://localhost:8080/api/clubs/1/main-image" \
 - `image`: 업로드할 이미지 파일
 
 ### 성공 응답 (200)
-```json
-{
-  "success": true,
-  "message": "동아리 대표 사진이 성공적으로 업로드되었습니다",
-  "data": "https://example.com/images/club-photo.jpg"
-}
 ```
-
-### 실패 응답
-- **403**: 동아리 멤버가 아님
-
----
-
-## 11. 동아리 대표 사진 삭제
-```
-DELETE /api/clubs/{clubId}/main-image
-Authorization: Bearer {JWT_TOKEN}
-```
-
-### 요청 예시
-```bash
-curl -X DELETE "http://localhost:8080/api/clubs/1/main-image" \
-  -H "Authorization: Bearer {JWT_TOKEN}"
-```
-
-### 성공 응답 (200)
-```json
-{
-  "success": true,
-  "message": "동아리 대표 사진이 성공적으로 삭제되었습니다",
-  "data": null
-}
-```
-
-### 실패 응답
-- **403**: 동아리 멤버가 아님

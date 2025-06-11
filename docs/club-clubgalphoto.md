@@ -39,11 +39,8 @@ curl -X GET "http://localhost:8080/api/clubs/1/photo?page=0&size=5" \
       {
         "id": 1,
         "imageUrl": "https://example.com/photos/club1_photo1.jpg",
-        "description": "동아리 정기 공연 사진",
-        "isPublic": true,
         "isPinned": true,
-        "uploaderName": "홍길동",
-        "createdAt": "2024-03-15T10:30:00"
+        "isPublic": true
       }
     ],
     "pageInfo": {
@@ -83,12 +80,10 @@ curl -X GET "http://localhost:8080/api/clubs/1/photo/1" \
     "id": 1,
     "imageUrl": "https://example.com/photos/club1_photo1.jpg",
     "description": "동아리 정기 공연 사진입니다. 모든 멤버가 함께한 소중한 순간을 담았습니다.",
-    "isPublic": true,
     "isPinned": true,
-    "uploaderName": "홍길동",
-    "uploaderId": 1,
-    "createdAt": "2024-03-15T10:30:00",
-    "updatedAt": "2024-03-15T10:30:00"
+    "isPublic": true,
+    "uploader": "홍길동",
+    "uploadedAt": "2024-03-15T10:30:00"
   }
 }
 ```
@@ -126,11 +121,8 @@ curl -X POST "http://localhost:8080/api/clubs/1/photo" \
   "data": {
     "id": 1,
     "imageUrl": "https://example.com/photos/club1_photo1.jpg",
-    "description": "동아리 정기 공연 사진",
-    "isPublic": true,
     "isPinned": false,
-    "uploaderName": "홍길동",
-    "createdAt": "2024-03-15T10:30:00"
+    "isPublic": true
   }
 }
 ```
@@ -169,12 +161,10 @@ curl -X PATCH "http://localhost:8080/api/clubs/1/photo/1" \
     "id": 1,
     "imageUrl": "https://example.com/photos/club1_photo1.jpg",
     "description": "수정된 사진 설명",
-    "isPublic": false,
     "isPinned": false,
-    "uploaderName": "홍길동",
-    "uploaderId": 1,
-    "createdAt": "2024-03-15T10:30:00",
-    "updatedAt": "2024-03-15T11:00:00"
+    "isPublic": false,
+    "uploader": "홍길동",
+    "uploadedAt": "2024-03-15T10:30:00"
   }
 }
 ```
@@ -300,11 +290,8 @@ interface ClubGalPhotoReqDTO {
 interface ClubGalPhotoRespDTO {
   id: number;            // 사진 ID
   imageUrl: string;      // 이미지 URL
-  description: string;   // 사진 설명
-  isPublic: boolean;     // 공개 여부
   isPinned: boolean;     // 핀 등록 여부
-  uploaderName: string;  // 업로더명
-  createdAt: string;     // 생성일시 (ISO 8601)
+  isPublic: boolean;     // 공개 여부
 }
 ```
 
@@ -314,12 +301,10 @@ interface ClubGalPhotoRespDetailDTO {
   id: number;            // 사진 ID
   imageUrl: string;      // 이미지 URL
   description: string;   // 사진 설명
-  isPublic: boolean;     // 공개 여부
   isPinned: boolean;     // 핀 등록 여부
-  uploaderName: string;  // 업로더명
-  uploaderId: number;    // 업로더 ID
-  createdAt: string;     // 생성일시 (ISO 8601)
-  updatedAt: string;     // 수정일시 (ISO 8601)
+  isPublic: boolean;     // 공개 여부
+  uploader: string;      // 업로더명
+  uploadedAt: string;    // 생성일시 (ISO 8601)
 }
 ```
 
@@ -333,4 +318,4 @@ interface ClubGalPhotoRespDetailDTO {
 - **핀 기능**: 중요한 사진을 상단에 고정하는 기능 (토글 방식)
 - **공개 설정**: isPublic 필드로 사진의 공개/비공개 설정 가능
 - **소프트 삭제**: 삭제된 사진은 실제로는 숨김 처리되어 복구 가능
-- **권한 확인**: 사진 수정/삭제는 업로더 본인 또는 동아리 운영진만 가능 
+- **권한 확인**: 사진 수정/삭제는 업로더 본인 또는 동아리 대표만 가능, 핀 등록/해제는 동아리 대표만 가능 

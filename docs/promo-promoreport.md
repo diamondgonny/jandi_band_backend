@@ -22,14 +22,15 @@ curl -X POST "http://localhost:8080/api/promos/reports" \
   -H "Content-Type: application/json" \
   -d '{
     "promoId": 1,
-    "reason": "SPAM"
+    "reportReasonId": 1,
+    "description": "SPAM"
   }'
 ```
 
 #### 요청 필드
 - `promoId` (integer, 필수): 신고할 공연 홍보 ID
-- `reason` (string, 필수): 신고 사유
-  - 가능한 값: `SPAM`, `INAPPROPRIATE_CONTENT`, `HARASSMENT`, `FALSE_INFORMATION`, `COPYRIGHT_VIOLATION`, `OTHER`
+- `reportReasonId` (integer, 필수): 신고 사유 ID
+- `description` (string, 선택): 신고 상세 설명
 
 #### 응답 (200 OK)
 ```json
@@ -154,7 +155,8 @@ curl -X GET "http://localhost:8080/api/promos/reports?page=0&size=20&sort=create
 ```typescript
 interface PromoReportReqDTO {
   promoId: number;       // 신고할 공연 홍보 ID
-  reason: string;        // 신고 사유 (SPAM, INAPPROPRIATE_CONTENT, HARASSMENT, FALSE_INFORMATION, COPYRIGHT_VIOLATION, OTHER)
+  reportReasonId: number; // 신고 사유 ID
+  description?: string;   // 신고 상세 설명
 }
 ```
 
@@ -175,16 +177,18 @@ interface PromoReportRespDTO {
 
 ---
 
-## 신고 사유 코드
+## 신고 사유 ID와 코드
 
-| 코드 | 설명 |
-|------|------|
-| `SPAM` | 스팸/도배 |
-| `INAPPROPRIATE_CONTENT` | 부적절한 내용 |
-| `HARASSMENT` | 괴롭힘/혐오 표현 |
-| `FALSE_INFORMATION` | 허위 정보 |
-| `COPYRIGHT_VIOLATION` | 저작권 위반 |
-| `OTHER` | 기타 |
+실제 요청 시에는 `reportReasonId`를 사용하며, 응답에서는 `reason` 코드로 표시됩니다.
+
+| ID | 코드 | 설명 |
+|-----|------|------|
+| 1 | `SPAM` | 스팸/도배 |
+| 2 | `INAPPROPRIATE_CONTENT` | 부적절한 내용 |
+| 3 | `HARASSMENT` | 괴롭힘/혐오 표현 |
+| 4 | `FALSE_INFORMATION` | 허위 정보 |
+| 5 | `COPYRIGHT_VIOLATION` | 저작권 위반 |
+| 6 | `OTHER` | 기타 |
 
 ---
 

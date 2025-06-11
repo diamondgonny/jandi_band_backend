@@ -1,6 +1,6 @@
 # University & Region API
 
-## 🏫 대학교 및 지역 정보
+## 대학교 및 지역 정보
 인증 불필요 (공개 API)
 
 ---

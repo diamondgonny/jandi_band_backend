@@ -23,14 +23,17 @@ curl "http://localhost:8080/api/region/all"
   "data": [
     {
       "id": 1,
+      "code": "SEOUL",
       "name": "서울"
     },
     {
       "id": 2,
+      "code": "GYEONGGI",
       "name": "경기"
     },
     {
       "id": 3,
+      "code": "INCHEON",
       "name": "인천"
     }
   ]
@@ -39,6 +42,7 @@ curl "http://localhost:8080/api/region/all"
 
 ### 응답 필드
 - `id`: 지역 ID
+- `code`: 지역 코드 (SEOUL, BUSAN 등)
 - `name`: 지역명
 
 ---

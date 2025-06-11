@@ -71,7 +71,18 @@ curl -X POST "http://localhost:8080/api/clubs/1/teams" \
         "nickname": "홍길동",
         "profilePhoto": "https://example.com/profile.jpg",
         "position": "GUITAR",
-        "joinedAt": "2024-03-15T10:30:00"
+        "joinedAt": "2024-03-15T10:30:00",
+        "timetableUpdatedAt": "2024-03-15T10:30:00",
+        "isSubmitted": true,
+        "timetableData": {
+          "Mon": ["14:00", "15:00"],
+          "Tue": ["18:00", "19:00"],
+          "Wed": [],
+          "Thu": ["16:00", "17:00"],
+          "Fri": ["17:00", "18:00"],
+          "Sat": ["10:00", "11:00"],
+          "Sun": []
+        }
       }
     ]
   }
@@ -121,7 +132,8 @@ curl -X GET "http://localhost:8080/api/clubs/1/teams?page=0&size=5" \
       "first": true,
       "last": true,
       "size": 5,
-      "number": 0
+      "page": 0,
+      "empty": false
     }
   }
 }
@@ -152,20 +164,39 @@ curl -X GET "http://localhost:8080/api/teams/1" \
     "creatorName": "홍길동",
     "createdAt": "2024-03-15T10:30:00",
     "memberCount": 4,
+    "suggestedScheduleAt": "2024-03-15T10:30:00",
+    "submissionProgress": {
+      "submittedMember": 2,
+      "totalMember": 4
+    },
     "members": [
       {
         "userId": 1,
         "nickname": "홍길동",
         "profilePhoto": "https://example.com/profile.jpg",
         "position": "GUITAR",
-        "joinedAt": "2024-03-15T10:30:00"
+        "joinedAt": "2024-03-15T10:30:00",
+        "timetableUpdatedAt": "2024-03-15T10:30:00",
+        "isSubmitted": true,
+        "timetableData": {
+          "Mon": ["14:00", "15:00"],
+          "Tue": ["18:00", "19:00"],
+          "Wed": [],
+          "Thu": ["16:00", "17:00"],
+          "Fri": ["17:00", "18:00"],
+          "Sat": ["10:00", "11:00"],
+          "Sun": []
+        }
       },
       {
         "userId": 2,
         "nickname": "김철수",
         "profilePhoto": "https://example.com/profile2.jpg",
         "position": "VOCAL",
-        "joinedAt": "2024-03-16T14:20:00"
+        "joinedAt": "2024-03-16T14:20:00",
+        "timetableUpdatedAt": "2024-03-16T15:00:00",
+        "isSubmitted": false,
+        "timetableData": null
       }
     ]
   }

@@ -3,6 +3,7 @@ package com.jandi.band_backend.invite.service;
 import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.club.repository.ClubMemberRepository;
+import com.jandi.band_backend.global.exception.BannedMemberJoinAttemptException;
 import com.jandi.band_backend.global.exception.InvalidAccessException;
 import com.jandi.band_backend.global.exception.UserNotFoundException;
 import com.jandi.band_backend.invite.dto.JoinRespDTO;
@@ -15,6 +16,9 @@ import com.jandi.band_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -61,16 +65,46 @@ public class JoinService {
     }
 
     private void createNewClubMember(Users user, Club club) {
-        ClubMember clubMember = new ClubMember();
-        clubMember.setClub(club);
-        clubMember.setUser(user);
-        clubMemberRepository.save(clubMember);
+        // 기존 회원 여부 확인 (deleted_at 상태와 관계없이)
+        Optional<ClubMember> existingMember = clubMemberRepository.findByClubIdAndUserId(club.getId(), user.getId());
+
+        if (existingMember.isPresent()) {
+            ClubMember clubMember = existingMember.get();
+
+            if (clubMember.getRole() == ClubMember.MemberRole.BANNED) {
+                throw new BannedMemberJoinAttemptException("강퇴된 사용자는 해당 동아리에 재가입할 수 없습니다.");
+            }
+
+            if (clubMember.getDeletedAt() != null) {
+                // 소프트 삭제된 상태라면 재활성화
+                clubMember.setDeletedAt(null);
+                clubMember.setRole(ClubMember.MemberRole.MEMBER);
+                clubMember.setUpdatedAt(LocalDateTime.now());
+                clubMemberRepository.save(clubMember);
+            }
+        } else {
+            ClubMember clubMember = new ClubMember();
+            clubMember.setClub(club);
+            clubMember.setUser(user);
+            clubMemberRepository.save(clubMember);
+        }
     }
 
     private void createNewTeamMember(Users user, Team team) {
-        TeamMember teamMember = new TeamMember();
-        teamMember.setTeam(team);
-        teamMember.setUser(user);
-        teamMemberRepository.save(teamMember);
+        Optional<TeamMember> existingMember = teamMemberRepository.findByTeamIdAndUserId(team.getId(), user.getId());
+
+        if (existingMember.isPresent()) {
+            TeamMember teamMember = existingMember.get();
+
+            if (teamMember.getDeletedAt() != null) {
+                teamMember.setDeletedAt(null);
+                teamMemberRepository.save(teamMember);
+            }
+        } else {
+            TeamMember teamMember = new TeamMember();
+            teamMember.setTeam(team);
+            teamMember.setUser(user);
+            teamMemberRepository.save(teamMember);
+        }
     }
 }

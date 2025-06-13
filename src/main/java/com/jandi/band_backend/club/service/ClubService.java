@@ -8,9 +8,11 @@ import com.jandi.band_backend.club.dto.ClubMembersRespDTO;
 import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.club.entity.ClubPhoto;
+import com.jandi.band_backend.club.entity.ClubGalPhoto;
 import com.jandi.band_backend.club.entity.ClubEvent;
 import com.jandi.band_backend.club.repository.ClubMemberRepository;
 import com.jandi.band_backend.club.repository.ClubPhotoRepository;
+import com.jandi.band_backend.club.repository.ClubGalPhotoRepository;
 import com.jandi.band_backend.club.repository.ClubRepository;
 import com.jandi.band_backend.club.repository.ClubEventRepository;
 import com.jandi.band_backend.team.repository.TeamRepository;
@@ -50,6 +52,7 @@ public class ClubService {
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final ClubPhotoRepository clubPhotoRepository;
+    private final ClubGalPhotoRepository clubGalPhotoRepository;
     private final ClubEventRepository clubEventRepository;
     private final TeamRepository teamRepository;
     private final TeamMemberRepository teamMemberRepository;
@@ -243,9 +246,16 @@ public class ClubService {
         }
         teamRepository.saveAll(teams);
 
-        // 동아리 갤러리 사진들 S3 삭제 (정희님)
+        // 동아리 갤러리 사진들 소환
+        List<ClubGalPhoto> clubGalPhotos = clubGalPhotoRepository.findByClubIdAndDeletedAtIsNull(clubId);
+        clubGalPhotos.forEach(clubGalPhoto -> {
+            // S3에서 이미지 삭제
+            s3FileManagementUtil.deleteFileSafely(clubGalPhoto.getImageUrl());
 
-        // 동아리 갤러리 사진들 DB 레코드 소프트 삭제 (정희님)
+            // DB 레코드 소프트 삭제
+            clubGalPhoto.setDeletedAt(deletedTime);
+        });
+        clubGalPhotoRepository.saveAll(clubGalPhotos);
 
         // 동아리 대표 사진 S3 삭제
         deleteClubPhoto(clubId, userId);

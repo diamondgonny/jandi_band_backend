@@ -4,6 +4,7 @@ import com.jandi.band_backend.team.entity.TeamEvent;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -35,4 +36,8 @@ public interface TeamEventRepository extends JpaRepository<TeamEvent, Integer> {
     List<TeamEvent> findTeamEventsByTeamIdAndDateRange(@Param("teamId") Integer teamId, 
                                                        @Param("startDate") LocalDateTime startDate, 
                                                        @Param("endDate") LocalDateTime endDate);
+
+    @Modifying
+    @Query(value = "UPDATE team_event SET creator_user_id = -1 WHERE creator_user_id = :userId", nativeQuery = true)
+    int anonymizeByUserId(@Param("userId") Integer userId);
 }

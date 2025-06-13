@@ -35,6 +35,14 @@ public class PromoCommentReportService {
         PromoComment promoComment = promoCommentRepository.findById(request.getPromoCommentId())
                 .orElseThrow(() -> new RuntimeException("해당 댓글을 찾을 수 없습니다."));
 
+        if (promoComment.getDeletedAt() != null) {
+            throw new RuntimeException("삭제된 댓글은 신고할 수 없습니다.");
+        }
+
+        if (promoComment.getCreator().getId().equals(reporterUserId)) {
+            throw new RuntimeException("본인이 작성한 댓글은 신고할 수 없습니다.");
+        }
+
         ReportReason reportReason = reportReasonRepository.findById(request.getReportReasonId())
                 .orElseThrow(() -> new RuntimeException("해당 신고 이유를 찾을 수 없습니다."));
 

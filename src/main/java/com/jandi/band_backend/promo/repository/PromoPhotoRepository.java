@@ -2,6 +2,7 @@ package com.jandi.band_backend.promo.repository;
 
 import com.jandi.band_backend.promo.entity.PromoPhoto;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -19,4 +20,8 @@ public interface PromoPhotoRepository extends JpaRepository<PromoPhoto, Integer>
     
     @Query("SELECT pp FROM PromoPhoto pp WHERE pp.promo.id = :promoId AND pp.imageUrl = :imageUrl AND pp.deletedAt IS NULL")
     PromoPhoto findByPromoIdAndImageUrlAndNotDeleted(@Param("promoId") Integer promoId, @Param("imageUrl") String imageUrl);
-} 
+
+    @Modifying
+    @Query(value = "UPDATE promo_photo SET uploader_user_id = -1 WHERE uploader_user_id = :userId", nativeQuery = true)
+    int anonymizeByUserId(@Param("userId") Integer userId);
+}

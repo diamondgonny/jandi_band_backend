@@ -4,10 +4,12 @@ import com.jandi.band_backend.club.entity.Club;
 import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.user.entity.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,4 +39,8 @@ public interface ClubMemberRepository extends JpaRepository<ClubMember, Integer>
     Integer user(Users user);
 
     Boolean existsByUserIdAndClub_IdAndDeletedAtIsNullAndRole(Integer userId, Integer clubId, ClubMember.MemberRole memberRole);
+
+    @Modifying
+    @Query("UPDATE ClubMember cm SET cm.deletedAt = :deletedAt WHERE cm.user.id = :userId AND cm.deletedAt IS NULL")
+    int softDeleteByUserId(@Param("userId") Integer userId, @Param("deletedAt") LocalDateTime deletedAt);
 }

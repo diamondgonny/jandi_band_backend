@@ -4,6 +4,7 @@ import com.jandi.band_backend.promo.entity.Promo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -73,4 +74,12 @@ public interface PromoRepository extends JpaRepository<Promo, Integer> {
             @Param("maxLng") BigDecimal maxLng,
             Pageable pageable
     );
-} 
+
+    @Modifying
+    @Query(value = "UPDATE promo SET creator_user_id = -1 WHERE creator_user_id = :userId", nativeQuery = true)
+    int anonymizeByCreatorId(@Param("userId") Integer userId);
+
+    @Modifying
+    @Query("UPDATE Promo p SET p.likeCount = p.likeCount - 1 WHERE p.id = :promoId AND p.likeCount > 0")
+    void decrementLikeCount(@Param("promoId") Integer promoId);
+}

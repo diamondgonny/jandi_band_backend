@@ -2,6 +2,7 @@ package com.jandi.band_backend.club.repository;
 
 import com.jandi.band_backend.club.entity.ClubEvent;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -25,4 +26,8 @@ public interface ClubEventRepository extends JpaRepository<ClubEvent, Long> {
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end
     );
+
+    @Modifying
+    @Query(value = "UPDATE club_event SET creator_user_id = -1 WHERE creator_user_id = :userId", nativeQuery = true)
+    int anonymizeByUserId(@Param("userId") Integer userId);
 }

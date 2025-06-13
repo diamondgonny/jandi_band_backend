@@ -5,11 +5,20 @@ import com.jandi.band_backend.auth.dto.kakao.KakaoUserInfoDTO;
 import com.jandi.band_backend.auth.service.kakao.KakaoUserService;
 import com.jandi.band_backend.club.entity.ClubMember;
 import com.jandi.band_backend.club.repository.ClubMemberRepository;
+import com.jandi.band_backend.club.repository.ClubEventRepository;
+import com.jandi.band_backend.club.repository.ClubGalPhotoRepository;
 import com.jandi.band_backend.global.exception.InvalidAccessException;
 import com.jandi.band_backend.global.exception.InvalidTokenException;
 import com.jandi.band_backend.global.exception.UniversityNotFoundException;
 import com.jandi.band_backend.global.exception.UserNotFoundException;
+import com.jandi.band_backend.poll.repository.PollRepository;
+import com.jandi.band_backend.poll.repository.PollSongRepository;
+import com.jandi.band_backend.poll.repository.VoteRepository;
+import com.jandi.band_backend.promo.repository.*;
 import com.jandi.band_backend.security.jwt.JwtTokenProvider;
+import com.jandi.band_backend.team.repository.TeamEventRepository;
+import com.jandi.band_backend.team.repository.TeamMemberRepository;
+import com.jandi.band_backend.team.repository.TeamRepository;
 import com.jandi.band_backend.univ.entity.University;
 import com.jandi.band_backend.univ.repository.UniversityRepository;
 import com.jandi.band_backend.user.dto.UserInfoDTO;
@@ -17,6 +26,7 @@ import com.jandi.band_backend.user.entity.UserPhoto;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserPhotoRepository;
 import com.jandi.band_backend.user.repository.UserRepository;
+import com.jandi.band_backend.user.repository.UserTimetableRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,10 +41,28 @@ import java.util.List;
 public class AuthService {
     private final UserRepository userRepository;
     private final UserPhotoRepository userPhotoRepository;
+    private final UserTimetableRepository userTimetableRepository;
     private final UniversityRepository universityRepository;
     private final ClubMemberRepository clubMemberRepository;
+    private final TeamMemberRepository teamMemberRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final KakaoUserService kakaoUserService;
+    // 그룹 2
+    private final ClubGalPhotoRepository clubGalPhotoRepository;
+    private final ClubEventRepository clubEventRepository;
+    private final PollRepository pollRepository;
+    private final PollSongRepository pollSongRepository;
+    private final PromoRepository promoRepository;
+    private final PromoPhotoRepository promoPhotoRepository;
+    private final PromoCommentRepository promoCommentRepository;
+    private final TeamRepository teamRepository;
+    private final TeamEventRepository teamEventRepository;
+    private final PromoReportRepository promoReportRepository;
+    private final PromoCommentReportRepository promoCommentReportRepository;
+    // 그룹 3
+    private final VoteRepository voteRepository;
+    private final PromoLikeRepository promoLikeRepository;
+    private final PromoCommentLikeRepository promoCommentLikeRepository;
 
     /// 로그인
     @Transactional
@@ -110,13 +138,66 @@ public class AuthService {
             throw new RuntimeException("탈퇴할 수 없습니다: 해당 동아리 대표직을 타인에게 위임 후 재시도해주세요: " + clubNames);
         }
 
-        // DB에서 탈퇴 처리
+        LocalDateTime deletedAt = LocalDateTime.now();
+
+        log.info("회원 탈퇴 처리 시작 - 사용자 ID: {}", userId);
+        processGroup1SoftDelete(userId, deletedAt);
+        processGroup2Anonymize(userId);
+        processGroup3HardDelete(userId);
+
         user.setIsRegistered(false);
-        user.setDeletedAt(LocalDateTime.now());
+        user.setDeletedAt(deletedAt);
         userRepository.save(user);
 
-        // 카카오와 연결 끊기
         kakaoUserService.unlink(user.getKakaoOauthId());
+
+        log.info("회원 탈퇴 처리 완료 - 사용자 ID: {}", userId);
+    }
+
+    // 그룹 1
+    private void processGroup1SoftDelete(Integer userId, LocalDateTime deletedAt) {
+        int userPhotoCount = userPhotoRepository.softDeleteByUserId(userId, deletedAt);
+        int userTimetableCount = userTimetableRepository.softDeleteByUserId(userId, deletedAt);
+        int clubMemberCount = clubMemberRepository.softDeleteByUserId(userId, deletedAt);
+        int teamMemberCount = teamMemberRepository.softDeleteByUserId(userId, deletedAt);
+
+        log.info("그룹 1 소프트 삭제 완료 - 사용자프로필: {}, 시간표: {}, 동아리멤버: {}, 팀멤버: {}",
+                userPhotoCount, userTimetableCount, clubMemberCount, teamMemberCount);
+    }
+
+    // 그룹 2
+    private void processGroup2Anonymize(Integer userId) {
+        int clubGalPhotoCount = clubGalPhotoRepository.anonymizeByUserId(userId);
+        int clubEventCount = clubEventRepository.anonymizeByUserId(userId);
+        int pollCount = pollRepository.anonymizeByCreatorId(userId);
+        int pollSongCount = pollSongRepository.anonymizeBySuggesterId(userId);
+        int promoCount = promoRepository.anonymizeByCreatorId(userId);
+        int promoPhotoCount = promoPhotoRepository.anonymizeByUserId(userId);
+        int promoCommentCount = promoCommentRepository.anonymizeByUserId(userId);
+        int teamCount = teamRepository.anonymizeByCreatorId(userId);
+        int teamEventCount = teamEventRepository.anonymizeByUserId(userId);
+        int promoReportCount = promoReportRepository.anonymizeByReporterId(userId);
+        int promoCommentReportCount = promoCommentReportRepository.anonymizeByReporterId(userId);
+
+        log.info("그룹 2 익명화 완료 - 갤러리: {}, 동아리이벤트: {}, 투표: {}, 투표곡: {}, 홍보글: {}, 홍보사진: {}, 홍보댓글: {}, 팀: {}, 팀이벤트: {}, 홍보신고: {}, 댓글신고: {}",
+                clubGalPhotoCount, clubEventCount, pollCount, pollSongCount, promoCount, promoPhotoCount,
+                promoCommentCount, teamCount, teamEventCount, promoReportCount, promoCommentReportCount);
+    }
+
+    // 그룹 3
+    private void processGroup3HardDelete(Integer userId) {
+        int voteCount = voteRepository.deleteByUserId(userId);
+
+        List<Integer> promoIds = promoLikeRepository.findPromoIdsByUserId(userId);
+        for (Integer promoId : promoIds) {
+            promoRepository.decrementLikeCount(promoId);
+        }
+        int promoLikeCount = promoLikeRepository.deleteByUserId(userId);
+
+        int promoCommentLikeCount = promoCommentLikeRepository.deleteByUserId(userId);
+
+        log.info("그룹 3 하드 삭제 완료 - 투표: {}, 홍보좋아요: {} ({}개 홍보글 카운트 조정), 댓글좋아요: {}",
+                voteCount, promoLikeCount, promoIds.size(), promoCommentLikeCount);
     }
 
     /// 리프레시 토큰 생성

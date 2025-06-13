@@ -59,9 +59,9 @@ public class PromoCommentReportRespDTO {
         response.setPromoCommentId(promoCommentReport.getPromoComment().getId());
         response.setCommentContent(promoCommentReport.getPromoComment().getDescription());
         response.setCommentCreatorId(promoCommentReport.getPromoComment().getCreator().getId());
-        response.setCommentCreatorName(promoCommentReport.getPromoComment().getCreator().getName());
+        response.setCommentCreatorName(promoCommentReport.getPromoComment().getCreator().getNickname());
         response.setReporterUserId(promoCommentReport.getReporter().getId());
-        response.setReporterUserName(promoCommentReport.getReporter().getName());
+        response.setReporterUserName(promoCommentReport.getReporter().getNickname());
         response.setReportReasonId(promoCommentReport.getReportReason().getId());
         response.setReportReasonCode(promoCommentReport.getReportReason().getCode());
         response.setDescription(promoCommentReport.getDescription());

@@ -51,9 +51,9 @@ public class PromoReportRespDTO {
         response.setPromoId(promoReport.getPromo().getId());
         response.setPromoTitle(promoReport.getPromo().getTitle());
         response.setPromoCreatorId(promoReport.getPromo().getCreator().getId());
-        response.setPromoCreatorName(promoReport.getPromo().getCreator().getName());
+        response.setPromoCreatorName(promoReport.getPromo().getCreator().getNickname());
         response.setReporterUserId(promoReport.getReporter().getId());
-        response.setReporterUserName(promoReport.getReporter().getName());
+        response.setReporterUserName(promoReport.getReporter().getNickname());
         response.setReportReasonId(promoReport.getReportReason().getId());
         response.setReportReasonCode(promoReport.getReportReason().getCode());
         response.setDescription(promoReport.getDescription());

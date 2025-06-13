@@ -23,6 +23,7 @@ import com.jandi.band_backend.univ.dto.UniversityRespDTO;
 import com.jandi.band_backend.univ.entity.University;
 import com.jandi.band_backend.univ.repository.UniversityRepository;
 import com.jandi.band_backend.user.entity.Users;
+import com.jandi.band_backend.global.exception.BannedMemberJoinAttemptException;
 import com.jandi.band_backend.global.exception.ClubNotFoundException;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
 import com.jandi.band_backend.global.exception.UniversityNotFoundException;
@@ -303,6 +304,7 @@ public class ClubService {
             throw new IllegalStateException("동아리 대표자를 강퇴할 수 없습니다.");
         }
 
+        targetMember.setRole(ClubMember.MemberRole.BANNED);
         targetMember.setDeletedAt(LocalDateTime.now());
         clubMemberRepository.save(targetMember);
     }

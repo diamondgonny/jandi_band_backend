@@ -70,12 +70,14 @@ curl -X GET "http://localhost:8080/api/promos/reports?page=0&size=20&sort=create
       {
         "id": 1,
         "promoId": 1,
-        "promoTitle": "락밴드 정기공연",
+        "promoTitle": "록 밴드 공연 홍보",
         "promoCreatorId": 2,
-        "promoCreatorName": "김철수",
+        "promoCreatorName": "홍길동",
         "reporterUserId": 3,
-        "reporterUserName": "이영희",
-        "reason": "SPAM",
+        "reporterUserName": "김철수",
+        "reportReasonId": 1,
+        "reportReasonCode": "SPAM",
+        "description": "스팸성 게시물입니다.",
         "createdAt": "2024-03-15T10:30:00"
       }
     ],
@@ -97,11 +99,13 @@ curl -X GET "http://localhost:8080/api/promos/reports?page=0&size=20&sort=create
 - `promoId` (integer): 신고된 공연 홍보 ID
 - `promoTitle` (string): 신고된 공연 홍보 제목
 - `promoCreatorId` (integer): 공연 홍보 작성자 ID
-- `promoCreatorName` (string): 공연 홍보 작성자명
-- `reporterUserId` (integer): 신고자 ID
-- `reporterUserName` (string): 신고자명
-- `reason` (string): 신고 사유
-- `createdAt` (string): 신고 일시
+- `promoCreatorName` (string): 공연 홍보 작성자 이름
+- `reporterUserId` (integer): 신고한 사용자 ID
+- `reporterUserName` (string): 신고한 사용자 이름
+- `reportReasonId` (integer): 신고 이유 ID
+- `reportReasonCode` (string): 신고 이유 코드
+- `description` (string): 신고 상세 설명
+- `createdAt` (string): 신고 생성일시
 
 ---
 
@@ -147,6 +151,26 @@ curl -X GET "http://localhost:8080/api/promos/reports?page=0&size=20&sort=create
 ```
 **발생 케이스**: 존재하지 않는 공연 홍보 ID
 
+### 400 Bad Request - 자기신고 시도
+```json
+{
+  "success": false,
+  "message": "본인이 작성한 게시물은 신고할 수 없습니다.",
+  "data": null
+}
+```
+**발생 케이스**: 사용자가 자신이 작성한 게시물을 신고하려고 할 때
+
+### 400 Bad Request - 삭제된 게시물 신고 시도
+```json
+{
+  "success": false,
+  "message": "삭제된 게시물은 신고할 수 없습니다.",
+  "data": null
+}
+```
+**발생 케이스**: 이미 삭제된 게시물을 신고하려고 할 때
+
 ---
 
 ## 데이터 모델
@@ -167,11 +191,13 @@ interface PromoReportRespDTO {
   promoId: number;              // 신고된 공연 홍보 ID
   promoTitle: string;           // 신고된 공연 홍보 제목
   promoCreatorId: number;       // 공연 홍보 작성자 ID
-  promoCreatorName: string;     // 공연 홍보 작성자명
-  reporterUserId: number;       // 신고자 ID
-  reporterUserName: string;     // 신고자명
-  reason: string;               // 신고 사유
-  createdAt: string;            // 신고 일시 (ISO 8601)
+  promoCreatorName: string;     // 공연 홍보 작성자 이름
+  reporterUserId: number;       // 신고한 사용자 ID
+  reporterUserName: string;     // 신고한 사용자 이름
+  reportReasonId: number;       // 신고 이유 ID
+  reportReasonCode: string;     // 신고 이유 코드
+  description?: string;         // 신고 상세 설명
+  createdAt: string;            // 신고 생성일시 (ISO 8601)
 }
 ```
 
@@ -193,7 +219,8 @@ interface PromoReportRespDTO {
 ---
 
 ## 참고 사항
-- **중복 신고**: 같은 사용자가 같은 게시물을 여러 번 신고하는 것을 방지
+- **자기신고 방지**: 사용자가 본인이 작성한 게시물을 신고할 수 없음
+- **삭제된 컨텐츠 보호**: 이미 삭제된 게시물은 신고할 수 없음
 - **자동 처리**: 신고 누적 시 자동으로 게시물 검토 상태 변경
 - **관리자 전용**: 신고 목록 조회는 관리자 권한이 있는 사용자만 가능
-- **로그 기록**: 모든 신고 활동은 시스템 로그에 기록됨 
+- **로그 기록**: 모든 신고 활동은 시스템 로그에 기록됨

@@ -69,15 +69,17 @@ curl -X GET "http://localhost:8080/api/promos/comments/reports?page=0&size=20&so
     "content": [
       {
         "id": 1,
-        "commentId": 1,
-        "commentContent": "부적절한 댓글 내용...",
-        "commentCreatorId": 2,
-        "commentCreatorName": "김철수",
-        "promoId": 1,
-        "promoTitle": "락밴드 정기공연",
+        "promoId": 5,
+        "promoTitle": "록 밴드 공연 홍보",
+        "promoCommentId": 15,
+        "commentContent": "정말 기대됩니다!",
+        "commentCreatorId": 3,
+        "commentCreatorName": "이영희",
         "reporterUserId": 3,
-        "reporterUserName": "이영희",
-        "reason": "HARASSMENT",
+        "reporterUserName": "김철수",
+        "reportReasonId": 3,
+        "reportReasonCode": "HARASSMENT",
+        "description": "부적절한 댓글입니다.",
         "createdAt": "2024-03-15T10:30:00"
       }
     ],
@@ -96,16 +98,18 @@ curl -X GET "http://localhost:8080/api/promos/comments/reports?page=0&size=20&so
 
 #### 응답 필드
 - `id` (integer): 신고 ID
-- `commentId` (integer): 신고된 댓글 ID
-- `commentContent` (string): 신고된 댓글 내용
+- `promoId` (integer): 공연 홍보 ID
+- `promoTitle` (string): 공연 홍보 제목
+- `promoCommentId` (integer): 신고된 댓글 ID
+- `commentContent` (string): 댓글 내용
 - `commentCreatorId` (integer): 댓글 작성자 ID
-- `commentCreatorName` (string): 댓글 작성자명
-- `promoId` (integer): 댓글이 속한 공연 홍보 ID
-- `promoTitle` (string): 댓글이 속한 공연 홍보 제목
-- `reporterUserId` (integer): 신고자 ID
-- `reporterUserName` (string): 신고자명
-- `reason` (string): 신고 사유
-- `createdAt` (string): 신고 일시
+- `commentCreatorName` (string): 댓글 작성자 이름
+- `reporterUserId` (integer): 신고한 사용자 ID
+- `reporterUserName` (string): 신고한 사용자 이름
+- `reportReasonId` (integer): 신고 이유 ID
+- `reportReasonCode` (string): 신고 이유 코드
+- `description` (string): 신고 상세 설명
+- `createdAt` (string): 신고 생성일시
 
 ---
 
@@ -151,6 +155,26 @@ curl -X GET "http://localhost:8080/api/promos/comments/reports?page=0&size=20&so
 ```
 **발생 케이스**: 존재하지 않는 댓글 ID
 
+### 400 Bad Request - 자기신고 시도
+```json
+{
+  "success": false,
+  "message": "본인이 작성한 댓글은 신고할 수 없습니다.",
+  "data": null
+}
+```
+**발생 케이스**: 사용자가 자신이 작성한 댓글을 신고하려고 할 때
+
+### 400 Bad Request - 삭제된 댓글 신고 시도
+```json
+{
+  "success": false,
+  "message": "삭제된 댓글은 신고할 수 없습니다.",
+  "data": null
+}
+```
+**발생 케이스**: 이미 삭제된 댓글을 신고하려고 할 때
+
 ---
 
 ## 데이터 모델
@@ -168,16 +192,18 @@ interface PromoCommentReportReqDTO {
 ```typescript
 interface PromoCommentReportRespDTO {
   id: number;                      // 신고 ID
-  commentId: number;               // 신고된 댓글 ID
-  commentContent: string;          // 신고된 댓글 내용
+  promoId: number;                 // 공연 홍보 ID
+  promoTitle: string;              // 공연 홍보 제목
+  promoCommentId: number;          // 신고된 댓글 ID
+  commentContent: string;          // 댓글 내용
   commentCreatorId: number;        // 댓글 작성자 ID
-  commentCreatorName: string;      // 댓글 작성자명
-  promoId: number;                 // 댓글이 속한 공연 홍보 ID
-  promoTitle: string;              // 댓글이 속한 공연 홍보 제목
-  reporterUserId: number;          // 신고자 ID
-  reporterUserName: string;        // 신고자명
-  reason: string;                  // 신고 사유
-  createdAt: string;               // 신고 일시 (ISO 8601)
+  commentCreatorName: string;      // 댓글 작성자 이름
+  reporterUserId: number;          // 신고한 사용자 ID
+  reporterUserName: string;        // 신고한 사용자 이름
+  reportReasonId: number;          // 신고 이유 ID
+  reportReasonCode: string;        // 신고 이유 코드
+  description?: string;            // 신고 상세 설명
+  createdAt: string;               // 신고 생성일시 (ISO 8601)
 }
 ```
 
@@ -199,8 +225,8 @@ interface PromoCommentReportRespDTO {
 ---
 
 ## 참고 사항
-- **중복 신고**: 같은 사용자가 같은 댓글을 여러 번 신고하는 것을 방지
+- **자기신고 방지**: 사용자가 본인이 작성한 댓글을 신고할 수 없음
+- **삭제된 컨텐츠 보호**: 이미 삭제된 댓글은 신고할 수 없음
 - **자동 처리**: 신고 누적 시 자동으로 댓글 검토 상태 변경
 - **관리자 전용**: 신고 목록 조회는 관리자 권한이 있는 사용자만 가능
-- **연관 정보**: 댓글 신고 시 해당 댓글이 속한 공연 홍보 정보도 함께 제공
-- **로그 기록**: 모든 신고 활동은 시스템 로그에 기록됨 
+- **로그 기록**: 모든 신고 활동은 시스템 로그에 기록됨

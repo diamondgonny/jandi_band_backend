@@ -35,15 +35,20 @@ public class PromoReportService {
         Users reporter = userRepository.findById(reporterUserId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-// Promo 엔티티 조회
         Promo promo = promoRepository.findById(request.getPromoId())
                 .orElseThrow(() -> new RuntimeException("해당 공연 홍보를 찾을 수 없습니다."));
 
-// ReportReason 엔티티 조회
+        if (promo.getDeletedAt() != null) {
+            throw new RuntimeException("삭제된 게시물은 신고할 수 없습니다.");
+        }
+
+        if (promo.getCreator().getId().equals(reporterUserId)) {
+            throw new RuntimeException("본인이 작성한 게시물은 신고할 수 없습니다.");
+        }
+
         ReportReason reportReason = reportReasonRepository.findById(request.getReportReasonId())
                 .orElseThrow(() -> new RuntimeException("해당 신고 이유를 찾을 수 없습니다."));
 
-// 신고 엔티티 생성 및 저장
         PromoReport promoReport = new PromoReport();
         promoReport.setPromo(promo);
         promoReport.setReporter(reporter);

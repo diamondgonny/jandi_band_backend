@@ -15,13 +15,9 @@ import java.util.Optional;
 
 @Repository
 public interface ClubMemberRepository extends JpaRepository<ClubMember, Integer> {
-    // 동아리 ID로 멤버 조회
     List<ClubMember> findByClubIdAndDeletedAtIsNull(Integer clubId);
-    // 동아리 ID와 사용자 ID로 멤버 조회
     Optional<ClubMember> findByClubIdAndUserIdAndDeletedAtIsNull(Integer clubId, Integer userId);
-    // 동아리 ID로 멤버 수 조회
     Integer countByClubIdAndDeletedAtIsNull(Integer clubId);
-    // 동아리와 사용자로 멤버 존재 여부 확인
     boolean existsByClubAndUserAndDeletedAtIsNull(Club club, Users user);
     // 사용자 ID로 동아리 멤버 조회 (동아리와 멤버 모두 삭제되지 않은 것만)
     List<ClubMember> findByUserIdAndClubDeletedAtIsNullAndDeletedAtIsNullOrderByJoinedAtDesc(Integer userId);
@@ -43,4 +39,7 @@ public interface ClubMemberRepository extends JpaRepository<ClubMember, Integer>
     @Modifying
     @Query("UPDATE ClubMember cm SET cm.deletedAt = :deletedAt WHERE cm.user.id = :userId AND cm.deletedAt IS NULL")
     int softDeleteByUserId(@Param("userId") Integer userId, @Param("deletedAt") LocalDateTime deletedAt);
+
+    // deleted_at 상태와 관계없이 동아리 ID와 사용자 ID로 멤버 조회 (재가입 처리용)
+    Optional<ClubMember> findByClubIdAndUserId(Integer clubId, Integer userId);
 }

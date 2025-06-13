@@ -25,4 +25,7 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, Integer>
     @Modifying
     @Query("UPDATE TeamMember tm SET tm.deletedAt = :deletedAt WHERE tm.user.id = :userId AND tm.deletedAt IS NULL")
     int softDeleteByUserId(@Param("userId") Integer userId, @Param("deletedAt") LocalDateTime deletedAt);
+
+    // deleted_at 상태와 관계없이 팀 ID와 사용자 ID로 멤버 조회 (재가입 처리용)
+    Optional<TeamMember> findByTeamIdAndUserId(Integer teamId, Integer userId);
 }

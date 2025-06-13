@@ -9,8 +9,9 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 public class ClubGalPhotoRespDetailDTO {
-    private Integer id;
-    private String uploader;
+    private Integer photoId;
+    private Integer uploaderId;
+    private String uploaderName;
     private String imageUrl;
     private String description;
     private Boolean isPinned;
@@ -18,8 +19,9 @@ public class ClubGalPhotoRespDetailDTO {
     private LocalDateTime uploadedAt;
 
     public ClubGalPhotoRespDetailDTO(ClubGalPhoto photo) {
-        id = photo.getId();
-        uploader = photo.getUploader().getNickname();
+        photoId = photo.getId();
+        uploaderId = photo.getUploader().getId();
+        uploaderName = photo.getUploader().getNickname();
         imageUrl = photo.getImageUrl();
         description = photo.getDescription();
         isPinned = photo.getIsPinned();

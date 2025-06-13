@@ -56,6 +56,7 @@ public class ClubMember {
 
     public enum MemberRole {
         REPRESENTATIVE,
-        MEMBER
+        MEMBER,
+        BANNED
     }
 }

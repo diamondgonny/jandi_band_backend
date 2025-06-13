@@ -5,13 +5,17 @@ import lombok.Data;
 
 @Data
 public class ClubGalPhotoRespDTO {
-    private Integer id;
+    private Integer photoId;
+    private Integer uploaderId;
+    private String uploaderName;
     private String imageUrl;
     private Boolean isPinned;
     private Boolean isPublic;
 
     public ClubGalPhotoRespDTO(ClubGalPhoto photo) {
-        id = photo.getId();
+        photoId = photo.getId();
+        uploaderId = photo.getUploader().getId();
+        uploaderName = photo.getUploader().getNickname();
         imageUrl = photo.getImageUrl();
         isPinned = photo.getIsPinned();
         isPublic = photo.getIsPublic();

@@ -10,6 +10,7 @@ import com.jandi.band_backend.user.repository.UserRepository;
 import com.jandi.band_backend.user.repository.UserTimetableRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,12 +30,15 @@ public class UserHardDeleteScheduler {
     private final TeamMemberRepository teamMemberRepository;
     private final S3Service s3Service;
 
+    @Value("${user-withdraw.days}")
+    private int userWithdrawDays;
+
     @Scheduled(cron = "0 0 3 * * ?")
     @Transactional
     public void hardDeleteUsers() {
         log.info("=== [UserHardDeleteScheduler] 유저 삭제 스케줄 시작 ===");
 
-        LocalDateTime threshold = LocalDateTime.now().minusDays(7);
+        LocalDateTime threshold = LocalDateTime.now().minusDays(userWithdrawDays);
         List<Users> toDelete = userRepository.findAllByDeletedAtBefore(threshold);
 
         log.info("[UserHardDeleteScheduler] 삭제 대상 유저: {}명 (기준일: {})", toDelete.size(), threshold);

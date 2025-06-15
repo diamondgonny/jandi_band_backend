@@ -313,16 +313,24 @@ public class PollService {
     }
 
     private VotedMark convertToVotedMark(String voteType) {
+        if (voteType == null || voteType.trim().isEmpty()) {
+            throw new BadRequestException("투표 타입이 null이거나 비어있습니다.");
+        }
+
         return switch (voteType.toUpperCase()) {
             case "LIKE", "좋아요" -> VotedMark.LIKE;
             case "DISLIKE", "별로에요" -> VotedMark.DISLIKE;
             case "CANT", "실력부족" -> VotedMark.CANT;
             case "HAJJ", "하고싶지_않은데_존중해요" -> VotedMark.HAJJ;
-            default -> throw new IllegalArgumentException("유효하지 않은 투표 타입입니다: " + voteType);
+            default -> throw new BadRequestException("유효하지 않은 투표 타입입니다: " + voteType);
         };
     }
 
     private List<PollSongResultRespDTO> applySortingForResult(List<PollSongResultRespDTO> songs, String sortBy, String order) {
+        if (sortBy == null || sortBy.trim().isEmpty()) {
+            throw new BadRequestException("정렬 기준이 null이거나 비어있습니다.");
+        }
+
         Comparator<PollSongResultRespDTO> comparator;
 
         switch (sortBy.toUpperCase()) {
@@ -336,7 +344,7 @@ public class PollService {
                 comparator = Comparator.comparingInt(this::calculateScore);
                 break;
             default:
-                throw new IllegalArgumentException("유효하지 않은 정렬 기준입니다: " + sortBy);
+                throw new BadRequestException("유효하지 않은 정렬 기준입니다: " + sortBy);
         }
 
         // 내림차순이 기본값

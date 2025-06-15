@@ -6,7 +6,6 @@ import com.jandi.band_backend.invite.redis.InviteCodeService;
 import com.jandi.band_backend.invite.redis.InviteType;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Random;

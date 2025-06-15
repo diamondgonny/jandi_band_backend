@@ -18,9 +18,6 @@ public class InviteService {
     private final InviteUtilService inviteUtilService;
     private static final Random RANDOM = new Random();
 
-    @Value("${invite.club.link.prefix}") private String clubLinkPrefix;
-    @Value("${invite.team.link.prefix}") private String teamLinkPrefix;
-
     @Transactional
     public InviteLinkRespDTO generateInviteClubLink(Integer clubId, Integer userId) {
         inviteUtilService.isExistClub(clubId);
@@ -31,9 +28,7 @@ public class InviteService {
         // code 생성 후 Redis 서버에 저장
         String code = generateRandomCode();
         inviteCodeService.saveCode(InviteType.CLUB, clubId, code);
-
-        String link = clubLinkPrefix + "?code=" + code;
-        return new InviteLinkRespDTO(link);
+        return new InviteLinkRespDTO(code);
     }
 
     @Transactional
@@ -46,9 +41,7 @@ public class InviteService {
         // code 생성 후 Redis 서버에 저장
         String code = generateRandomCode();
         inviteCodeService.saveCode(InviteType.TEAM, teamId, code);
-
-        String link = teamLinkPrefix + "?code=" + code;
-        return new InviteLinkRespDTO(link);
+        return new InviteLinkRespDTO(code);
     }
 
     private String generateRandomCode() {

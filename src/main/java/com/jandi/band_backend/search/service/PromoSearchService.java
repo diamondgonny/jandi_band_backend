@@ -3,6 +3,7 @@ package com.jandi.band_backend.search.service;
 import com.jandi.band_backend.search.document.PromoDocument;
 import com.jandi.band_backend.search.repository.PromoSearchRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -14,11 +15,13 @@ import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class PromoSearchService {
@@ -70,13 +73,20 @@ public class PromoSearchService {
      */
     public Page<PromoDocument> searchByKeyword(String keyword, Pageable pageable) {
         try {
+            log.info("검색 시작 - 키워드: {}, 페이지: {}, 크기: {}", keyword, pageable.getPageNumber(), pageable.getPageSize());
+            
+            // 더 정교한 검색을 위해 여러 필드에 대한 쿼리 구성
             Criteria criteria = new Criteria()
-                    .or("title").contains(keyword)
-                    .or("teamName").contains(keyword)
-                    .or("description").contains(keyword);
+                    .or("title").contains(keyword).boost(2.0f)  // 제목에 가중치 부여
+                    .or("teamName").contains(keyword).boost(1.5f)  // 팀명에 가중치 부여
+                    .or("description").contains(keyword)
+                    .or("location").contains(keyword)
+                    .or("address").contains(keyword);
             
             CriteriaQuery criteriaQuery = new CriteriaQuery(criteria);
             criteriaQuery.setPageable(pageable);
+            
+            log.debug("Elasticsearch 쿼리 실행: {}", criteriaQuery.getCriteria());
             
             SearchHits<PromoDocument> searchHits = elasticsearchOperations.search(criteriaQuery, PromoDocument.class);
             
@@ -84,8 +94,11 @@ public class PromoSearchService {
                     .map(SearchHit::getContent)
                     .collect(Collectors.toList());
             
+            log.info("검색 완료 - 총 결과 수: {}, 현재 페이지 결과 수: {}", searchHits.getTotalHits(), content.size());
+            
             return new PageImpl<>(content, pageable, searchHits.getTotalHits());
         } catch (Exception e) {
+            log.error("검색 중 오류 발생 - 키워드: {}, 오류: {}", keyword, e.getMessage(), e);
             return Page.empty(pageable);
         }
     }
@@ -148,9 +161,9 @@ public class PromoSearchService {
     /**
      * 이벤트 날짜 범위로 검색
      */
-    public List<PromoDocument> searchByEventDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+    public List<PromoDocument> searchByEventDateRange(LocalDate startDate, LocalDate endDate) {
         try {
-            return promoSearchRepository.findByEventDatetimeBetween(startDate, endDate);
+            return promoSearchRepository.findByEventDateBetween(startDate, endDate);
         } catch (Exception e) {
             return List.of();
         }
@@ -193,19 +206,19 @@ public class PromoSearchService {
      * 날짜 범위와 팀명으로 필터링
      */
     public Page<PromoDocument> filterPromosByDateAndTeam(
-            LocalDateTime startDate, 
-            LocalDateTime endDate, 
+            LocalDate startDate, 
+            LocalDate endDate, 
             String teamName, 
             Pageable pageable) {
         try {
             Criteria criteria = new Criteria();
             
             if (startDate != null && endDate != null) {
-                criteria.and("eventDatetime").between(startDate, endDate);
+                criteria.and("eventDate").between(startDate, endDate);
             } else if (startDate != null) {
-                criteria.and("eventDatetime").greaterThanEqual(startDate);
+                criteria.and("eventDate").greaterThanEqual(startDate);
             } else if (endDate != null) {
-                criteria.and("eventDatetime").lessThanEqual(endDate);
+                criteria.and("eventDate").lessThanEqual(endDate);
             }
             
             if (teamName != null && !teamName.trim().isEmpty()) {

@@ -4,7 +4,7 @@ import com.jandi.band_backend.search.document.PromoDocument;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -30,7 +30,7 @@ public interface PromoSearchRepository extends ElasticsearchRepository<PromoDocu
     List<PromoDocument> findByAddressContaining(String address);
     
     // 이벤트 날짜 범위로 검색
-    List<PromoDocument> findByEventDatetimeBetween(LocalDateTime startDate, LocalDateTime endDate);
+    List<PromoDocument> findByEventDateBetween(LocalDate startDate, LocalDate endDate);
     
     // 입장료 범위로 검색
     List<PromoDocument> findByAdmissionFeeBetween(Double minFee, Double maxFee);

@@ -6,6 +6,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Document(indexName = "promos", createIndex = true)
@@ -40,13 +41,13 @@ public class PromoDocument {
     private BigDecimal admissionFee;
 
     @Field(type = FieldType.Date)
-    private LocalDateTime eventDatetime;
+    private LocalDate eventDate;
 
     @Field(type = FieldType.Date)
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
 
     @Field(type = FieldType.Date)
-    private LocalDateTime updatedAt;
+    private LocalDate updatedAt;
 
     @Field(type = FieldType.Integer)
     private Integer likeCount;
@@ -71,9 +72,9 @@ public class PromoDocument {
         this.latitude = latitude;
         this.longitude = longitude;
         this.admissionFee = admissionFee;
-        this.eventDatetime = eventDatetime;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+        this.eventDate = eventDatetime != null ? eventDatetime.toLocalDate() : null;
+        this.createdAt = createdAt != null ? createdAt.toLocalDate() : null;
+        this.updatedAt = updatedAt != null ? updatedAt.toLocalDate() : null;
         this.likeCount = likeCount;
         this.imageUrl = imageUrl;
     }
@@ -106,14 +107,14 @@ public class PromoDocument {
     public BigDecimal getAdmissionFee() { return admissionFee; }
     public void setAdmissionFee(BigDecimal admissionFee) { this.admissionFee = admissionFee; }
 
-    public LocalDateTime getEventDatetime() { return eventDatetime; }
-    public void setEventDatetime(LocalDateTime eventDatetime) { this.eventDatetime = eventDatetime; }
+    public LocalDate getEventDate() { return eventDate; }
+    public void setEventDate(LocalDate eventDate) { this.eventDate = eventDate; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDate getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDate createdAt) { this.createdAt = createdAt; }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public LocalDate getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDate updatedAt) { this.updatedAt = updatedAt; }
 
     public Integer getLikeCount() { return likeCount; }
     public void setLikeCount(Integer likeCount) { this.likeCount = likeCount; }

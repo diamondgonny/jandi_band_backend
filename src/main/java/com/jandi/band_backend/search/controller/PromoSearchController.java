@@ -19,6 +19,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -182,8 +183,8 @@ public class PromoSearchController {
     @Operation(summary = "공연 홍보 필터링 (Elasticsearch 기반)")
     @GetMapping("/filter-v2")
     public ResponseEntity<CommonRespDTO<PagedRespDTO<PromoRespDTO>>> filterPromos(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) String teamName,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -267,9 +268,10 @@ public class PromoSearchController {
         dto.setLatitude(doc.getLatitude());
         dto.setLongitude(doc.getLongitude());
         dto.setAdmissionFee(doc.getAdmissionFee());
-        dto.setEventDatetime(doc.getEventDatetime());
-        dto.setCreatedAt(doc.getCreatedAt());
-        dto.setUpdatedAt(doc.getUpdatedAt());
+        // LocalDate를 LocalDateTime으로 변환 (시간은 00:00:00으로 설정)
+        dto.setEventDatetime(doc.getEventDate() != null ? doc.getEventDate().atStartOfDay() : null);
+        dto.setCreatedAt(doc.getCreatedAt() != null ? doc.getCreatedAt().atStartOfDay() : null);
+        dto.setUpdatedAt(doc.getUpdatedAt() != null ? doc.getUpdatedAt().atStartOfDay() : null);
         dto.setLikeCount(doc.getLikeCount());
         
         // 이미지 URL 설정

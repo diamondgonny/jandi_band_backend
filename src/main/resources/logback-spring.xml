@@ -175,6 +175,11 @@
     <logger name="org.hibernate.SQL" level="DEBUG"/>
     <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
     
+    <!-- Elasticsearch 로깅 -->
+    <logger name="org.springframework.data.elasticsearch" level="DEBUG"/>
+    <logger name="org.elasticsearch" level="INFO"/>
+    <logger name="co.elastic.clients" level="INFO"/>
+    
     <!-- 루트 로거 -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>

@@ -170,13 +170,6 @@ public class PollService {
         int cantCount = calculateVoteCount(pollSong, "CANT");
         int hajjCount = calculateVoteCount(pollSong, "HAJJ");
 
-        switch (voteType.toUpperCase()) {
-            case "LIKE", "좋아요" -> likeCount -= 1;
-            case "DISLIKE", "별로에요" -> dislikeCount -= 1;
-            case "CANT", "실력부족" -> cantCount -= 1;
-            case "HAJJ", "하고싶지_않은데_존중해요" -> hajjCount -= 1;
-        }
-
         String suggesterProfilePhoto = pollSong.getSuggester().getPhotos().stream()
                 .filter(photo -> photo.getIsCurrent() && photo.getDeletedAt() == null)
                 .map(photo -> photo.getImageUrl())

@@ -1,10 +1,10 @@
-# 🔍 잔디밴드 검색 시스템 (Elasticsearch)
+# 잔디밴드 검색 시스템 (Elasticsearch)
 
 **엘라스틱서치를 사용한 팀 검색 기능**을 제공합니다. 팀 이름, 설명, 카테고리 등으로 빠른 검색이 가능합니다.
 
-> 💡 **엘라스틱서치란?** 실시간 검색 및 분석 엔진으로, 빠른 전문 검색과 복잡한 쿼리를 지원합니다.
+> **엘라스틱서치란?** 실시간 검색 및 분석 엔진으로, 빠른 전문 검색과 복잡한 쿼리를 지원합니다.
 
-## 📁 구조
+## 구조
 
 ```
 search/
@@ -13,9 +13,9 @@ search/
 └── README.md                          # 이 파일
 ```
 
-## 🚀 빠른 시작 (5분 완료)
+## 빠른 시작 (5분 완료)
 
-### 1️⃣ 엘라스틱서치 환경 시작
+### 1. 엘라스틱서치 환경 시작
 ```bash
 # search 폴더로 이동
 cd search
@@ -24,7 +24,7 @@ cd search
 ./start-elasticsearch.sh
 ```
 
-### 2️⃣ 애플리케이션 설정
+### 2. 애플리케이션 설정
 ```bash
 # 프로젝트 루트로 돌아가기
 cd ..
@@ -36,7 +36,7 @@ cp src/main/resources/application.properties.example src/main/resources/applicat
 ./gradlew bootRun
 ```
 
-### 3️⃣ 테스트 데이터 생성
+### 3. 테스트 데이터 생성
 ```bash
 # 샘플 데이터 생성 (5개 팀 데이터)
 curl -X POST "http://localhost:8080/api/admin/search/teams/sample-data"
@@ -44,15 +44,15 @@ curl -X POST "http://localhost:8080/api/admin/search/teams/sample-data"
 # 성공 응답: "샘플 데이터가 생성되었습니다."
 ```
 
-### 4️⃣ 동작 확인
+### 4. 동작 확인
 ```bash
 # 검색 테스트
 curl "http://localhost:8080/api/search/teams?query=스터디"
 
-# 응답이 오면 설정 완료! 🎉
+# 응답이 오면 설정 완료!
 ```
 
-## 📊 접속 정보
+## 접속 정보
 
 | 서비스 | URL | 설명 |
 |--------|-----|------|
@@ -60,9 +60,9 @@ curl "http://localhost:8080/api/search/teams?query=스터디"
 | **키바나** | http://localhost:5601 | 검색 데이터 시각화 대시보드 |
 | **Swagger UI** | http://localhost:8080/swagger-ui.html | API 문서 및 테스트 |
 
-## 📋 API 명세서
+## API 명세서
 
-### 🔍 검색 API (프론트엔드용)
+### 검색 API (프론트엔드용)
 
 #### 1. 통합 검색 (가장 많이 사용)
 ```http
@@ -197,7 +197,7 @@ GET /api/search/teams/all
 curl "http://localhost:8080/api/search/teams/all"
 ```
 
-### 🛠️ 관리 API (개발/테스트용)
+### 관리 API (개발/테스트용)
 
 #### 8. 팀 문서 저장 (직접 저장)
 ```http
@@ -233,9 +233,9 @@ curl -X DELETE "http://localhost:8080/api/search/teams/custom-team-1"
 
 ---
 
-### 🛠️ 관리 API (개발/테스트용)
+### 관리 API (개발/테스트용)
 
-> ⚠️ **주의**: 이 API들은 개발 및 테스트 용도로만 사용하세요.
+> **주의**: 이 API들은 개발 및 테스트 용도로만 사용하세요.
 
 #### 1. 샘플 데이터 생성
 ```http
@@ -293,7 +293,7 @@ curl -X POST "http://localhost:8080/api/admin/search/teams/sync" \
 
 ---
 
-## 🧪 백엔드 개발자 테스트 가이드
+## 백엔드 개발자 테스트 가이드
 
 ### 1단계: 기본 동작 확인
 ```bash
@@ -307,7 +307,22 @@ curl "http://localhost:8080/api/search/teams/all"
 curl "http://localhost:8080/api/search/teams?query=스터디"
 ```
 
-### 2단계: 다양한 검색 테스트
+### 2단계: 디버그 엔드포인트로 문제 진단
+```bash
+# Repository를 통한 조회 테스트
+curl "http://localhost:8080/api/search/teams/debug/repo"
+
+# Native Query를 통한 조회 테스트
+curl "http://localhost:8080/api/search/teams/debug/native"
+
+# 두 결과를 비교하여 어디서 문제가 발생하는지 확인
+# - 둘 다 빈 배열: Elasticsearch 연결 문제
+# - repo만 빈 배열: Repository 설정 문제
+# - native만 빈 배열: ElasticsearchOperations 설정 문제
+# - 둘 다 정상: 검색 쿼리 문제
+```
+
+### 3단계: 다양한 검색 테스트
 ```bash
 # 카테고리별 검색
 curl "http://localhost:8080/api/search/teams/category?category=스터디"
@@ -321,7 +336,7 @@ curl "http://localhost:8080/api/search/teams/status?status=ACTIVE"
 curl "http://localhost:8080/api/search/teams/members?minCount=5&maxCount=15"
 ```
 
-### 3단계: 데이터 조작 테스트
+### 4단계: 데이터 조작 테스트
 ```bash
 # 새 팀 추가
 curl -X POST "http://localhost:8080/api/search/teams" \
@@ -343,9 +358,21 @@ curl "http://localhost:8080/api/search/teams?query=테스트"
 curl -X DELETE "http://localhost:8080/api/search/teams/test-team-1"
 ```
 
+### 5단계: 문제 해결 테스트
+```bash
+# Elasticsearch 직접 확인
+curl "http://localhost:9200/teams/_search?pretty"
+
+# 인덱스 상태 확인
+curl "http://localhost:9200/_cat/indices?v"
+
+# 클러스터 상태 확인
+curl "http://localhost:9200/_cluster/health?pretty"
+```
+
 ---
 
-## 💻 프론트엔드 연동 가이드
+## 프론트엔드 연동 가이드
 
 ### React 예제
 ```javascript
@@ -469,7 +496,7 @@ export default {
 
 ---
 
-## 🔄 실제 팀 데이터 연동
+## 실제 팀 데이터 연동
 
 기존 팀 서비스에서 엘라스틱서치 동기화를 위해 `TeamSyncService`를 사용하세요:
 
@@ -529,7 +556,7 @@ public class TeamService {
 }
 ```
 
-## 🔧 설정 정보
+## 설정 정보
 
 ### Docker Compose 설정 (docker-compose.elasticsearch.yml)
 - **엘라스틱서치**: 8.18.0
@@ -545,9 +572,9 @@ spring.elasticsearch.connection-timeout=10s
 spring.elasticsearch.socket-timeout=30s
 ```
 
-## 🎯 주요 기능
+## 주요 기능
 
-### ✅ 구현된 기능
+### 구현된 기능
 - 팀 이름/설명 통합 검색
 - 카테고리별 필터링
 - 상태별 필터링  
@@ -555,12 +582,12 @@ spring.elasticsearch.socket-timeout=30s
 - 실시간 데이터 동기화
 - 샘플 데이터 생성/삭제
 
-### 🔄 데이터 동기화
+### 데이터 동기화
 - 팀 생성 시 자동 인덱싱
 - 팀 수정 시 자동 업데이트
 - 팀 삭제 시 자동 제거
 
-### 📈 향후 개선사항
+### 향후 개선사항
 - 한국어 형태소 분석기 (Nori) 추가
 - 자동완성 기능
 - 검색 결과 하이라이팅
@@ -569,7 +596,7 @@ spring.elasticsearch.socket-timeout=30s
 
 ---
 
-## 📋 데이터 구조 (TeamDocument)
+## 데이터 구조 (TeamDocument)
 
 ```json
 {
@@ -587,9 +614,9 @@ spring.elasticsearch.socket-timeout=30s
 
 ---
 
-## 🚨 문제 해결 가이드
+## 문제 해결 가이드
 
-### ❌ 엘라스틱서치 연결 실패
+### 엘라스틱서치 연결 실패
 **증상**: `Connection refused` 또는 `ConnectException` 오류
 
 **해결 방법:**
@@ -616,7 +643,7 @@ cd search
 docker-compose -f docker-compose.elasticsearch.yml restart
 ```
 
-### ❌ 메모리 부족 오류
+### 메모리 부족 오류
 **증상**: `OutOfMemoryError` 또는 컨테이너 종료
 
 **해결 방법:**
@@ -632,7 +659,7 @@ vm_stat  # Mac
 # ES_JAVA_OPTS를 -Xms256m -Xmx256m으로 변경
 ```
 
-### ❌ 한글 검색이 안 되는 경우
+### 한글 검색이 안 되는 경우
 **증상**: 한글로 검색했는데 결과가 나오지 않음
 
 **해결 방법:**
@@ -654,7 +681,7 @@ const query = encodeURIComponent('스터디');
 fetch(`http://localhost:8080/api/search/teams?query=${query}`)
 ```
 
-### ❌ Spring Boot 애플리케이션 시작 실패
+### Spring Boot 애플리케이션 시작 실패
 **증상**: `NoSuchBeanDefinitionException` 또는 `ClassNotFoundException`
 
 **해결 방법:**
@@ -670,7 +697,7 @@ fetch(`http://localhost:8080/api/search/teams?query=${query}`)
 # spring.elasticsearch.uris=http://localhost:9200
 ```
 
-### ❌ 검색 결과가 비어있는 경우
+### 검색 결과가 비어있는 경우
 **해결 방법:**
 ```bash
 # 1. 샘플 데이터 확인
@@ -683,7 +710,7 @@ curl -X POST "http://localhost:8080/api/admin/search/teams/sample-data"
 # http://localhost:5601 접속 후 Management > Index Management에서 'teams' 인덱스 확인
 ```
 
-### ❌ CORS 오류 (프론트엔드에서)
+### CORS 오류 (프론트엔드에서)
 **증상**: `Access-Control-Allow-Origin` 오류
 
 **해결 방법:**
@@ -698,14 +725,14 @@ public class TeamSearchController {
 
 ---
 
-## 📞 지원 및 문의
+## 지원 및 문의
 
-🔍 **엘라스틱서치 관련 문제**:
+**엘라스틱서치 관련 문제**:
 - [Elasticsearch 공식 문서](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html)
 - [Spring Data Elasticsearch 공식 문서](https://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/)
 
-🐛 **버그 리포트**:
+**버그 리포트**:
 - 팀 Slack 채널 또는 GitHub Issues에 문의해주세요.
 
-💡 **개선 제안**:
+**개선 제안**:
 - 새로운 검색 기능이나 성능 개선 아이디어가 있다면 언제든 제안해주세요! 

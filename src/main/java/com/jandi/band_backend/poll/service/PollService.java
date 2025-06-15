@@ -115,31 +115,22 @@ public class PollService {
 
         VotedMark votedMark = convertToVotedMark(voteType);
 
-        List<Vote> userVotesForSong = voteRepository.findByPollSongIdAndUserId(songId, currentUserId);
+        Optional<Vote> existingVote = voteRepository.findByPollSongIdAndUserId(songId, currentUserId)
+                .stream().findFirst();    // 1인 1투표 (유니크 제약조건)
 
-        boolean hasSameTypeVote = userVotesForSong.stream()
-                .anyMatch(v -> v.getVotedMark() == votedMark);
+        if (existingVote.isPresent()) {
+            Vote vote = existingVote.get();    // Managed Entity 이므로 더티체킹 O (save 불필요)
 
-        if (hasSameTypeVote) {
-            throw new VoteAlreadyExistsException(
-                "이미 이 노래에 대한 '" + voteType + "' 투표가 존재합니다. " +
-                "취소하려면 DELETE 요청을 사용하세요."
-            );
-        }
-
-        // 다른 타입의 투표가 있으면 기존 투표의 타입을 업데이트
-        if (!userVotesForSong.isEmpty()) {
-            Vote existingVote = userVotesForSong.getFirst();
-            existingVote.setVotedMark(votedMark);
-            if (userVotesForSong.size() > 1) {
-                for (int i = 1; i < userVotesForSong.size(); i++) {
-                    voteRepository.delete(userVotesForSong.get(i));
-                }
+            if (vote.getVotedMark() == votedMark) {
+                throw new VoteAlreadyExistsException(
+                    "이미 이 노래에 대한 '" + voteType + "' 투표가 존재합니다. " +
+                    "취소하려면 DELETE 요청을 사용하세요."
+                );
             }
-        }
-        // 투표가 없으면 새로 생성
-        else {
-            Vote vote = new Vote();
+
+            vote.setVotedMark(votedMark);
+        } else {
+            Vote vote = new Vote();    // Transient Entity 이므로 더티체킹 X (save 필요)
             vote.setPollSong(pollSong);
             vote.setUser(user);
             vote.setVotedMark(votedMark);

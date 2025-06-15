@@ -13,10 +13,10 @@ public class TeamDocument {
     @Id
     private String id;
 
-    @Field(type = FieldType.Text, analyzer = "korean")
+    @Field(type = FieldType.Text, analyzer = "standard")
     private String name;
 
-    @Field(type = FieldType.Text, analyzer = "korean")
+    @Field(type = FieldType.Text, analyzer = "standard")
     private String description;
 
     @Field(type = FieldType.Keyword)

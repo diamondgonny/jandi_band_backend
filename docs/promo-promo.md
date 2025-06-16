@@ -456,6 +456,193 @@ curl -X GET "http://localhost:8080/api/promos/1/like/count"
 
 ---
 
+## 12. 공연 홍보 검색 (Elasticsearch 기반)
+### GET `/api/promos/search-v2`
+
+#### 요청
+```bash
+curl -X GET "http://localhost:8080/api/promos/search-v2?keyword=락밴드&page=0&size=20&sort=createdAt,desc"
+```
+
+#### 쿼리 파라미터
+- `keyword` (string, 필수): 검색 키워드 (제목, 팀명, 설명, 위치, 주소에서 검색)
+- `page` (integer): 페이지 번호 (기본값: 0)
+- `size` (integer): 페이지 크기 (기본값: 20)
+- `sort` (string): 정렬 기준 (기본값: "createdAt,desc")
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "공연 홍보 검색 성공 (Elasticsearch)",
+  "data": {
+    "content": [
+      {
+        "id": 1,
+        "teamName": "락밴드 팀",
+        "title": "락밴드 정기공연",
+        "description": "락밴드 팀의 정기 공연입니다.",
+        "location": "홍대 클럽",
+        "address": "서울시 마포구 홍익로 123",
+        "latitude": 37.5563,
+        "longitude": 126.9236,
+        "admissionFee": 10000,
+        "eventDatetime": "2024-03-15T19:00:00",
+        "createdAt": "2024-03-01T10:00:00",
+        "updatedAt": "2024-03-01T10:00:00",
+        "likeCount": 20,
+        "isLikedByUser": true,
+        "photoUrls": ["https://example.com/photo.jpg"]
+      }
+    ],
+    "pageInfo": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 1,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "empty": false
+    }
+  }
+}
+```
+
+---
+
+## 13. 공연 홍보 필터링 (Elasticsearch 기반)
+### GET `/api/promos/filter-v2`
+
+#### 요청
+```bash
+curl -X GET "http://localhost:8080/api/promos/filter-v2?startDate=2024-03-01&endDate=2024-03-31&teamName=락밴드&page=0&size=20&sort=createdAt,desc"
+```
+
+#### 쿼리 파라미터
+- `startDate` (string, 선택): 시작 날짜 (ISO DATE 형식: YYYY-MM-DD)
+- `endDate` (string, 선택): 종료 날짜 (ISO DATE 형식: YYYY-MM-DD)
+- `teamName` (string, 선택): 팀명
+- `page` (integer): 페이지 번호 (기본값: 0)
+- `size` (integer): 페이지 크기 (기본값: 20)
+- `sort` (string): 정렬 기준 (기본값: "createdAt,desc")
+
+#### 응답 (200 OK)
+위의 검색 응답과 동일한 구조
+
+---
+
+## 14. 공연 홍보 지도 검색 (Elasticsearch 기반)
+### GET `/api/promos/map-v2`
+
+#### 요청
+```bash
+curl -X GET "http://localhost:8080/api/promos/map-v2?startLatitude=37.5000&startLongitude=126.9000&endLatitude=37.6000&endLongitude=127.0000&page=0&size=20&sort=createdAt,desc"
+```
+
+#### 쿼리 파라미터
+- `startLatitude` (decimal, 필수): 검색 영역 시작 위도
+- `startLongitude` (decimal, 필수): 검색 영역 시작 경도
+- `endLatitude` (decimal, 필수): 검색 영역 끝 위도
+- `endLongitude` (decimal, 필수): 검색 영역 끝 경도
+- `page` (integer): 페이지 번호 (기본값: 0)
+- `size` (integer): 페이지 크기 (기본값: 20)
+- `sort` (string): 정렬 기준 (기본값: "createdAt,desc")
+
+#### 응답 (200 OK)
+위의 검색 응답과 동일한 구조
+
+---
+
+## 15. 제목으로 공연 홍보 검색 (Elasticsearch 기반)
+### GET `/api/promos/search-v2/title`
+
+#### 요청
+```bash
+curl -X GET "http://localhost:8080/api/promos/search-v2/title?title=정기공연&page=0&size=20"
+```
+
+#### 쿼리 파라미터
+- `title` (string, 필수): 검색할 제목
+- `page` (integer): 페이지 번호 (기본값: 0)
+- `size` (integer): 페이지 크기 (기본값: 20)
+
+#### 응답 (200 OK)
+위의 검색 응답과 동일한 구조
+
+---
+
+## 16. 팀명으로 공연 홍보 검색 (Elasticsearch 기반)
+### GET `/api/promos/search-v2/team`
+
+#### 요청
+```bash
+curl -X GET "http://localhost:8080/api/promos/search-v2/team?teamName=락밴드&page=0&size=20"
+```
+
+#### 쿼리 파라미터
+- `teamName` (string, 필수): 검색할 팀명
+- `page` (integer): 페이지 번호 (기본값: 0)
+- `size` (integer): 페이지 크기 (기본값: 20)
+
+#### 응답 (200 OK)
+위의 검색 응답과 동일한 구조
+
+---
+
+## 17. 장소로 공연 홍보 검색 (Elasticsearch 기반)
+### GET `/api/promos/search-v2/location`
+
+#### 요청
+```bash
+curl -X GET "http://localhost:8080/api/promos/search-v2/location?location=홍대&page=0&size=20"
+```
+
+#### 쿼리 파라미터
+- `location` (string, 필수): 검색할 장소
+- `page` (integer): 페이지 번호 (기본값: 0)
+- `size` (integer): 페이지 크기 (기본값: 20)
+
+#### 응답 (200 OK)
+위의 검색 응답과 동일한 구조
+
+---
+
+## 18. 모든 공연 홍보 조회 (Elasticsearch 기반)
+### GET `/api/promos/search-v2/all`
+
+#### 요청
+```bash
+curl -X GET "http://localhost:8080/api/promos/search-v2/all?page=0&size=20"
+```
+
+#### 쿼리 파라미터
+- `page` (integer): 페이지 번호 (기본값: 0)
+- `size` (integer): 페이지 크기 (기본값: 20)
+
+#### 응답 (200 OK)
+위의 검색 응답과 동일한 구조
+
+---
+
+## 19. 공연 홍보 데이터 동기화 (관리자용)
+### POST `/api/admin/promos/sync-all`
+
+#### 요청
+```bash
+curl -X POST "http://localhost:8080/api/admin/promos/sync-all"
+```
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "모든 데이터 동기화 완료",
+  "data": "데이터베이스의 모든 공연 홍보가 Elasticsearch에 동기화되었습니다."
+}
+```
+
+---
+
 ## 에러 응답
 ```json
 {
@@ -487,6 +674,13 @@ curl -X GET "http://localhost:8080/api/promos/1/like/count"
 - **좋아요**: 토글 방식으로 추가/취소 (같은 API), 중복 좋아요 방지
 - **좋아요 상태**: 공연 홍보 목록/상세 조회 시 `isLikedByUser` 필드 포함
 - **정렬 옵션**: `sort` 파라미터로 정렬 기준 지정 가능 (기본값: `createdAt,desc`)
+- **Elasticsearch 검색**: 
+  - **기존 JPA 검색**: `/api/promos/search`, `/api/promos/filter`, `/api/promos/map`
+  - **Elasticsearch 검색**: `/api/promos/search-v2`, `/api/promos/filter-v2`, `/api/promos/map-v2`
+  - **검색 성능**: Elasticsearch 기반 검색이 더 빠르고 정확함
+  - **검색 범위**: 제목, 팀명, 설명, 위치, 주소에서 통합 검색
+  - **날짜 형식**: Elasticsearch 검색에서는 ISO DATE 형식 (YYYY-MM-DD) 사용
+  - **데이터 동기화**: `/api/admin/promos/sync-all`로 DB 데이터를 Elasticsearch에 동기화
 - **응답 최적화**: 
   - **생성**: ID만 반환 (성능 최적화)
   - **수정/삭제**: null 반환

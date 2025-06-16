@@ -9,6 +9,7 @@ import com.jandi.band_backend.promo.entity.Promo;
 import com.jandi.band_backend.promo.entity.PromoPhoto;
 import com.jandi.band_backend.promo.repository.PromoRepository;
 import com.jandi.band_backend.promo.repository.PromoPhotoRepository;
+import com.jandi.band_backend.search.service.PromoSyncService;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.global.util.PermissionValidationUtil;
 import com.jandi.band_backend.global.util.UserValidationUtil;
@@ -32,6 +33,7 @@ public class PromoService {
     private final PromoRepository promoRepository;
     private final PromoPhotoRepository promoPhotoRepository;
     private final PromoLikeService promoLikeService;
+    private final PromoSyncService promoSyncService;
     private final PermissionValidationUtil permissionValidationUtil;
     private final UserValidationUtil userValidationUtil;
     private final S3FileManagementUtil s3FileManagementUtil;
@@ -107,6 +109,9 @@ public class PromoService {
             processImage(savedPromo, request.getImage(), creator);
         }
 
+        // Elasticsearch 동기화
+        promoSyncService.syncPromoCreate(savedPromo);
+
         return PromoSimpleRespDTO.of(savedPromo.getId());
     }
 
@@ -159,6 +164,9 @@ public class PromoService {
         if (request.getImage() != null && !request.getImage().isEmpty()) {
             processImage(promo, request.getImage(), promo.getCreator());
         }
+
+        // Elasticsearch 동기화
+        promoSyncService.syncPromoUpdate(promo);
     }
 
     // 공연 홍보 삭제 (소프트 삭제)
@@ -181,6 +189,9 @@ public class PromoService {
         }
 
         promo.setDeletedAt(LocalDateTime.now());
+
+        // Elasticsearch 동기화
+        promoSyncService.syncPromoDelete(promoId);
     }
 
     // 단일 이미지 처리 헬퍼 메소드 - 기존 레코드 업데이트 또는 새 레코드 생성

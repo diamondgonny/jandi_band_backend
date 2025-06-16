@@ -46,3 +46,8 @@ springdoc.swagger-ui.operations-sorter=alpha
 springdoc.swagger-ui.tags-sorter=alpha
 springdoc.swagger-ui.try-it-out-enabled=true
 springdoc.swagger-ui.filter=true
+
+# Elasticsearch Configuration
+spring.elasticsearch.uris=http://localhost:9200
+spring.elasticsearch.connection-timeout=10s
+spring.elasticsearch.socket-timeout=30s

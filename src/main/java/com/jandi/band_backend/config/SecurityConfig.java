@@ -50,11 +50,20 @@ public class SecurityConfig {
                                 "/api/images/**",
                                 "/api/promos",           // 공연 홍보 목록 조회
                                 "/api/promos/{promoId}", // 공연 홍보 상세 조회
-                                "/api/promos/search",    // 공연 홍보 검색
-                                "/api/promos/filter",    // 공연 홍보 필터링
+                                "/api/promos/search",    // 공연 홍보 검색 (JPA)
+                                "/api/promos/search-v2", // 공연 홍보 검색 (Elasticsearch)
+                                "/api/promos/search-v2/**", // 공연 홍보 세부 검색 (Elasticsearch)
+                                "/api/promos/filter",    // 공연 홍보 필터링 (JPA)
+                                "/api/promos/filter-v2", // 공연 홍보 필터링 (Elasticsearch)
+                                "/api/promos/map",       // 공연 홍보 지도 검색 (JPA)
+                                "/api/promos/map-v2",    // 공연 홍보 지도 검색 (Elasticsearch)
                                 "/api/promos/*/comments", // 공연 홍보 댓글 목록 조회
                                 "/api/promos/reports", // 공연 홍보 신고
                                 "/api/promos/comments/reports", // 공연 홍보 댓글 신고
+                                // 검색 API (인증 없이 접근 가능)
+                                "/api/search/**",
+                                // 관리자 API (개발/테스트용)
+                                "/api/admin/**",
                                 // Swagger UI 관련 경로
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",

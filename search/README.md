@@ -80,6 +80,10 @@ curl -X GET "http://localhost:9200/_cat/indices?v"
 spring.elasticsearch.uris=http://localhost:9200
 spring.elasticsearch.connection-timeout=10s
 spring.elasticsearch.socket-timeout=30s
+
+# Elasticsearch 디버그 로그
+logging.level.org.springframework.data.elasticsearch=DEBUG
+logging.level.org.elasticsearch.client=DEBUG
 ```
 
 ### 2. Spring Boot 애플리케이션 시작
@@ -186,7 +190,7 @@ curl -X GET "http://localhost:8080/api/promos/search-v2/all?page=0&size=10"
         "updatedAt": "2024-03-01T10:00:00",
         "likeCount": 20,
         "isLikedByUser": true,
-        "photoUrls": ["https://example.com/photo.jpg"]
+        "imageUrl": "https://example.com/photo.jpg"
       }
     ],
     "pageInfo": {
@@ -202,243 +206,247 @@ curl -X GET "http://localhost:8080/api/promos/search-v2/all?page=0&size=10"
 }
 ```
 
-## Kibana를 이용한 검색 테스트
+## 데이터 구조
 
-### 1. Kibana Dev Tools 접속
-- Kibana URL: http://localhost:5601
-- 좌측 메뉴에서 "Dev Tools" 클릭
+### PromoDocument 필드 정보
+- **id**: String (Keyword 타입)
+- **title**: String (Text 타입, standard 분석기)
+- **teamName**: String (Text 타입, standard 분석기)
+- **description**: String (Text 타입, standard 분석기)
+- **location**: String (Keyword 타입)
+- **address**: String (Keyword 타입)
+- **latitude**: BigDecimal (Double 타입)
+- **longitude**: BigDecimal (Double 타입)
+- **admissionFee**: BigDecimal (Double 타입)
+- **eventDate**: LocalDate (Date 타입)
+- **createdAt**: LocalDate (Date 타입)
+- **updatedAt**: LocalDate (Date 타입)
+- **likeCount**: Integer (Integer 타입)
+- **imageUrl**: String (Keyword 타입)
 
-### 2. 인덱스 확인
-```json
-GET _cat/indices?v
-```
+## 문제 해결 가이드
 
-### 3. 매핑 확인
-```json
-GET promos/_mapping
-```
+### 1. Docker 네트워크 연결 문제
 
-### 4. 샘플 데이터 확인
-```json
-GET promos/_search
-{
-  "size": 5
-}
-```
+#### 문제 상황
+- Spring Boot 애플리케이션 시작 시 `java.net.UnknownHostException: elasticsearch: Temporary failure in name resolution` 오류 발생
+- Elasticsearch와 Spring Boot가 서로 다른 Docker 네트워크에 있어서 호스트명 해석 불가
 
-### 5. 키워드 검색 테스트
-```json
-GET promos/_search
-{
-  "query": {
-    "multi_match": {
-      "query": "락밴드",
-      "fields": ["title^2.0", "teamName^1.5", "description", "location", "address"]
-    }
-  },
-  "size": 10
-}
-```
+#### 해결 방법
 
-### 6. 날짜 범위 검색 테스트
-```json
-GET promos/_search
-{
-  "query": {
-    "range": {
-      "eventDate": {
-        "gte": "2024-03-01",
-        "lte": "2024-03-31"
-      }
-    }
-  },
-  "size": 10
-}
-```
-
-### 7. 위치 기반 검색 테스트
-```json
-GET promos/_search
-{
-  "query": {
-    "bool": {
-      "must": [
-        {
-          "range": {
-            "latitude": {
-              "gte": 37.5,
-              "lte": 37.6
-            }
-          }
-        },
-        {
-          "range": {
-            "longitude": {
-              "gte": 126.9,
-              "lte": 127.0
-            }
-          }
-        }
-      ]
-    }
-  },
-  "size": 10
-}
-```
-
-## 문제 해결
-
-### 1. Elasticsearch 연결 실패
+**1단계: 현재 네트워크 상황 확인**
 ```bash
-# Elasticsearch 상태 확인
-curl -X GET "http://localhost:9200/_cluster/health?pretty"
+# 실행 중인 컨테이너 확인
+docker ps
 
-# 포트 확인
-netstat -an | grep 9200
+# Docker 네트워크 목록 확인
+docker network ls
 
-# Docker 컨테이너 상태 확인
-docker ps | grep elasticsearch
+# Spring Boot 컨테이너의 네트워크 설정 확인
+docker inspect <spring-boot-container-name> | grep -A 10 "Networks"
+
+# Elasticsearch 컨테이너의 네트워크 설정 확인
+docker inspect <elasticsearch-container-name> | grep -A 10 "Networks"
 ```
 
-**해결 방법**:
-- Docker Compose 재시작: `docker-compose -f docker-compose.elasticsearch.yml restart`
-- 포트 충돌 확인: 다른 서비스가 9200 포트를 사용하고 있는지 확인
-- 방화벽 설정 확인
+**2단계: 네트워크 연결**
+```bash
+# 방법 1: Spring Boot를 Elasticsearch 네트워크에 연결
+docker network connect <elasticsearch-network-name> <spring-boot-container-name>
 
-### 2. 인덱스 생성 실패
+# 방법 2: Elasticsearch를 Spring Boot 네트워크에 연결
+docker network connect <spring-boot-network-name> <elasticsearch-container-name>
+```
+
+**3단계: 연결 확인**
+```bash
+# Spring Boot 컨테이너에서 elasticsearch 호스트 확인
+docker exec <spring-boot-container-name> nslookup elasticsearch
+
+# Elasticsearch 연결 테스트
+docker exec <spring-boot-container-name> curl -X GET "http://elasticsearch:9200/_cluster/health?pretty"
+```
+
+**4단계: 애플리케이션 재시작**
+```bash
+# Spring Boot 컨테이너 재시작
+docker restart <spring-boot-container-name>
+
+# 로그 확인
+docker logs -f <spring-boot-container-name>
+```
+
+### 2. 날짜 형식 변환 오류
+
+#### 문제 상황
+- `Conversion exception when converting document id` 오류 발생
+- Elasticsearch에 저장된 날짜 형식과 Java 코드의 날짜 타입 불일치
+
+#### 해결 방법
+
+**1단계: PromoDocument 클래스 수정**
+```java
+// LocalDateTime에서 LocalDate로 변경
+@Field(type = FieldType.Date)
+private LocalDate eventDate;
+
+@Field(type = FieldType.Date)
+private LocalDate createdAt;
+
+@Field(type = FieldType.Date)
+private LocalDate updatedAt;
+```
+
+**2단계: 관련 서비스 클래스 수정**
+```java
+// PromoSyncService에서 날짜 변환
+public void syncPromoCreate(Promo promo) {
+    PromoDocument promoDocument = new PromoDocument(
+        // ... 다른 필드들
+        promo.getEventDatetime().toLocalDate(),  // LocalDateTime -> LocalDate
+        promo.getCreatedAt().toLocalDate(),      // LocalDateTime -> LocalDate
+        promo.getUpdatedAt().toLocalDate()       // LocalDateTime -> LocalDate
+    );
+}
+```
+
+**3단계: 인덱스 재생성**
 ```bash
 # 기존 인덱스 삭제
 curl -X DELETE "http://localhost:9200/promos"
 
-# 애플리케이션 재시작
-./gradlew bootRun
-```
+# 애플리케이션 재시작 (새 인덱스 자동 생성)
+docker restart <spring-boot-container-name>
 
-**해결 방법**:
-- 기존 인덱스 삭제 후 애플리케이션 재시작
-- 매핑 오류 확인: 로그에서 구체적인 오류 메시지 확인
-- Elasticsearch 버전 호환성 확인
-
-### 3. 검색 결과가 비어있음
-```bash
-# 인덱스 데이터 확인
-curl -X GET "http://localhost:9200/promos/_count"
-
-# 샘플 데이터 확인
-curl -X GET "http://localhost:9200/promos/_search?size=1"
-
-# 데이터 동기화 재실행
+# 데이터 재동기화
 curl -X POST "http://localhost:8080/api/admin/promos/sync-all"
 ```
 
-**해결 방법**:
-- 데이터 동기화 재실행
-- 검색 키워드가 데이터와 일치하는지 확인
-- 인덱스 매핑 확인
+### 3. 한국어 검색 문제
 
-### 4. 날짜 변환 오류
-**증상**: `Conversion exception when converting document id`
+#### 문제 상황
+- 한국어 키워드로 검색 시 결과가 나오지 않음
+- Elasticsearch가 한국어 형태소 분석을 제대로 수행하지 못함
 
-**해결 방법**:
-- 기존 인덱스 삭제: `curl -X DELETE "http://localhost:9200/promos"`
-- 애플리케이션 재시작
-- 데이터 재동기화
+#### 해결 방법
 
-### 5. 403 Forbidden 오류
-**해결 방법**:
-- Spring Security 설정 확인
-- `/api/admin/**` 경로가 허용되었는지 확인
-- 인증 토큰 확인
+**1단계: Nori 분석기 설치 (선택사항)**
+```bash
+# Elasticsearch 컨테이너에 접속
+docker exec -it <elasticsearch-container-name> bash
 
-### 6. 분석기 오류
-**증상**: `analyzer [nori] has not been configured in mappings`
+# Nori 분석기 설치
+bin/elasticsearch-plugin install analysis-nori
+```
 
-**해결 방법**:
-- Standard 분석기 사용 (현재 설정)
-- Nori 분석기 설치 필요 시:
-  ```bash
-  docker exec -it jandi-elasticsearch /bin/bash
-  bin/elasticsearch-plugin install analysis-nori
-  ```
-
-## 성능 최적화
-
-### 1. 인덱스 설정
-```json
-PUT promos/_settings
-{
-  "index": {
-    "number_of_shards": 1,
-    "number_of_replicas": 0,
-    "refresh_interval": "1s"
-  }
+**2단계: 표준 분석기 사용 (권장)**
+```java
+// PromoDocument 클래스에서 표준 분석기 사용
+@Document(indexName = "promos")
+public class PromoDocument {
+    // 기본 분석기 사용 (별도 설정 불필요)
 }
 ```
 
-### 2. 쿼리 최적화
-- 가중치 설정으로 관련성 높은 결과 우선 표시
-- 페이징 사용으로 대용량 데이터 처리
-- 필요한 필드만 선택적으로 검색
+**3단계: 인덱스 재생성 및 데이터 재동기화**
+```bash
+# 인덱스 삭제
+curl -X DELETE "http://localhost:9200/promos"
 
-### 3. 로깅 설정
+# 애플리케이션 재시작
+docker restart <spring-boot-container-name>
+
+# 데이터 재동기화
+curl -X POST "http://localhost:8080/api/admin/promos/sync-all"
+```
+
+### 4. 배포 환경 설정
+
+#### 로컬 환경
+```properties
+# application.properties
+spring.elasticsearch.uris=http://localhost:9200
+```
+
+#### 배포 환경 (Docker)
+```properties
+# application.properties
+spring.elasticsearch.uris=http://elasticsearch:9200
+```
+
+#### 디버그 로그 활성화
 ```properties
 # application.properties
 logging.level.org.springframework.data.elasticsearch=DEBUG
-logging.level.org.elasticsearch=INFO
+logging.level.org.elasticsearch.client=DEBUG
+logging.level.org.elasticsearch=DEBUG
 ```
 
-## 기존 JPA 검색과의 차이점
+### 5. 컨테이너 관리 명령어
 
-| 기능 | JPA 검색 | Elasticsearch 검색 |
-|------|----------|-------------------|
-| **키워드 검색** | `/api/promos/search` | `/api/promos/search-v2` |
-| **필터링** | `/api/promos/filter` | `/api/promos/filter-v2` |
-| **지도 검색** | `/api/promos/map` | `/api/promos/map-v2` |
-| **검색 속도** | 일반적 | 매우 빠름 |
-| **복잡한 검색** | 제한적 | 강력함 |
-| **풀텍스트 검색** | 기본적 | 고급 |
-| **가중치 검색** | 불가능 | 가능 |
-| **페이징** | 지원 | 지원 |
-| **정렬** | 지원 | 지원 |
-| **사용자별 좋아요 상태** | 지원 | 지원 |
-| **요청/응답 형식** | 동일 | 동일 |
-| **날짜 형식** | ISO 8601 | ISO DATE |
+#### 컨테이너 재시작
+```bash
+# 단일 컨테이너 재시작
+docker restart <container-name>
 
-## 개발 가이드
-
-### 1. 새로운 검색 필드 추가
-1. `PromoDocument`에 필드 추가
-2. `PromoSearchService`에 검색 로직 추가
-3. `PromoSearchController`에 엔드포인트 추가
-4. 데이터 재동기화
-
-### 2. 검색 가중치 조정
-```java
-Criteria criteria = new Criteria()
-    .or("title").contains(keyword).boost(2.0f)      // 제목 가중치
-    .or("teamName").contains(keyword).boost(1.5f)   // 팀명 가중치
-    .or("description").contains(keyword)            // 설명 가중치 없음
+# 컨테이너 중지 후 시작
+docker stop <container-name>
+docker start <container-name>
 ```
 
-### 3. 로깅 추가
-```java
-@Slf4j
-@Service
-public class PromoSearchService {
-    public Page<PromoDocument> searchByKeyword(String keyword, Pageable pageable) {
-        log.info("검색 시작 - 키워드: {}, 페이지: {}, 크기: {}", 
-                keyword, pageable.getPageNumber(), pageable.getPageSize());
-        // 검색 로직
-    }
-}
+#### 로그 확인
+```bash
+# 실시간 로그
+docker logs -f <container-name>
+
+# 최근 로그
+docker logs --tail 100 <container-name>
 ```
 
-## 다음 단계
+#### 네트워크 관리
+```bash
+# 네트워크 목록
+docker network ls
 
-1. **실제 데이터 동기화**: Promo 엔티티 변경 시 자동으로 Elasticsearch 동기화
-2. **고급 검색**: 날짜 범위, 가격 범위, 위치 기반 검색 추가
-3. **검색 결과 하이라이팅**: 검색어 강조 표시
-4. **검색 제안**: 자동완성 기능
-5. **검색 분석**: 인기 검색어, 검색 통계
-6. **성능 모니터링**: 검색 성능 지표 수집
-7. **백업 및 복구**: Elasticsearch 데이터 백업 전략 
+# 네트워크 상세 정보
+docker network inspect <network-name>
+
+# 컨테이너를 네트워크에 연결
+docker network connect <network-name> <container-name>
+
+# 컨테이너를 네트워크에서 분리
+docker network disconnect <network-name> <container-name>
+```
+
+### 6. 일반적인 문제 해결 순서
+
+1. **Elasticsearch 상태 확인**
+   ```bash
+   curl -X GET "http://localhost:9200/_cluster/health?pretty"
+   ```
+
+2. **네트워크 연결 확인**
+   ```bash
+   docker network ls
+   docker inspect <container-name> | grep -A 10 "Networks"
+   ```
+
+3. **애플리케이션 로그 확인**
+   ```bash
+   docker logs -f <spring-boot-container-name>
+   ```
+
+4. **인덱스 상태 확인**
+   ```bash
+   curl -X GET "http://localhost:9200/_cat/indices?v"
+   curl -X GET "http://localhost:9200/promos/_search?pretty&size=1"
+   ```
+
+5. **필요시 인덱스 재생성 및 데이터 재동기화**
+   ```bash
+   curl -X DELETE "http://localhost:9200/promos"
+   docker restart <spring-boot-container-name>
+   curl -X POST "http://localhost:8080/api/admin/promos/sync-all"
+   ```
+
+이 가이드를 참고하여 문제가 발생했을 때 체계적으로 해결할 수 있습니다. 

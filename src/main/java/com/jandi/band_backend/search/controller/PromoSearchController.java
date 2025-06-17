@@ -257,6 +257,59 @@ public class PromoSearchController {
                 PagedRespDTO.from(promoPage)));
     }
 
+    @Operation(summary = "공연 상태별 필터링 (Elasticsearch 기반)", 
+               description = "공연 상태에 따라 필터링: ongoing(진행 중), upcoming(예정), ended(종료)")
+    @GetMapping("/status-v2")
+    public ResponseEntity<CommonRespDTO<PagedRespDTO<PromoRespDTO>>> filterPromosByStatus(
+            @RequestParam String status,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String teamName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "eventDate,asc") String sort,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        
+        Pageable pageable = createPageable(page, size, sort);
+        Integer userId = userDetails != null ? userDetails.getUserId() : null;
+        
+        // Elasticsearch에서 공연 상태별 필터링
+        Page<com.jandi.band_backend.search.document.PromoDocument> promoDocuments;
+        
+        if ((keyword != null && !keyword.trim().isEmpty()) || (teamName != null && !teamName.trim().isEmpty())) {
+            // 추가 조건이 있는 경우
+            promoDocuments = promoSearchService.filterPromosByStatusWithConditions(status, keyword, teamName, pageable);
+        } else {
+            // 상태만으로 필터링
+            promoDocuments = promoSearchService.filterPromosByStatus(status, pageable);
+        }
+        
+        // PromoDocument를 PromoRespDTO로 변환 (사용자별 좋아요 상태 포함)
+        List<PromoRespDTO> promoRespDTOs = promoDocuments.getContent().stream()
+                .map(doc -> {
+                    PromoRespDTO dto = convertToPromoRespDTO(doc);
+                    // 사용자별 좋아요 상태 확인
+                    if (userId != null) {
+                        Boolean isLikedByUser = promoLikeService.isLikedByUser(Integer.valueOf(doc.getId()), userId);
+                        dto.setIsLikedByUser(isLikedByUser);
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
+        
+        Page<PromoRespDTO> promoPage = new org.springframework.data.domain.PageImpl<>(
+            promoRespDTOs, pageable, promoDocuments.getTotalElements());
+        
+        String statusMessage = switch (status.toLowerCase()) {
+            case "ongoing" -> "진행 중인 공연";
+            case "upcoming" -> "예정된 공연";
+            case "ended" -> "종료된 공연";
+            default -> "공연";
+        };
+        
+        return ResponseEntity.ok(CommonRespDTO.success(statusMessage + " 필터링 성공 (Elasticsearch)",
+                PagedRespDTO.from(promoPage)));
+    }
+
     private PromoRespDTO convertToPromoRespDTO(com.jandi.band_backend.search.document.PromoDocument doc) {
         PromoRespDTO dto = new PromoRespDTO();
         dto.setId(Integer.valueOf(doc.getId()));

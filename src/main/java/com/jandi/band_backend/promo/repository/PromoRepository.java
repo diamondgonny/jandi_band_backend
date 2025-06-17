@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Repository
 public interface PromoRepository extends JpaRepository<Promo, Integer> {
     
-    @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL")
+    @Query("SELECT p FROM Promo p LEFT JOIN FETCH p.photos WHERE p.deletedAt IS NULL")
     Page<Promo> findAllNotDeleted(Pageable pageable);
     
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.club.id = :clubId")

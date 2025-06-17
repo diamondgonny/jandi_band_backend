@@ -2,6 +2,7 @@ package com.jandi.band_backend.search.service;
 
 import com.jandi.band_backend.promo.entity.Promo;
 import com.jandi.band_backend.promo.repository.PromoRepository;
+import com.jandi.band_backend.promo.repository.PromoPhotoRepository;
 import com.jandi.band_backend.search.document.PromoDocument;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ public class PromoSyncService {
 
     private final PromoSearchService promoSearchService;
     private final PromoRepository promoRepository;
+    private final PromoPhotoRepository promoPhotoRepository;
 
     /**
      * 공연 홍보 생성 시 Elasticsearch에 동기화
@@ -102,14 +104,17 @@ public class PromoSyncService {
 
     private String getImageUrl(Promo promo) {
         try {
-            // 실제 구현에서는 Promo의 이미지 URL을 가져오는 로직
-            return promo.getPhotos().stream()
+            // PromoPhotoRepository를 사용하여 직접 조회하여 Lazy Loading 문제 해결
+            List<com.jandi.band_backend.promo.entity.PromoPhoto> photos = 
+                promoPhotoRepository.findByPromoIdAndNotDeleted(promo.getId());
+            
+            return photos.stream()
                     .filter(photo -> photo.getDeletedAt() == null)
                     .findFirst()
                     .map(photo -> photo.getImageUrl())
                     .orElse(null);
         } catch (Exception e) {
-            // 이미지 URL 가져오기 실패 시 null 반환
+            log.error("이미지 URL 가져오기 실패 - Promo ID: {}, 오류: {}", promo.getId(), e.getMessage());
             return null;
         }
     }

@@ -1,6 +1,6 @@
-# Elasticsearch 트러블슈팅 가이드
+# Elasticsearch 문제 해결 가이드
 
-이 문서는 Elasticsearch 통합 과정에서 발생할 수 있는 문제들과 해결책을 정리한 것입니다.
+이 문서는 Elasticsearch 통합 과정에서 발생할 수 있는 주요 문제들과 해결책을 정리한 것입니다.
 
 ## 주요 문제 유형
 
@@ -24,7 +24,7 @@ java.net.UnknownHostException: elasticsearch: Temporary failure in name resoluti
    docker network ls
    
    # Spring Boot 컨테이너의 네트워크 설정 확인
-   docker inspect rhythmeet-be | grep -A 10 "Networks"
+   docker inspect <spring-boot-container> | grep -A 10 "Networks"
    
    # Elasticsearch 컨테이너의 네트워크 설정 확인
    docker inspect jandi-elasticsearch | grep -A 10 "Networks"
@@ -33,28 +33,28 @@ java.net.UnknownHostException: elasticsearch: Temporary failure in name resoluti
 2. **네트워크 연결**
    ```bash
    # 방법 1: Spring Boot를 Elasticsearch 네트워크에 연결
-   docker network connect search_elastic rhythmeet-be
+   docker network connect search_elastic <spring-boot-container>
    
    # 방법 2: Elasticsearch를 Spring Boot 네트워크에 연결
-   docker network connect spring-app_spring-network jandi-elasticsearch
+   docker network connect <spring-boot-network> jandi-elasticsearch
    ```
 
 3. **연결 확인**
    ```bash
    # Spring Boot 컨테이너에서 elasticsearch 호스트 확인
-   docker exec rhythmeet-be nslookup elasticsearch
+   docker exec <spring-boot-container> nslookup elasticsearch
    
    # Elasticsearch 연결 테스트
-   docker exec rhythmeet-be curl -X GET "http://elasticsearch:9200/_cluster/health?pretty"
+   docker exec <spring-boot-container> curl -X GET "http://elasticsearch:9200/_cluster/health?pretty"
    ```
 
 4. **애플리케이션 재시작**
    ```bash
    # Spring Boot 컨테이너 재시작
-   docker restart rhythmeet-be
+   docker restart <spring-boot-container>
    
    # 로그 확인
-   docker logs -f rhythmeet-be
+   docker logs -f <spring-boot-container>
    ```
 
 ### 2. 날짜 형식 변환 오류
@@ -99,7 +99,7 @@ Conversion exception when converting document id 23
    curl -X DELETE "http://localhost:9200/promos"
    
    # 애플리케이션 재시작 (새 인덱스 자동 생성)
-   docker restart rhythmeet-be
+   docker restart <spring-boot-container>
    
    # 데이터 재동기화
    curl -X POST "http://localhost:8080/api/admin/promos/sync-all"
@@ -130,22 +130,13 @@ Conversion exception when converting document id 23
    }
    ```
 
-2. **Nori 분석기 설치 (선택사항)**
-   ```bash
-   # Elasticsearch 컨테이너에 접속
-   docker exec -it jandi-elasticsearch bash
-   
-   # Nori 분석기 설치
-   bin/elasticsearch-plugin install analysis-nori
-   ```
-
-3. **인덱스 재생성 및 데이터 재동기화**
+2. **인덱스 재생성 및 데이터 재동기화**
    ```bash
    # 인덱스 삭제
    curl -X DELETE "http://localhost:9200/promos"
    
    # 애플리케이션 재시작
-   docker restart rhythmeet-be
+   docker restart <spring-boot-container>
    
    # 데이터 재동기화
    curl -X POST "http://localhost:8080/api/admin/promos/sync-all"
@@ -171,14 +162,7 @@ Failed to instantiate [org.springframework.data.elasticsearch.repository.support
    docker ps | grep elasticsearch
    ```
 
-2. **네트워크 연결 확인**
-   ```bash
-   # 네트워크 연결 상태 확인
-   docker network ls
-   docker inspect rhythmeet-be | grep -A 10 "Networks"
-   ```
-
-3. **디버그 로그 활성화**
+2. **디버그 로그 활성화**
    ```properties
    # application.properties
    logging.level.org.springframework.data.elasticsearch=DEBUG
@@ -186,43 +170,13 @@ Failed to instantiate [org.springframework.data.elasticsearch.repository.support
    logging.level.org.elasticsearch=DEBUG
    ```
 
-4. **애플리케이션 재시작**
+3. **애플리케이션 재시작**
    ```bash
-   docker restart rhythmeet-be
-   docker logs -f rhythmeet-be
+   docker restart <spring-boot-container>
+   docker logs -f <spring-boot-container>
    ```
 
-### 5. 배포 환경 설정 문제
-
-#### 문제 상황
-- 로컬에서는 정상 작동하지만 배포 서버에서 연결 실패
-
-**원인**: 로컬과 배포 환경의 Elasticsearch URI 차이
-
-**해결 방법**:
-
-1. **환경별 설정 확인**
-   ```properties
-   # 로컬 환경
-   spring.elasticsearch.uris=http://localhost:9200
-   
-   # 배포 환경 (Docker)
-   spring.elasticsearch.uris=http://elasticsearch:9200
-   ```
-
-2. **Docker 네트워크 연결**
-   ```bash
-   # Spring Boot를 Elasticsearch 네트워크에 연결
-   docker network connect search_elastic rhythmeet-be
-   ```
-
-3. **연결 테스트**
-   ```bash
-   # Spring Boot 컨테이너에서 Elasticsearch 연결 테스트
-   docker exec rhythmeet-be curl -X GET "http://elasticsearch:9200/_cluster/health?pretty"
-   ```
-
-### 6. 엘라스틱서치 검색에서 이미지 URL 누락 문제
+### 5. 이미지 URL 누락 문제
 
 #### 문제 상황
 - 엘라스틱서치 검색 결과에서 최근에 생성된 게시물의 이미지가 표시되지 않음
@@ -257,37 +211,17 @@ Failed to instantiate [org.springframework.data.elasticsearch.repository.support
    }
    ```
 
-2. **PromoRepository 수정 (선택사항)**
-   ```java
-   @Query("SELECT p FROM Promo p LEFT JOIN FETCH p.photos WHERE p.deletedAt IS NULL")
-   Page<Promo> findAllNotDeleted(Pageable pageable);
-   ```
-
-3. **데이터 재동기화**
+2. **데이터 재동기화**
    ```bash
    # 기존 인덱스 삭제
    curl -X DELETE "http://localhost:9200/promos"
    
    # 애플리케이션 재시작 (새 인덱스 자동 생성)
-   docker restart rhythmeet-be
+   docker restart <spring-boot-container>
    
    # 데이터 재동기화
    curl -X POST "http://localhost:8080/api/admin/promos/sync-all"
    ```
-
-4. **검증**
-   ```bash
-   # 특정 게시물 검색하여 이미지 URL 확인
-   curl -X GET "http://localhost:8080/api/promos/search-v2?keyword=테스트&page=0&size=10"
-   
-   # Elasticsearch에서 직접 확인
-   curl -X GET "http://localhost:9200/promos/_search?pretty&q=title:테스트"
-   ```
-
-**예방 방법**:
-- 새로운 게시물 생성/수정 시 항상 `promoSyncService.syncPromoCreate()` 또는 `promoSyncService.syncPromoUpdate()` 호출
-- 이미지 업로드 후 반드시 동기화 실행
-- 정기적으로 전체 데이터 동기화 실행 (`/api/admin/promos/sync-all`)
 
 ## 일반적인 문제 해결 순서
 
@@ -306,17 +240,17 @@ docker network ls
 ### 2단계: 네트워크 연결 확인
 ```bash
 # 컨테이너 네트워크 설정 확인
-docker inspect rhythmeet-be | grep -A 10 "Networks"
+docker inspect <spring-boot-container> | grep -A 10 "Networks"
 docker inspect jandi-elasticsearch | grep -A 10 "Networks"
 
 # 호스트명 해석 확인
-docker exec rhythmeet-be nslookup elasticsearch
+docker exec <spring-boot-container> nslookup elasticsearch
 ```
 
 ### 3단계: 로그 확인
 ```bash
 # Spring Boot 로그 확인
-docker logs -f rhythmeet-be
+docker logs -f <spring-boot-container>
 
 # Elasticsearch 로그 확인
 docker logs -f jandi-elasticsearch
@@ -335,11 +269,11 @@ curl -X GET "http://localhost:9200/promos/_search?pretty&size=1"
 ### 5단계: 문제 해결
 ```bash
 # 네트워크 연결 (필요시)
-docker network connect search_elastic rhythmeet-be
+docker network connect search_elastic <spring-boot-container>
 
 # 인덱스 재생성 (필요시)
 curl -X DELETE "http://localhost:9200/promos"
-docker restart rhythmeet-be
+docker restart <spring-boot-container>
 curl -X POST "http://localhost:8080/api/admin/promos/sync-all"
 ```
 
@@ -348,11 +282,11 @@ curl -X POST "http://localhost:8080/api/admin/promos/sync-all"
 ### 컨테이너 관리
 ```bash
 # 컨테이너 재시작
-docker restart rhythmeet-be
+docker restart <spring-boot-container>
 docker restart jandi-elasticsearch
 
 # 컨테이너 로그 확인
-docker logs -f rhythmeet-be
+docker logs -f <spring-boot-container>
 docker logs -f jandi-elasticsearch
 
 # 컨테이너 상태 확인
@@ -367,13 +301,12 @@ docker network ls
 
 # 네트워크 상세 정보
 docker network inspect search_elastic
-docker network inspect spring-app_spring-network
 
 # 컨테이너를 네트워크에 연결
-docker network connect search_elastic rhythmeet-be
+docker network connect search_elastic <spring-boot-container>
 
 # 컨테이너를 네트워크에서 분리
-docker network disconnect search_elastic rhythmeet-be
+docker network disconnect search_elastic <spring-boot-container>
 ```
 
 ### Elasticsearch 관리
@@ -409,5 +342,13 @@ curl -X GET "http://localhost:8080/actuator/health"
 3. **인덱스 재생성**: 매핑 변경 시 기존 인덱스 삭제 후 재생성 필요
 4. **환경 설정**: 로컬과 배포 환경의 Elasticsearch URI가 다름
 5. **로그 확인**: 문제 발생 시 항상 로그를 먼저 확인
+
+## 관련 문서
+
+- [메인 README.md](./README.md) - 전체 설정 및 사용법
+- [Elasticsearch 공식 문서](https://www.elastic.co/guide/index.html)
+- [Spring Data Elasticsearch 문서](https://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/)
+
+---
 
 이 가이드를 참고하여 문제가 발생했을 때 체계적으로 해결할 수 있습니다. 

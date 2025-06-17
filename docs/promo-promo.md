@@ -643,6 +643,86 @@ curl -X POST "http://localhost:8080/api/admin/promos/sync-all"
 
 ---
 
+## 20. 공연 상태별 필터링 (Elasticsearch 기반)
+### GET `/api/promos/status-v2`
+
+#### 설명
+공연 상태에 따라 필터링하여 조회합니다. 진행 중인 공연, 예정된 공연, 종료된 공연을 구분하여 볼 수 있습니다.
+
+#### 요청
+```bash
+# 진행 중인 공연만 조회
+curl -X GET "http://localhost:8080/api/promos/status-v2?status=ongoing&page=0&size=20&sort=eventDate,asc"
+
+# 예정된 공연 중에서 키워드 검색
+curl -X GET "http://localhost:8080/api/promos/status-v2?status=upcoming&keyword=락밴드&page=0&size=20&sort=eventDate,asc"
+
+# 특정 팀의 종료된 공연 조회
+curl -X GET "http://localhost:8080/api/promos/status-v2?status=ended&teamName=밴드A&page=0&size=20&sort=eventDate,desc"
+```
+
+#### 쿼리 파라미터
+- `status` (string, 필수): 공연 상태
+  - `ongoing`: 진행 중인 공연 (오늘 날짜와 일치하는 공연)
+  - `upcoming`: 예정된 공연 (오늘 이후의 공연)
+  - `ended`: 종료된 공연 (오늘 이전의 공연)
+- `keyword` (string, 선택): 검색 키워드 (제목, 팀명, 설명, 위치, 주소에서 검색)
+- `teamName` (string, 선택): 팀명으로 필터링
+- `page` (integer): 페이지 번호 (기본값: 0)
+- `size` (integer): 페이지 크기 (기본값: 20)
+- `sort` (string): 정렬 기준 (기본값: "eventDate,asc")
+
+#### 응답 (200 OK)
+```json
+{
+  "success": true,
+  "message": "진행 중인 공연 필터링 성공 (Elasticsearch)",
+  "data": {
+    "content": [
+      {
+        "id": 1,
+        "teamName": "락밴드 팀",
+        "title": "락밴드 정기공연",
+        "description": "락밴드 팀의 정기 공연입니다.",
+        "location": "홍대 클럽",
+        "address": "서울시 마포구 홍익로 123",
+        "latitude": 37.5563,
+        "longitude": 126.9236,
+        "admissionFee": 10000,
+        "eventDatetime": "2024-03-15T19:00:00",
+        "createdAt": "2024-03-01T10:00:00",
+        "updatedAt": "2024-03-01T10:00:00",
+        "likeCount": 20,
+        "isLikedByUser": true,
+        "photoUrls": ["https://example.com/photo.jpg"]
+      }
+    ],
+    "pageInfo": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 1,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "empty": false
+    }
+  }
+}
+```
+
+#### 공연 상태 구분 기준
+- **진행 중 (ongoing)**: 공연 날짜가 오늘과 일치하는 공연
+- **예정 (upcoming)**: 공연 날짜가 오늘 이후인 공연
+- **종료 (ended)**: 공연 날짜가 오늘 이전인 공연
+
+#### 사용 예시
+1. **진행 중인 공연만 조회**: `status=ongoing`
+2. **예정된 공연 중에서 키워드 검색**: `status=upcoming&keyword=콘서트`
+3. **특정 팀의 종료된 공연 조회**: `status=ended&teamName=밴드B`
+4. **예정된 공연 중에서 키워드와 팀명으로 필터링**: `status=upcoming&keyword=공연&teamName=밴드C&page=0&size=10`
+
+---
+
 ## 에러 응답
 ```json
 {
@@ -676,11 +756,12 @@ curl -X POST "http://localhost:8080/api/admin/promos/sync-all"
 - **정렬 옵션**: `sort` 파라미터로 정렬 기준 지정 가능 (기본값: `createdAt,desc`)
 - **Elasticsearch 검색**: 
   - **기존 JPA 검색**: `/api/promos/search`, `/api/promos/filter`, `/api/promos/map`
-  - **Elasticsearch 검색**: `/api/promos/search-v2`, `/api/promos/filter-v2`, `/api/promos/map-v2`
+  - **Elasticsearch 검색**: `/api/promos/search-v2`, `/api/promos/filter-v2`, `/api/promos/map-v2`, `/api/promos/status-v2`
   - **검색 성능**: Elasticsearch 기반 검색이 더 빠르고 정확함
   - **검색 범위**: 제목, 팀명, 설명, 위치, 주소에서 통합 검색
   - **날짜 형식**: Elasticsearch 검색에서는 ISO DATE 형식 (YYYY-MM-DD) 사용
   - **데이터 동기화**: `/api/admin/promos/sync-all`로 DB 데이터를 Elasticsearch에 동기화
+  - **공연 상태별 필터링**: `/api/promos/status-v2`로 진행 중/예정/종료 공연 구분 조회
 - **응답 최적화**: 
   - **생성**: ID만 반환 (성능 최적화)
   - **수정/삭제**: null 반환

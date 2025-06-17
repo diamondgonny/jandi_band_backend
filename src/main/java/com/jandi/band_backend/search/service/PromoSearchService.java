@@ -274,4 +274,110 @@ public class PromoSearchService {
             return Page.empty(pageable);
         }
     }
+
+    /**
+     * 공연 상태별 필터링 (진행 중, 예정, 종료)
+     * @param status "ongoing" (진행 중), "upcoming" (예정), "ended" (종료)
+     */
+    public Page<PromoDocument> filterPromosByStatus(String status, Pageable pageable) {
+        try {
+            LocalDate today = LocalDate.now();
+            Criteria criteria = new Criteria();
+            
+            switch (status.toLowerCase()) {
+                case "ongoing":
+                    // 진행 중인 공연: 오늘 날짜와 일치하는 공연
+                    criteria.and("eventDate").is(today);
+                    break;
+                case "upcoming":
+                    // 예정된 공연: 오늘 이후의 공연
+                    criteria.and("eventDate").greaterThan(today);
+                    break;
+                case "ended":
+                    // 종료된 공연: 오늘 이전의 공연
+                    criteria.and("eventDate").lessThan(today);
+                    break;
+                default:
+                    // 잘못된 상태값이면 빈 결과 반환
+                    return Page.empty(pageable);
+            }
+            
+            CriteriaQuery criteriaQuery = new CriteriaQuery(criteria);
+            criteriaQuery.setPageable(pageable);
+            
+            SearchHits<PromoDocument> searchHits = elasticsearchOperations.search(criteriaQuery, PromoDocument.class);
+            
+            List<PromoDocument> content = searchHits.getSearchHits().stream()
+                    .map(SearchHit::getContent)
+                    .collect(Collectors.toList());
+            
+            return new PageImpl<>(content, pageable, searchHits.getTotalHits());
+        } catch (Exception e) {
+            log.error("공연 상태별 필터링 중 오류 발생 - 상태: {}, 오류: {}", status, e.getMessage(), e);
+            return Page.empty(pageable);
+        }
+    }
+
+    /**
+     * 공연 상태별 필터링 + 추가 조건 (키워드, 팀명 등)
+     * @param status "ongoing" (진행 중), "upcoming" (예정), "ended" (종료)
+     * @param keyword 검색 키워드 (선택사항)
+     * @param teamName 팀명 (선택사항)
+     */
+    public Page<PromoDocument> filterPromosByStatusWithConditions(
+            String status, 
+            String keyword, 
+            String teamName, 
+            Pageable pageable) {
+        try {
+            LocalDate today = LocalDate.now();
+            Criteria criteria = new Criteria();
+            
+            // 공연 상태 조건
+            switch (status.toLowerCase()) {
+                case "ongoing":
+                    criteria.and("eventDate").is(today);
+                    break;
+                case "upcoming":
+                    criteria.and("eventDate").greaterThan(today);
+                    break;
+                case "ended":
+                    criteria.and("eventDate").lessThan(today);
+                    break;
+                default:
+                    return Page.empty(pageable);
+            }
+            
+            // 키워드 검색 조건 (제목, 설명, 장소, 주소)
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                Criteria keywordCriteria = new Criteria()
+                        .or("title").contains(keyword).boost(2.0f)
+                        .or("teamName").contains(keyword).boost(1.5f)
+                        .or("description").contains(keyword)
+                        .or("location").contains(keyword)
+                        .or("address").contains(keyword);
+                criteria.and(keywordCriteria);
+            }
+            
+            // 팀명 조건
+            if (teamName != null && !teamName.trim().isEmpty()) {
+                criteria.and("teamName").contains(teamName);
+            }
+            
+            CriteriaQuery criteriaQuery = new CriteriaQuery(criteria);
+            criteriaQuery.setPageable(pageable);
+            
+            SearchHits<PromoDocument> searchHits = elasticsearchOperations.search(criteriaQuery, PromoDocument.class);
+            
+            List<PromoDocument> content = searchHits.getSearchHits().stream()
+                    .map(SearchHit::getContent)
+                    .collect(Collectors.toList());
+            
+            return new PageImpl<>(content, pageable, searchHits.getTotalHits());
+        } catch (Exception e) {
+            log.error("공연 상태별 필터링 중 오류 발생 - 상태: {}, 키워드: {}, 팀명: {}, 오류: {}", 
+                    status, keyword, teamName, e.getMessage(), e);
+            return Page.empty(pageable);
+        }
+    }
 } 

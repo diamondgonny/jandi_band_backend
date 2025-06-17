@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -47,7 +48,7 @@ public class ClubController {
     @Operation(summary = "동아리 목록 조회")
     @GetMapping
     public ResponseEntity<CommonRespDTO<PagedRespDTO<ClubRespDTO>>> getClubList(
-            @PageableDefault(size = 5) Pageable pageable) {
+            @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<ClubRespDTO> response = clubService.getClubList(pageable);
         return ResponseEntity.ok(CommonRespDTO.success("동아리 목록 조회 성공", PagedRespDTO.from(response)));
     }

@@ -222,6 +222,73 @@ Failed to instantiate [org.springframework.data.elasticsearch.repository.support
    docker exec rhythmeet-be curl -X GET "http://elasticsearch:9200/_cluster/health?pretty"
    ```
 
+### 6. 엘라스틱서치 검색에서 이미지 URL 누락 문제
+
+#### 문제 상황
+- 엘라스틱서치 검색 결과에서 최근에 생성된 게시물의 이미지가 표시되지 않음
+- 기존 게시물은 이미지가 정상적으로 표시되지만 새로 생성된 게시물은 이미지가 null로 나옴
+
+**원인**: JPA Lazy Loading으로 인해 `PromoSyncService`에서 `promo.getPhotos()` 호출 시 이미지 데이터가 로드되지 않음
+
+**해결 방법**:
+
+1. **PromoSyncService 수정**
+   ```java
+   @Service
+   public class PromoSyncService {
+       private final PromoPhotoRepository promoPhotoRepository;
+       
+       private String getImageUrl(Promo promo) {
+           try {
+               // PromoPhotoRepository를 사용하여 직접 조회하여 Lazy Loading 문제 해결
+               List<PromoPhoto> photos = 
+                   promoPhotoRepository.findByPromoIdAndNotDeleted(promo.getId());
+               
+               return photos.stream()
+                       .filter(photo -> photo.getDeletedAt() == null)
+                       .findFirst()
+                       .map(photo -> photo.getImageUrl())
+                       .orElse(null);
+           } catch (Exception e) {
+               log.error("이미지 URL 가져오기 실패 - Promo ID: {}, 오류: {}", promo.getId(), e.getMessage());
+               return null;
+           }
+       }
+   }
+   ```
+
+2. **PromoRepository 수정 (선택사항)**
+   ```java
+   @Query("SELECT p FROM Promo p LEFT JOIN FETCH p.photos WHERE p.deletedAt IS NULL")
+   Page<Promo> findAllNotDeleted(Pageable pageable);
+   ```
+
+3. **데이터 재동기화**
+   ```bash
+   # 기존 인덱스 삭제
+   curl -X DELETE "http://localhost:9200/promos"
+   
+   # 애플리케이션 재시작 (새 인덱스 자동 생성)
+   docker restart rhythmeet-be
+   
+   # 데이터 재동기화
+   curl -X POST "http://localhost:8080/api/admin/promos/sync-all"
+   ```
+
+4. **검증**
+   ```bash
+   # 특정 게시물 검색하여 이미지 URL 확인
+   curl -X GET "http://localhost:8080/api/promos/search-v2?keyword=테스트&page=0&size=10"
+   
+   # Elasticsearch에서 직접 확인
+   curl -X GET "http://localhost:9200/promos/_search?pretty&q=title:테스트"
+   ```
+
+**예방 방법**:
+- 새로운 게시물 생성/수정 시 항상 `promoSyncService.syncPromoCreate()` 또는 `promoSyncService.syncPromoUpdate()` 호출
+- 이미지 업로드 후 반드시 동기화 실행
+- 정기적으로 전체 데이터 동기화 실행 (`/api/admin/promos/sync-all`)
+
 ## 일반적인 문제 해결 순서
 
 ### 1단계: 환경 확인

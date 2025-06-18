@@ -9,7 +9,6 @@ import com.jandi.band_backend.promo.entity.Promo;
 import com.jandi.band_backend.promo.entity.PromoPhoto;
 import com.jandi.band_backend.promo.repository.PromoRepository;
 import com.jandi.band_backend.promo.repository.PromoPhotoRepository;
-import com.jandi.band_backend.search.service.PromoSyncService;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.global.util.PermissionValidationUtil;
 import com.jandi.band_backend.global.util.UserValidationUtil;

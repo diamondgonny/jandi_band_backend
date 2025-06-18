@@ -73,8 +73,6 @@ public class PromoSearchService {
      */
     public Page<PromoDocument> searchByKeyword(String keyword, Pageable pageable) {
         try {
-            log.info("검색 시작 - 키워드: {}, 페이지: {}, 크기: {}", keyword, pageable.getPageNumber(), pageable.getPageSize());
-            
             // 더 정교한 검색을 위해 여러 필드에 대한 쿼리 구성
             Criteria criteria = new Criteria()
                     .or("title").contains(keyword).boost(2.0f)  // 제목에 가중치 부여
@@ -86,15 +84,11 @@ public class PromoSearchService {
             CriteriaQuery criteriaQuery = new CriteriaQuery(criteria);
             criteriaQuery.setPageable(pageable);
             
-            log.debug("Elasticsearch 쿼리 실행: {}", criteriaQuery.getCriteria());
-            
             SearchHits<PromoDocument> searchHits = elasticsearchOperations.search(criteriaQuery, PromoDocument.class);
             
             List<PromoDocument> content = searchHits.getSearchHits().stream()
                     .map(SearchHit::getContent)
                     .collect(Collectors.toList());
-            
-            log.info("검색 완료 - 총 결과 수: {}, 현재 페이지 결과 수: {}", searchHits.getTotalHits(), content.size());
             
             return new PageImpl<>(content, pageable, searchHits.getTotalHits());
         } catch (Exception e) {
@@ -281,37 +275,67 @@ public class PromoSearchService {
      */
     public Page<PromoDocument> filterPromosByStatus(String status, Pageable pageable) {
         try {
-            LocalDate today = LocalDate.now();
-            Criteria criteria = new Criteria();
+            LocalDateTime now = LocalDateTime.now();
+            LocalDate today = now.toLocalDate();
             
+            // 직접 Elasticsearch 쿼리 실행
+            String query;
             switch (status.toLowerCase()) {
                 case "ongoing":
                     // 진행 중인 공연: 오늘 날짜와 일치하는 공연
-                    criteria.and("eventDate").is(today);
+                    query = String.format("""
+                        {
+                          "term": {
+                            "eventDate": "%s"
+                          }
+                        }
+                        """, today);
                     break;
                 case "upcoming":
-                    // 예정된 공연: 오늘 이후의 공연
-                    criteria.and("eventDate").greaterThan(today);
+                    // 예정된 공연: 오늘 이후의 공연 (오늘 날짜보다 큰 공연)
+                    query = String.format("""
+                        {
+                          "range": {
+                            "eventDate": {
+                              "gt": "%s"
+                            }
+                          }
+                        }
+                        """, today);
                     break;
                 case "ended":
-                    // 종료된 공연: 오늘 이전의 공연
-                    criteria.and("eventDate").lessThan(today);
+                    // 종료된 공연: 오늘 이전의 공연 (오늘 날짜보다 작은 공연)
+                    query = String.format("""
+                        {
+                          "range": {
+                            "eventDate": {
+                              "lt": "%s"
+                            }
+                          }
+                        }
+                        """, today);
                     break;
                 default:
                     // 잘못된 상태값이면 빈 결과 반환
                     return Page.empty(pageable);
             }
             
-            CriteriaQuery criteriaQuery = new CriteriaQuery(criteria);
-            criteriaQuery.setPageable(pageable);
-            
-            SearchHits<PromoDocument> searchHits = elasticsearchOperations.search(criteriaQuery, PromoDocument.class);
+            // Elasticsearch 직접 쿼리 실행
+            SearchHits<PromoDocument> searchHits = elasticsearchOperations.search(
+                new org.springframework.data.elasticsearch.core.query.StringQuery(query), 
+                PromoDocument.class
+            );
             
             List<PromoDocument> content = searchHits.getSearchHits().stream()
                     .map(SearchHit::getContent)
                     .collect(Collectors.toList());
             
-            return new PageImpl<>(content, pageable, searchHits.getTotalHits());
+            // 페이징 처리
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), content.size());
+            List<PromoDocument> pagedContent = content.subList(start, end);
+            
+            return new PageImpl<>(pagedContent, pageable, content.size());
         } catch (Exception e) {
             log.error("공연 상태별 필터링 중 오류 발생 - 상태: {}, 오류: {}", status, e.getMessage(), e);
             return Page.empty(pageable);
@@ -330,7 +354,8 @@ public class PromoSearchService {
             String teamName, 
             Pageable pageable) {
         try {
-            LocalDate today = LocalDate.now();
+            LocalDateTime now = LocalDateTime.now();
+            LocalDate today = now.toLocalDate();
             Criteria criteria = new Criteria();
             
             // 공연 상태 조건

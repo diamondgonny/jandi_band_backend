@@ -26,10 +26,9 @@ public class PromoLikeService {
      * 공연 홍보 좋아요 추가/취소 토글
      */
     public boolean togglePromoLike(Integer promoId, Integer userId) {
-        Promo promo = promoRepository.findByIdAndNotDeleted(promoId);
-        if (promo == null) {
-            throw new ResourceNotFoundException("공연 홍보를 찾을 수 없습니다.");
-        }
+        Promo promo = promoRepository.findById(promoId)
+                .filter(p -> p.getDeletedAt() == null)
+                .orElseThrow(() -> new ResourceNotFoundException("공연 홍보를 찾을 수 없습니다."));
         
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다."));
@@ -58,7 +57,10 @@ public class PromoLikeService {
      */
     @Transactional(readOnly = true)
     public boolean isLikedByUser(Integer promoId, Integer userId) {
-        Promo promo = promoRepository.findByIdAndNotDeleted(promoId);
+        Promo promo = promoRepository.findById(promoId)
+                .filter(p -> p.getDeletedAt() == null)
+                .orElse(null);
+        
         if (promo == null) {
             return false;
         }
@@ -76,10 +78,9 @@ public class PromoLikeService {
      */
     @Transactional(readOnly = true)
     public Integer getLikeCount(Integer promoId) {
-        Promo promo = promoRepository.findByIdAndNotDeleted(promoId);
-        if (promo == null) {
-            throw new ResourceNotFoundException("공연 홍보를 찾을 수 없습니다.");
-        }
+        Promo promo = promoRepository.findById(promoId)
+                .filter(p -> p.getDeletedAt() == null)
+                .orElseThrow(() -> new ResourceNotFoundException("공연 홍보를 찾을 수 없습니다."));
         
         return promo.getLikeCount();
     }

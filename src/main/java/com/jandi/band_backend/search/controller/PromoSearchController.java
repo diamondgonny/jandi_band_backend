@@ -32,6 +32,7 @@ public class PromoSearchController {
     private final PromoSearchService promoSearchService;
     private final PromoLikeService promoLikeService;
 
+    /*
     @Operation(summary = "공연 홍보 검색 (Elasticsearch 기반)")
     @GetMapping("/search-v2")
     public ResponseEntity<CommonRespDTO<PagedRespDTO<PromoRespDTO>>> searchPromos(
@@ -344,4 +345,5 @@ public class PromoSearchController {
         
         return PageRequest.of(page, size, Sort.by(direction, field));
     }
+    */
 } 

@@ -111,8 +111,8 @@ public class PromoService {
             processImage(savedPromo, request.getImage(), creator);
         }
 
-        // Elasticsearch 동기화
-        promoSyncService.syncPromoCreate(savedPromo);
+        // Elasticsearch 동기화 - 주석처리됨
+        // promoSyncService.syncPromoCreate(savedPromo);
 
         return PromoSimpleRespDTO.of(savedPromo.getId());
     }
@@ -167,8 +167,8 @@ public class PromoService {
             processImage(promo, request.getImage(), promo.getCreator());
         }
 
-        // Elasticsearch 동기화
-        promoSyncService.syncPromoUpdate(promo);
+        // Elasticsearch 동기화 - 주석처리됨
+        // promoSyncService.syncPromoUpdate(promo);
     }
 
     // 공연 홍보 삭제 (소프트 삭제)
@@ -192,8 +192,8 @@ public class PromoService {
 
         promo.setDeletedAt(LocalDateTime.now());
 
-        // Elasticsearch 동기화
-        promoSyncService.syncPromoDelete(promoId);
+        // Elasticsearch 동기화 - 주석처리됨
+        // promoSyncService.syncPromoDelete(promoId);
     }
 
     // 단일 이미지 처리 헬퍼 메소드 - 기존 레코드 업데이트 또는 새 레코드 생성

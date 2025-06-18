@@ -189,6 +189,34 @@ public class PromoController {
                 PagedRespDTO.from(promoPage)));
     }
 
+    @Operation(summary = "공연 상태별 필터링", 
+               description = "공연 상태에 따라 필터링: ongoing(진행 중), upcoming(예정), ended(종료)")
+    @GetMapping("/status")
+    public ResponseEntity<CommonRespDTO<PagedRespDTO<PromoRespDTO>>> filterPromosByStatus(
+            @RequestParam String status,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String teamName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "eventDatetime,asc") String sort,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        
+        Pageable pageable = createPageable(page, size, sort);
+        Integer userId = userDetails != null ? userDetails.getUserId() : null;
+        
+        Page<PromoRespDTO> promoPage = promoService.filterPromosByStatus(status, keyword, teamName, userId, pageable);
+        
+        String statusMessage = switch (status.toLowerCase()) {
+            case "ongoing" -> "진행 중인 공연";
+            case "upcoming" -> "예정된 공연";
+            case "ended" -> "종료된 공연";
+            default -> "공연";
+        };
+        
+        return ResponseEntity.ok(CommonRespDTO.success(statusMessage + " 필터링 성공",
+                PagedRespDTO.from(promoPage)));
+    }
+
     @Operation(summary = "공연 홍보 좋아요 추가/취소")
     @PostMapping("/{promoId}/like")
     public ResponseEntity<CommonRespDTO<String>> togglePromoLike(

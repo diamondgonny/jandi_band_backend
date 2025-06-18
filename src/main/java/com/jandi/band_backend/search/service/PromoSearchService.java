@@ -1,5 +1,8 @@
 package com.jandi.band_backend.search.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jandi.band_backend.search.document.PromoDocument;
 import com.jandi.band_backend.search.repository.PromoSearchRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,7 @@ public class PromoSearchService {
 
     private final PromoSearchRepository promoSearchRepository;
     private final ElasticsearchOperations elasticsearchOperations;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * 공연 홍보 문서를 Elasticsearch에 저장
@@ -356,49 +360,100 @@ public class PromoSearchService {
         try {
             LocalDateTime now = LocalDateTime.now();
             LocalDate today = now.toLocalDate();
-            Criteria criteria = new Criteria();
             
-            // 공연 상태 조건
+            log.info("필터링 시작 - 상태: {}, 키워드: {}, 팀명: {}, 현재날짜: {}", status, keyword, teamName, today);
+            
+            // Jackson을 사용하여 JSON 쿼리 구성
+            ObjectNode boolQuery = objectMapper.createObjectNode();
+            ArrayNode mustArray = objectMapper.createArrayNode();
+            
+            // 상태 필터 조건 추가
+            ObjectNode statusCondition;
             switch (status.toLowerCase()) {
                 case "ongoing":
-                    criteria.and("eventDate").is(today);
+                    statusCondition = objectMapper.createObjectNode();
+                    ObjectNode termQuery = objectMapper.createObjectNode();
+                    termQuery.put("eventDate", today.toString());
+                    statusCondition.set("term", termQuery);
                     break;
                 case "upcoming":
-                    criteria.and("eventDate").greaterThan(today);
+                    statusCondition = objectMapper.createObjectNode();
+                    ObjectNode rangeQuery = objectMapper.createObjectNode();
+                    ObjectNode dateRange = objectMapper.createObjectNode();
+                    dateRange.put("gt", today.toString());
+                    rangeQuery.set("eventDate", dateRange);
+                    statusCondition.set("range", rangeQuery);
                     break;
                 case "ended":
-                    criteria.and("eventDate").lessThan(today);
+                    statusCondition = objectMapper.createObjectNode();
+                    ObjectNode rangeQueryEnded = objectMapper.createObjectNode();
+                    ObjectNode dateRangeEnded = objectMapper.createObjectNode();
+                    dateRangeEnded.put("lt", today.toString());
+                    rangeQueryEnded.set("eventDate", dateRangeEnded);
+                    statusCondition.set("range", rangeQueryEnded);
                     break;
                 default:
                     return Page.empty(pageable);
             }
+            mustArray.add(statusCondition);
             
-            // 키워드 검색 조건 (제목, 설명, 장소, 주소)
+            // 키워드 검색 조건 추가
             if (keyword != null && !keyword.trim().isEmpty()) {
-                Criteria keywordCriteria = new Criteria()
-                        .or("title").contains(keyword).boost(2.0f)
-                        .or("teamName").contains(keyword).boost(1.5f)
-                        .or("description").contains(keyword)
-                        .or("location").contains(keyword)
-                        .or("address").contains(keyword);
-                criteria.and(keywordCriteria);
+                ObjectNode keywordCondition = objectMapper.createObjectNode();
+                ObjectNode multiMatch = objectMapper.createObjectNode();
+                multiMatch.put("query", keyword);
+                
+                ArrayNode fields = objectMapper.createArrayNode();
+                fields.add("title^2");
+                fields.add("teamName^1.5");
+                fields.add("description");
+                fields.add("location");
+                fields.add("address");
+                multiMatch.set("fields", fields);
+                
+                keywordCondition.set("multi_match", multiMatch);
+                mustArray.add(keywordCondition);
+                log.info("키워드 조건 추가됨: {}", keyword);
             }
             
-            // 팀명 조건
+            // 팀명 조건 추가
             if (teamName != null && !teamName.trim().isEmpty()) {
-                criteria.and("teamName").contains(teamName);
+                ObjectNode teamCondition = objectMapper.createObjectNode();
+                ObjectNode match = objectMapper.createObjectNode();
+                match.put("teamName", teamName);
+                teamCondition.set("match", match);
+                mustArray.add(teamCondition);
+                log.info("팀명 조건 추가됨: {}", teamName);
             }
             
-            CriteriaQuery criteriaQuery = new CriteriaQuery(criteria);
-            criteriaQuery.setPageable(pageable);
+            boolQuery.set("must", mustArray);
             
-            SearchHits<PromoDocument> searchHits = elasticsearchOperations.search(criteriaQuery, PromoDocument.class);
+            ObjectNode rootQuery = objectMapper.createObjectNode();
+            rootQuery.set("bool", boolQuery);
+            
+            String finalQuery = objectMapper.writeValueAsString(rootQuery);
+            
+            // 디버깅을 위한 로그 추가
+            log.info("생성된 Elasticsearch 쿼리: {}", finalQuery);
+            
+            // Elasticsearch 직접 쿼리 실행
+            SearchHits<PromoDocument> searchHits = elasticsearchOperations.search(
+                new org.springframework.data.elasticsearch.core.query.StringQuery(finalQuery), 
+                PromoDocument.class
+            );
             
             List<PromoDocument> content = searchHits.getSearchHits().stream()
                     .map(SearchHit::getContent)
                     .collect(Collectors.toList());
             
-            return new PageImpl<>(content, pageable, searchHits.getTotalHits());
+            log.info("검색 결과 - 총 개수: {}, 현재 페이지 결과: {}", searchHits.getTotalHits(), content.size());
+            
+            // 페이징 처리
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), content.size());
+            List<PromoDocument> pagedContent = content.subList(start, end);
+            
+            return new PageImpl<>(pagedContent, pageable, content.size());
         } catch (Exception e) {
             log.error("공연 상태별 필터링 중 오류 발생 - 상태: {}, 키워드: {}, 팀명: {}, 오류: {}", 
                     status, keyword, teamName, e.getMessage(), e);

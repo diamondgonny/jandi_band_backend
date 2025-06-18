@@ -17,6 +17,7 @@ import com.jandi.band_backend.global.util.S3FileManagementUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -284,6 +286,62 @@ public class PromoService {
                 minLat, maxLat, minLng, maxLng, pageable
         );
 
+        return promos.map(promo -> {
+            Boolean isLikedByUser = userId != null ?
+                    promoLikeService.isLikedByUser(promo.getId(), userId) : null;
+            return PromoRespDTO.from(promo, isLikedByUser);
+        });
+    }
+
+    // 공연 상태별 필터링
+    public Page<PromoRespDTO> filterPromosByStatus(String status, String keyword, String teamName, Integer userId, Pageable pageable) {
+        LocalDateTime now = LocalDateTime.now();
+        
+        Page<Promo> promos;
+        
+        // 상태별 필터링
+        switch (status.toLowerCase()) {
+            case "ongoing":
+                // 진행 중인 공연: 오늘 날짜와 일치하는 공연
+                promos = promoRepository.findOngoingPromos(now, pageable);
+                break;
+            case "upcoming":
+                // 예정된 공연: 오늘 이후의 공연
+                promos = promoRepository.findUpcomingPromos(now, pageable);
+                break;
+            case "ended":
+                // 종료된 공연: 오늘 이전의 공연
+                promos = promoRepository.findEndedPromos(now, pageable);
+                break;
+            default:
+                return Page.empty(pageable);
+        }
+        
+        // 키워드나 팀명 필터링이 있는 경우 메모리에서 추가 필터링
+        if ((keyword != null && !keyword.trim().isEmpty()) || (teamName != null && !teamName.trim().isEmpty())) {
+            List<Promo> filteredContent = promos.getContent().stream()
+                    .filter(promo -> {
+                        boolean matchesKeyword = keyword == null || keyword.trim().isEmpty() ||
+                                promo.getTitle().toLowerCase().contains(keyword.toLowerCase()) ||
+                                (promo.getDescription() != null && promo.getDescription().toLowerCase().contains(keyword.toLowerCase())) ||
+                                (promo.getLocation() != null && promo.getLocation().toLowerCase().contains(keyword.toLowerCase())) ||
+                                promo.getTeamName().toLowerCase().contains(keyword.toLowerCase());
+                        
+                        boolean matchesTeamName = teamName == null || teamName.trim().isEmpty() ||
+                                promo.getTeamName().toLowerCase().contains(teamName.toLowerCase());
+                        
+                        return matchesKeyword && matchesTeamName;
+                    })
+                    .collect(Collectors.toList());
+            
+            // 페이징 처리
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), filteredContent.size());
+            List<Promo> pagedContent = filteredContent.subList(start, end);
+            
+            promos = new PageImpl<>(pagedContent, pageable, filteredContent.size());
+        }
+        
         return promos.map(promo -> {
             Boolean isLikedByUser = userId != null ?
                     promoLikeService.isLikedByUser(promo.getId(), userId) : null;

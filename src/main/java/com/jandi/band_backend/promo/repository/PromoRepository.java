@@ -24,6 +24,12 @@ public interface PromoRepository extends JpaRepository<Promo, Integer> {
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.eventDatetime >= :now ORDER BY p.eventDatetime ASC")
     Page<Promo> findUpcomingPromos(@Param("now") LocalDateTime now, Pageable pageable);
     
+    @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.eventDatetime = :now ORDER BY p.eventDatetime ASC")
+    Page<Promo> findOngoingPromos(@Param("now") LocalDateTime now, Pageable pageable);
+    
+    @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.eventDatetime < :now ORDER BY p.eventDatetime DESC")
+    Page<Promo> findEndedPromos(@Param("now") LocalDateTime now, Pageable pageable);
+    
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.creator.id = :userId")
     Page<Promo> findAllByCreatorId(@Param("userId") Integer userId, Pageable pageable);
     
@@ -82,4 +88,22 @@ public interface PromoRepository extends JpaRepository<Promo, Integer> {
     @Modifying
     @Query("UPDATE Promo p SET p.likeCount = p.likeCount - 1 WHERE p.id = :promoId AND p.likeCount > 0")
     void decrementLikeCount(@Param("promoId") Integer promoId);
+
+    // 상태별 필터링 + 키워드/팀명 조건
+    @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL " +
+           "AND (:status = 'ongoing' AND p.eventDatetime = :now) " +
+           "OR (:status = 'upcoming' AND p.eventDatetime > :now) " +
+           "OR (:status = 'ended' AND p.eventDatetime < :now) " +
+           "AND (:keyword IS NULL OR LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(p.location) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(p.teamName) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "AND (:teamName IS NULL OR LOWER(p.teamName) LIKE LOWER(CONCAT('%', :teamName, '%'))) " +
+           "ORDER BY p.eventDatetime ASC")
+    Page<Promo> filterPromosByStatusAndConditions(
+        @Param("status") String status,
+        @Param("keyword") String keyword,
+        @Param("teamName") String teamName,
+        @Param("now") LocalDateTime now,
+        Pageable pageable);
 }

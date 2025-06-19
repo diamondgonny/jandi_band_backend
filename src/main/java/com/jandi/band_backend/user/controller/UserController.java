@@ -53,21 +53,13 @@ public class UserController {
         updateDTO.setPosition(position);
         updateDTO.setProfilePhoto(profilePhoto);
 
-        Integer mask = 0;
-        mask += userService.updateMyInfo(userId, updateDTO);
-        mask += userPhotoService.updateMyPhoto(userId, profilePhoto);
-
-        int maskCopy = mask;
-        String updateList = "";
-        if ((maskCopy / 1000) % 10 > 0) updateList += "이미지 ";
-        if ((maskCopy / 100) % 10 > 0) updateList += "포지션 ";
-        if ((maskCopy / 10) % 10 > 0) updateList += "대학 ";
-        if (maskCopy % 10 > 0) updateList += "닉네임 ";
+        userService.updateMyInfo(userId, updateDTO);
+        userPhotoService.updateMyPhoto(userId, profilePhoto);
 
         UserInfoDTO userInfo = new UserInfoDTO(
                 userService.getMyInfo(userId),
                 userPhotoService.getMyPhoto(userId)
         );
-        return CommonRespDTO.success("내 정보 수정 성공: " + updateList, userInfo);
+        return CommonRespDTO.success("내 정보 수정 성공", userInfo);
     }
 }

@@ -297,7 +297,9 @@ public class ClubService {
             throw new IllegalStateException("동아리 대표자는 탈퇴할 수 없습니다. 먼저 다른 멤버에게 대표자 권한을 위임해주세요.");
         }
 
-        clubMember.setDeletedAt(LocalDateTime.now());
+        LocalDateTime deletedTime = LocalDateTime.now();
+        removeUserFromClubTeams(clubId, currentUserId, deletedTime);
+        clubMember.setDeletedAt(deletedTime);
         clubMemberRepository.save(clubMember);
     }
 
@@ -314,8 +316,10 @@ public class ClubService {
             throw new IllegalStateException("동아리 대표자를 강퇴할 수 없습니다.");
         }
 
+        LocalDateTime deletedTime = LocalDateTime.now();
+        removeUserFromClubTeams(clubId, targetUserId, deletedTime);
         targetMember.setRole(ClubMember.MemberRole.BANNED);
-        targetMember.setDeletedAt(LocalDateTime.now());
+        targetMember.setDeletedAt(deletedTime);
         clubMemberRepository.save(targetMember);
     }
 
@@ -426,5 +430,16 @@ public class ClubService {
                 .name(user.getNickname())
                 .position(position)
                 .build();
+    }
+
+    private void removeUserFromClubTeams(Integer clubId, Integer userId, LocalDateTime deletedTime) {
+        List<Team> teams = teamRepository.findAllByClubIdAndDeletedAtIsNull(clubId);
+        for (Team team : teams) {
+            teamMemberRepository.findByTeamIdAndUserIdAndDeletedAtIsNull(team.getId(), userId)
+                    .ifPresent(teamMember -> {
+                        teamMember.setDeletedAt(deletedTime);
+                        teamMemberRepository.save(teamMember);
+                    });
+        }
     }
 }

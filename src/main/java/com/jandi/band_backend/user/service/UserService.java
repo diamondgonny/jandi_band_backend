@@ -45,7 +45,7 @@ public class UserService {
         Users.Position newPosition = Users.Position.from(updateDTO.getPosition());
 
         // 있는 정보만 수정, 없다면 오류는 내지 않되 반영하지 않음
-        if (newNickName != null && !newNickName.isEmpty()) {
+        if (newNickName != null && !newNickName.isEmpty() && !newNickName.equals("null")) {
             user.setNickname(newNickName);
         }
         if (newUniversity != null) {

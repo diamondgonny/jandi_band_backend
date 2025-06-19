@@ -32,33 +32,28 @@ public class UserService {
 
     /// 내 기본 정보 수정 (userId 기반)
     @Transactional
-    public Integer updateMyInfo(Integer userId, UpdateUserInfoReqDTO updateDTO) {
+    public void updateMyInfo(Integer userId, UpdateUserInfoReqDTO updateDTO) {
         Users user = getMyInfo(userId);
-        return updateUser(user, updateDTO);
+        updateUser(user, updateDTO);
     }
 
     /// 내부 메서드
     // 유저 정보 수정
-    private Integer updateUser(Users user, UpdateUserInfoReqDTO updateDTO) {
+    private void updateUser(Users user, UpdateUserInfoReqDTO updateDTO) {
         String newNickName = updateDTO.getNickname();
         University newUniversity = universityRepository.findByName(updateDTO.getUniversity());
         Users.Position newPosition = Users.Position.from(updateDTO.getPosition());
 
-        Integer mask = 0;
         // 있는 정보만 수정, 없다면 오류는 내지 않되 반영하지 않음
-        if (newNickName != null && !newNickName.isEmpty()) {
+        if (newNickName != null && !newNickName.isEmpty() && !newNickName.equals("null")) {
             user.setNickname(newNickName);
-            mask += 1;
         }
         if (newUniversity != null) {
             user.setUniversity(newUniversity);
-            mask += 10;
         }
         if (newPosition != null) {
             user.setPosition(newPosition);
-            mask += 100;
         }
         userRepository.save(user);
-        return mask;
     }
 }

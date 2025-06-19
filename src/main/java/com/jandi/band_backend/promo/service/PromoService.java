@@ -1,6 +1,7 @@
 package com.jandi.band_backend.promo.service;
 
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
+import com.jandi.band_backend.global.exception.BadRequestException;
 
 import com.jandi.band_backend.promo.dto.PromoReqDTO;
 import com.jandi.band_backend.promo.dto.PromoRespDTO;
@@ -90,6 +91,11 @@ public class PromoService {
     public PromoSimpleRespDTO createPromo(PromoReqDTO request, Integer creatorId) {
         Users creator = userValidationUtil.getUserById(creatorId);
 
+        // 관람료 음수값 검증
+        if (request.getAdmissionFee() != null && request.getAdmissionFee().compareTo(BigDecimal.ZERO) < 0) {
+            throw new BadRequestException("관람료는 음수가 될 수 없습니다.");
+        }
+
         Promo promo = new Promo();
         promo.setTeamName(request.getTeamName());
         promo.setCreator(creator);
@@ -122,6 +128,11 @@ public class PromoService {
 
         // 권한 체크
         permissionValidationUtil.validateContentOwnership(promo.getCreator().getId(), userId, "공연 홍보를 수정할 권한이 없습니다.");
+
+        // 관람료 음수값 검증 (수정 시에도 적용)
+        if (request.getAdmissionFee() != null && request.getAdmissionFee().compareTo(BigDecimal.ZERO) < 0) {
+            throw new BadRequestException("관람료는 음수가 될 수 없습니다.");
+        }
 
         // 전송된 필드만 수정 (PATCH 방식)
         if (request.getTeamName() != null) {

@@ -158,7 +158,7 @@ curl -X POST "http://localhost:8080/api/promos" \
 #### 요청 필드
 - `teamName` (string, 필수): 팀명 (최대 255자)
 - `title` (string, 필수): 공연 제목 (최대 255자)
-- `admissionFee` (integer, 선택): 입장료
+- `admissionFee` (decimal, 선택): 입장료 (0 이상의 값, 음수 불가)
 - `eventDatetime` (string, 선택): 공연 일시 (ISO 8601)
 - `location` (string, 선택): 장소명 (최대 255자)
 - `address` (string, 선택): 상세 주소 (최대 255자)
@@ -203,7 +203,7 @@ curl -X PATCH "http://localhost:8080/api/promos/1" \
 #### 요청 필드 (모든 필드 선택사항)
 - `teamName` (string, 선택): 팀명 (최대 255자)
 - `title` (string, 선택): 공연 제목 (최대 255자)
-- `admissionFee` (integer, 선택): 입장료
+- `admissionFee` (decimal, 선택): 입장료 (0 이상의 값, 음수 불가)
 - `eventDatetime` (string, 선택): 공연 일시 (ISO 8601)
 - `location` (string, 선택): 장소명 (최대 255자)
 - `address` (string, 선택): 상세 주소 (최대 255자)
@@ -739,6 +739,9 @@ curl -X GET "http://localhost:8080/api/promos/status-v2?status=ended&teamName=�
 - `403 Forbidden`: 권한 없음
 - `404 Not Found`: 리소스 없음
 
+### 주요 에러 메시지
+- `관람료는 음수가 될 수 없습니다.`: 관람료에 음수값을 입력한 경우 (400 Bad Request)
+
 ---
 
 ## 참고 항목
@@ -749,6 +752,7 @@ curl -X GET "http://localhost:8080/api/promos/status-v2?status=ended&teamName=�
 - **이미지 형식**: JPG, PNG 등 일반적인 이미지 형식 지원
 - **이미지 교체**: 수정 시 새 이미지 업로드하면 기존 이미지 자동 교체
 - **부분 수정**: PATCH 방식으로 필요한 필드만 전송하면 나머지는 기존 값 유지
+- **관람료 검증**: 관람료는 0 이상의 값만 허용, 음수값 입력 시 BadRequest 에러 발생
 - **동적 계산**: viewCount, commentCount, likeCount는 실시간 동기화
 - **소프트 삭제**: deletedAt 필드 사용, 이미지도 함께 삭제 처리
 - **좋아요**: 토글 방식으로 추가/취소 (같은 API), 중복 좋아요 방지

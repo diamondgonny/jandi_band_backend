@@ -434,7 +434,7 @@ public class ClubService {
                 .build();
     }
 
-        private void removeUserFromClubTeams(Integer clubId, Integer userId, LocalDateTime deletedTime) {
+    private void removeUserFromClubTeams(Integer clubId, Integer userId, LocalDateTime deletedTime) {
         List<Team> teams = teamRepository.findAllByClubIdAndDeletedAtIsNull(clubId);
         for (Team team : teams) {
             teamMemberRepository.findByTeamIdAndUserIdAndDeletedAtIsNull(team.getId(), userId)

@@ -58,7 +58,7 @@ public class SecurityConfig {
                                 "/api/promos/*/comments", // 공연 홍보 댓글 목록 조회
                                 "/api/promos/reports", // 공연 홍보 신고
                                 "/api/promos/comments/reports", // 공연 홍보 댓글 신고
-                                // 검색 API (인증 없이 접근 가능)
+                                // 검색 API (인증 없이  접근 가능)
                                 "/api/search/**",
                                 // 관리자 API (개발/테스트용)
                                 "/api/admin/**",

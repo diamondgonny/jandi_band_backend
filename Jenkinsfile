@@ -38,7 +38,7 @@ pipeline {
                 script {
                     def fullImageName = "ghcr.io/${env.GHCR_OWNER}/${env.IMAGE_NAME}:${env.BUILD_NUMBER}"
 
-                    withCredentials([sshUserPrivateKey(credentialsId: 'rhythmeet-ec2-ssh-key', keyFileVariable: 'EC2_PRIVATE_KEY')]) {
+                    withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'EC2_PRIVATE_KEY')]) {
                         echo "Deploying to EC2 host: ${env.EC2_HOST}"
                         // EC2의 spring-app 디렉터리에 있는 배포 스크립트 실행
                         sh """

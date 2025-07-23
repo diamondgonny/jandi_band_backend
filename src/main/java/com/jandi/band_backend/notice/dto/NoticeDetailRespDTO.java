@@ -1,6 +1,6 @@
 package com.jandi.band_backend.notice.dto;
 
-import com.jandi.band_backend.notice.entity.SiteNotice;
+import com.jandi.band_backend.notice.entity.Notice;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@Schema(description = "사이트 공지사항 상세 응답 DTO")
-public class SiteNoticeDetailRespDTO {
+@Schema(description = "공지사항 상세 응답 DTO")
+public class NoticeDetailRespDTO {
 
     @Schema(description = "공지사항 ID", example = "1")
     private Integer id;
@@ -47,20 +47,20 @@ public class SiteNoticeDetailRespDTO {
     @Schema(description = "삭제일시 (관리자용)", example = "null")
     private LocalDateTime deletedAt;
 
-    public SiteNoticeDetailRespDTO(SiteNotice siteNotice) {
-        this.id = siteNotice.getId();
-        this.title = siteNotice.getTitle();
-        this.content = siteNotice.getContent();
-        this.startDatetime = siteNotice.getStartDatetime();
-        this.endDatetime = siteNotice.getEndDatetime();
-        this.isPaused = siteNotice.getIsPaused();
-        this.createdAt = siteNotice.getCreatedAt();
-        this.updatedAt = siteNotice.getUpdatedAt();
-        this.deletedAt = siteNotice.getDeletedAt();
+    public NoticeDetailRespDTO(Notice notice) {
+        this.id = notice.getId();
+        this.title = notice.getTitle();
+        this.content = notice.getContent();
+        this.startDatetime = notice.getStartDatetime();
+        this.endDatetime = notice.getEndDatetime();
+        this.isPaused = notice.getIsPaused();
+        this.createdAt = notice.getCreatedAt();
+        this.updatedAt = notice.getUpdatedAt();
+        this.deletedAt = notice.getDeletedAt();
         // NPE 방지
-        if (siteNotice.getCreator() != null) {
-            this.creatorId = siteNotice.getCreator().getId();
-            this.creatorName = siteNotice.getCreator().getNickname();
+        if (notice.getCreator() != null) {
+            this.creatorId = notice.getCreator().getId();
+            this.creatorName = notice.getCreator().getNickname();
         }
     }
 }

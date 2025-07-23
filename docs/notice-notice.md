@@ -1,7 +1,7 @@
-# Site Notice API
+# Notice API
 
-## 사이트 공지사항 관리
-팝업 형태로 노출되는 사이트 전체 공지사항 관리 시스템
+## 공지사항 관리
+팝업 형태로 노출되는 공지사항 관리 시스템
 
 ---
 
@@ -10,7 +10,7 @@
 GET /api/notices/active
 ```
 
-> **응답 DTO**: `SiteNoticeRespDTO`
+> **응답 DTO**: `NoticeRespDTO`
 
 ### 요청 예시
 ```bash
@@ -25,8 +25,8 @@ curl "http://localhost:8080/api/notices/active"
   "data": [
     {
       "id": 1,
-      "title": "사이트 점검 안내",
-      "content": "오늘 밤 12시부터 새벽 2시까지 사이트 점검이 있습니다.",
+      "title": "시스템 점검 안내",
+      "content": "오늘 밤 12시부터 새벽 2시까지 시스템 점검이 있습니다.",
       "startDatetime": "2024-12-10T00:00:00",
       "endDatetime": "2024-12-10T23:59:59",
       "isPaused": false
@@ -48,7 +48,7 @@ GET /api/notices?page=0&size=20&sort=createdAt,desc
 Authorization: Bearer {JWT_TOKEN}
 ```
 
-> **응답 DTO**: `SiteNoticeRespDTO`
+> **응답 DTO**: `NoticeRespDTO`
 
 ### 요청 예시
 ```bash
@@ -70,8 +70,8 @@ curl "http://localhost:8080/api/notices?page=0&size=20" \
     "content": [
       {
         "id": 1,
-        "title": "사이트 점검 안내",
-        "content": "오늘 밤 12시부터 새벽 2시까지 사이트 점검이 있습니다.",
+        "title": "시스템 점검 안내",
+        "content": "오늘 밤 12시부터 새벽 2시까지 시스템 점검이 있습니다.",
         "startDatetime": "2024-12-10T00:00:00",
         "endDatetime": "2024-12-10T23:59:59",
         "isPaused": false
@@ -102,7 +102,7 @@ GET /api/notices/{noticeId}
 Authorization: Bearer {JWT_TOKEN}
 ```
 
-> **응답 DTO**: `SiteNoticeDetailRespDTO`
+> **응답 DTO**: `NoticeDetailRespDTO`
 
 ### 요청 예시
 ```bash
@@ -117,8 +117,8 @@ curl "http://localhost:8080/api/notices/1" \
   "message": "공지사항 상세 조회 성공",
   "data": {
     "id": 1,
-    "title": "사이트 점검 안내",
-    "content": "오늘 밤 12시부터 새벽 2시까지 사이트 점검이 있습니다.",
+    "title": "시스템 점검 안내",
+    "content": "오늘 밤 12시부터 새벽 2시까지 시스템 점검이 있습니다.",
     "startDatetime": "2024-12-10T00:00:00",
     "endDatetime": "2024-12-10T23:59:59",
     "isPaused": false,
@@ -143,7 +143,7 @@ Authorization: Bearer {JWT_TOKEN}
 Content-Type: application/json
 ```
 
-> **응답 DTO**: `SiteNoticeDetailRespDTO`
+> **응답 DTO**: `NoticeDetailRespDTO`
 
 ### 요청 예시
 ```bash
@@ -151,8 +151,8 @@ curl -X POST "http://localhost:8080/api/notices" \
   -H "Authorization: Bearer {JWT_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
-    "title": "사이트 점검 안내",
-    "content": "오늘 밤 12시부터 새벽 2시까지 사이트 점검이 있습니다.",
+    "title": "시스템 점검 안내",
+    "content": "오늘 밤 12시부터 새벽 2시까지 시스템 점검이 있습니다.",
     "startDatetime": "2024-12-10T00:00:00",
     "endDatetime": "2024-12-10T23:59:59"
   }'
@@ -172,8 +172,8 @@ curl -X POST "http://localhost:8080/api/notices" \
   "message": "공지사항이 성공적으로 생성되었습니다",
   "data": {
     "id": 1,
-    "title": "사이트 점검 안내",
-    "content": "오늘 밤 12시부터 새벽 2시까지 사이트 점검이 있습니다.",
+    "title": "시스템 점검 안내",
+    "content": "오늘 밤 12시부터 새벽 2시까지 시스템 점검이 있습니다.",
     "startDatetime": "2024-12-10T00:00:00",
     "endDatetime": "2024-12-10T23:59:59",
     "isPaused": false,
@@ -203,7 +203,7 @@ Authorization: Bearer {JWT_TOKEN}
 Content-Type: application/json
 ```
 
-> **응답 DTO**: `SiteNoticeDetailRespDTO`
+> **응답 DTO**: `NoticeDetailRespDTO`
 
 ### 요청 예시
 ```bash
@@ -294,7 +294,7 @@ PATCH /api/notices/{noticeId}/toggle-pause
 Authorization: Bearer {JWT_TOKEN}
 ```
 
-> **응답 DTO**: `SiteNoticeRespDTO`
+> **응답 DTO**: `NoticeRespDTO`
 
 ### 요청 예시
 ```bash
@@ -309,8 +309,8 @@ curl -X PATCH "http://localhost:8080/api/notices/1/toggle-pause" \
   "message": "공지사항 일시정지 상태가 성공적으로 변경되었습니다",
   "data": {
     "id": 1,
-    "title": "사이트 점검 안내",
-    "content": "오늘 밤 12시부터 새벽 2시까지 사이트 점검이 있습니다.",
+    "title": "시스템 점검 안내",
+    "content": "오늘 밤 12시부터 새벽 2시까지 시스템 점검이 있습니다.",
     "startDatetime": "2024-12-10T00:00:00",
     "endDatetime": "2024-12-10T23:59:59",
     "isPaused": true
@@ -388,7 +388,7 @@ curl -X PATCH "http://localhost:8080/api/notices/1/toggle-pause" \
 
 ## 응답 DTO 구조
 
-### SiteNoticeRespDTO (간소화 버전)
+### NoticeRespDTO (간소화 버전)
 팝업용, 목록 조회, 일시정지 토글에서 사용되는 기본 응답 DTO
 
 **필드:**
@@ -404,10 +404,10 @@ curl -X PATCH "http://localhost:8080/api/notices/1/toggle-pause" \
 - `GET /api/notices` (공지사항 목록 조회)
 - `PATCH /api/notices/{noticeId}/toggle-pause` (일시정지/재개 토글)
 
-### SiteNoticeDetailRespDTO (상세 버전)
+### NoticeDetailRespDTO (상세 버전)
 관리자용 상세 조회, 생성, 수정에서 사용되는 상세 응답 DTO
 
-**추가 필드 (SiteNoticeRespDTO 포함):**
+**추가 필드 (NoticeRespDTO 포함):**
 - `creatorId` (Integer): 작성자 ID
 - `creatorName` (String): 작성자명
 - `createdAt` (LocalDateTime): 생성일시

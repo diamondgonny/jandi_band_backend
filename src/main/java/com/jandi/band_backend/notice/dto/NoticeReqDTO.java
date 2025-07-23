@@ -13,8 +13,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@Schema(description = "사이트 공지사항 생성/수정 요청 DTO")
-public class SiteNoticeReqDTO {
+@Schema(description = "공지사항 생성/수정 요청 DTO")
+public class NoticeReqDTO {
 
     @Schema(description = "공지사항 제목", example = "사이트 점검 안내", required = true, maxLength = 255)
     @NotBlank(message = "제목은 필수입니다")

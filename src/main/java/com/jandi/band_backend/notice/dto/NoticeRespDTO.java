@@ -1,6 +1,6 @@
 package com.jandi.band_backend.notice.dto;
 
-import com.jandi.band_backend.notice.entity.SiteNotice;
+import com.jandi.band_backend.notice.entity.Notice;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@Schema(description = "사이트 공지사항 응답 DTO")
-public class SiteNoticeRespDTO {
+@Schema(description = "공지사항 응답 DTO")
+public class NoticeRespDTO {
 
     @Schema(description = "공지사항 ID", example = "1")
     private Integer id;
@@ -32,12 +32,12 @@ public class SiteNoticeRespDTO {
     @Schema(description = "일시정지 여부", example = "false")
     private Boolean isPaused;
 
-    public SiteNoticeRespDTO(SiteNotice siteNotice) {
-        this.id = siteNotice.getId();
-        this.title = siteNotice.getTitle();
-        this.content = siteNotice.getContent();
-        this.startDatetime = siteNotice.getStartDatetime();
-        this.endDatetime = siteNotice.getEndDatetime();
-        this.isPaused = siteNotice.getIsPaused();
+    public NoticeRespDTO(Notice notice) {
+        this.id = notice.getId();
+        this.title = notice.getTitle();
+        this.content = notice.getContent();
+        this.startDatetime = notice.getStartDatetime();
+        this.endDatetime = notice.getEndDatetime();
+        this.isPaused = notice.getIsPaused();
     }
 }

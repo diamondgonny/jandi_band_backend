@@ -3,11 +3,11 @@ package com.jandi.band_backend.notice.service;
 import com.jandi.band_backend.global.exception.ResourceNotFoundException;
 import com.jandi.band_backend.global.exception.InvalidAccessException;
 import com.jandi.band_backend.global.exception.BadRequestException;
-import com.jandi.band_backend.notice.dto.SiteNoticeReqDTO;
-import com.jandi.band_backend.notice.dto.SiteNoticeDetailRespDTO;
-import com.jandi.band_backend.notice.dto.SiteNoticeRespDTO;
-import com.jandi.band_backend.notice.entity.SiteNotice;
-import com.jandi.band_backend.notice.repository.SiteNoticeRepository;
+import com.jandi.band_backend.notice.dto.NoticeReqDTO;
+import com.jandi.band_backend.notice.dto.NoticeDetailRespDTO;
+import com.jandi.band_backend.notice.dto.NoticeRespDTO;
+import com.jandi.band_backend.notice.entity.Notice;
+import com.jandi.band_backend.notice.repository.NoticeRepository;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +25,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class SiteNoticeService {
+public class NoticeService {
 
-    private final SiteNoticeRepository siteNoticeRepository;
+    private final NoticeRepository noticeRepository;
     private final UserRepository userRepository;
 
     private Users validateAdminPermissionAndGetUser(Integer userId) {
@@ -53,36 +53,36 @@ public class SiteNoticeService {
         return title.length() > 50 ? title.substring(0, 50) + "..." : title;
     }
 
-    public List<SiteNoticeRespDTO> getActiveNotices() {
-        List<SiteNotice> activeNotices = siteNoticeRepository.findActiveNotices(LocalDateTime.now());
+    public List<NoticeRespDTO> getActiveNotices() {
+        List<Notice> activeNotices = noticeRepository.findActiveNotices(LocalDateTime.now());
         return activeNotices.stream()
-                .map(SiteNoticeRespDTO::new)
+                .map(NoticeRespDTO::new)
                 .collect(Collectors.toList());
     }
 
-    public Page<SiteNoticeRespDTO> getAllNotices(Integer userId, Pageable pageable) {
+    public Page<NoticeRespDTO> getAllNotices(Integer userId, Pageable pageable) {
         validateAdminPermissionAndGetUser(userId);
 
-        Page<SiteNotice> notices = siteNoticeRepository.findAllByDeletedAtIsNullOrderByCreatedAtDesc(pageable);
-        return notices.map(SiteNoticeRespDTO::new);
+        Page<Notice> notices = noticeRepository.findAllByDeletedAtIsNullOrderByCreatedAtDesc(pageable);
+        return notices.map(NoticeRespDTO::new);
     }
 
-    public SiteNoticeDetailRespDTO getNoticeDetail(Integer noticeId, Integer userId) {
+    public NoticeDetailRespDTO getNoticeDetail(Integer noticeId, Integer userId) {
         validateAdminPermissionAndGetUser(userId);
 
-        SiteNotice notice = siteNoticeRepository.findByIdAndDeletedAtIsNull(noticeId)
+        Notice notice = noticeRepository.findByIdAndDeletedAtIsNull(noticeId)
                 .orElseThrow(() -> new ResourceNotFoundException("공지사항을 찾을 수 없습니다."));
 
-        return new SiteNoticeDetailRespDTO(notice);
+        return new NoticeDetailRespDTO(notice);
     }
 
     @Transactional
-    public SiteNoticeDetailRespDTO createNotice(SiteNoticeReqDTO reqDTO, Integer creatorId) {
+    public NoticeDetailRespDTO createNotice(NoticeReqDTO reqDTO, Integer creatorId) {
         Users creator = validateAdminPermissionAndGetUser(creatorId);
 
         validateDateTimeRange(reqDTO.getStartDatetime(), reqDTO.getEndDatetime());
 
-        SiteNotice notice = new SiteNotice();
+        Notice notice = new Notice();
         notice.setCreator(creator);
         notice.setTitle(reqDTO.getTitle());
         notice.setContent(reqDTO.getContent());
@@ -90,17 +90,17 @@ public class SiteNoticeService {
         notice.setEndDatetime(reqDTO.getEndDatetime());
         notice.setIsPaused(reqDTO.getIsPaused());
 
-        SiteNotice savedNotice = siteNoticeRepository.save(notice);
+        Notice savedNotice = noticeRepository.save(notice);
         log.info("공지사항 생성 완료 - ID: {}, 제목: {}", savedNotice.getId(), sanitizeTitle(savedNotice.getTitle()));
 
-        return new SiteNoticeDetailRespDTO(savedNotice);
+        return new NoticeDetailRespDTO(savedNotice);
     }
 
     @Transactional
-    public SiteNoticeDetailRespDTO updateNotice(Integer noticeId, SiteNoticeReqDTO reqDTO, Integer userId) {
+    public NoticeDetailRespDTO updateNotice(Integer noticeId, NoticeReqDTO reqDTO, Integer userId) {
         validateAdminPermissionAndGetUser(userId);
 
-        SiteNotice notice = siteNoticeRepository.findByIdAndDeletedAtIsNull(noticeId)
+        Notice notice = noticeRepository.findByIdAndDeletedAtIsNull(noticeId)
                 .orElseThrow(() -> new ResourceNotFoundException("공지사항을 찾을 수 없습니다."));
 
         validateDateTimeRange(reqDTO.getStartDatetime(), reqDTO.getEndDatetime());
@@ -111,37 +111,37 @@ public class SiteNoticeService {
         notice.setEndDatetime(reqDTO.getEndDatetime());
         // isPaused는 별도의 토글 API에서 변경 가능
 
-        SiteNotice updatedNotice = siteNoticeRepository.save(notice);
+        Notice updatedNotice = noticeRepository.save(notice);
         log.info("공지사항 수정 완료 - ID: {}, 제목: {}", updatedNotice.getId(), sanitizeTitle(updatedNotice.getTitle()));
 
-        return new SiteNoticeDetailRespDTO(updatedNotice);
+        return new NoticeDetailRespDTO(updatedNotice);
     }
 
     @Transactional
     public void deleteNotice(Integer noticeId, Integer userId) {
         validateAdminPermissionAndGetUser(userId);
 
-        SiteNotice notice = siteNoticeRepository.findByIdAndDeletedAtIsNull(noticeId)
+        Notice notice = noticeRepository.findByIdAndDeletedAtIsNull(noticeId)
                 .orElseThrow(() -> new ResourceNotFoundException("공지사항을 찾을 수 없습니다."));
 
         notice.setDeletedAt(LocalDateTime.now());
-        siteNoticeRepository.save(notice);
+        noticeRepository.save(notice);
 
         log.info("공지사항 삭제 완료 - ID: {}, 제목: {}", notice.getId(), sanitizeTitle(notice.getTitle()));
     }
 
     @Transactional
-    public SiteNoticeRespDTO toggleNoticeStatus(Integer noticeId, Integer userId) {
+    public NoticeRespDTO toggleNoticeStatus(Integer noticeId, Integer userId) {
         validateAdminPermissionAndGetUser(userId);
 
-        SiteNotice notice = siteNoticeRepository.findByIdAndDeletedAtIsNull(noticeId)
+        Notice notice = noticeRepository.findByIdAndDeletedAtIsNull(noticeId)
                 .orElseThrow(() -> new ResourceNotFoundException("공지사항을 찾을 수 없습니다."));
 
         notice.setIsPaused(!notice.getIsPaused());
-        SiteNotice updatedNotice = siteNoticeRepository.save(notice);
+        Notice updatedNotice = noticeRepository.save(notice);
 
         log.info("공지사항 상태 변경 완료 - ID: {}, 일시정지: {}", updatedNotice.getId(), updatedNotice.getIsPaused());
 
-        return new SiteNoticeRespDTO(updatedNotice);
+        return new NoticeRespDTO(updatedNotice);
     }
 }

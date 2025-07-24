@@ -29,7 +29,8 @@ curl "http://localhost:8080/api/notices/active"
       "content": "오늘 밤 12시부터 새벽 2시까지 시스템 점검이 있습니다.",
       "startDatetime": "2024-12-10T00:00:00",
       "endDatetime": "2024-12-10T23:59:59",
-      "isPaused": false
+      "isPaused": false,
+      "imageUrl": "https://example.com/notice-photo/image.jpg"
     }
   ]
 }
@@ -74,7 +75,8 @@ curl "http://localhost:8080/api/notices?page=0&size=20" \
         "content": "오늘 밤 12시부터 새벽 2시까지 시스템 점검이 있습니다.",
         "startDatetime": "2024-12-10T00:00:00",
         "endDatetime": "2024-12-10T23:59:59",
-        "isPaused": false
+        "isPaused": false,
+        "imageUrl": "https://example.com/notice-photo/image.jpg"
       }
     ],
     "pageInfo": {
@@ -124,6 +126,7 @@ curl "http://localhost:8080/api/notices/1" \
     "isPaused": false,
     "creatorId": 1,
     "creatorName": "관리자",
+    "imageUrl": "https://example.com/notice-photo/image.jpg",
     "createdAt": "2024-12-09T10:30:00",
     "updatedAt": "2024-12-09T15:45:00",
     "deletedAt": null
@@ -140,7 +143,7 @@ curl "http://localhost:8080/api/notices/1" \
 ```
 POST /api/notices
 Authorization: Bearer {JWT_TOKEN}
-Content-Type: application/json
+Content-Type: multipart/form-data
 ```
 
 > **응답 DTO**: `NoticeDetailRespDTO`
@@ -149,13 +152,11 @@ Content-Type: application/json
 ```bash
 curl -X POST "http://localhost:8080/api/notices" \
   -H "Authorization: Bearer {JWT_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "시스템 점검 안내",
-    "content": "오늘 밤 12시부터 새벽 2시까지 시스템 점검이 있습니다.",
-    "startDatetime": "2024-12-10T00:00:00",
-    "endDatetime": "2024-12-10T23:59:59"
-  }'
+  -F "title=시스템 점검 안내" \
+  -F "content=오늘 밤 12시부터 새벽 2시까지 시스템 점검이 있습니다." \
+  -F "startDatetime=2024-12-10T00:00:00" \
+  -F "endDatetime=2024-12-10T23:59:59" \
+  -F "image=@/path/to/image.jpg"
 ```
 
 ### 요청 필드
@@ -164,6 +165,7 @@ curl -X POST "http://localhost:8080/api/notices" \
 - `startDatetime` (datetime, 필수): 팝업 노출 시작 시각
 - `endDatetime` (datetime, 필수): 팝업 노출 종료 시각
 - `isPaused` (boolean, 선택): 일시정지 여부 (생략 시 자동으로 false 설정)
+- `image` (file, 선택): 첨부 이미지 파일
 
 ### 성공 응답 (201)
 ```json
@@ -179,6 +181,7 @@ curl -X POST "http://localhost:8080/api/notices" \
     "isPaused": false,
     "creatorId": 1,
     "creatorName": "관리자",
+    "imageUrl": "https://example.com/notice-photo/image.jpg",
     "createdAt": "2024-12-09T10:30:00",
     "updatedAt": "2024-12-09T10:30:00",
     "deletedAt": null
@@ -190,9 +193,11 @@ curl -X POST "http://localhost:8080/api/notices" \
 - **400**: 필수 필드 누락 또는 종료 시각이 시작 시각보다 이른 경우
 - **403**: 관리자 권한 없음
 
-### 참고사항
-- `isPaused` 필드를 생략하면 자동으로 `false`로 설정됩니다
-- 생성된 공지사항은 기본적으로 활성 상태(일시정지되지 않음)가 됩니다
+### 이미지 업로드 참고사항
+- 이미지는 S3에 `notice-photo` 폴더에 저장됩니다
+- 지원하는 이미지 형식: JPG, PNG, GIF 등 일반적인 이미지 포맷
+- 이미지 업로드 실패 시 전체 공지사항 생성이 롤백됩니다
+- `image` 필드를 생략하면 `imageUrl`은 `null`로 설정됩니다
 
 ---
 
@@ -200,7 +205,7 @@ curl -X POST "http://localhost:8080/api/notices" \
 ```
 PUT /api/notices/{noticeId}
 Authorization: Bearer {JWT_TOKEN}
-Content-Type: application/json
+Content-Type: multipart/form-data
 ```
 
 > **응답 DTO**: `NoticeDetailRespDTO`
@@ -209,13 +214,11 @@ Content-Type: application/json
 ```bash
 curl -X PUT "http://localhost:8080/api/notices/1" \
   -H "Authorization: Bearer {JWT_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "수정된 점검 안내",
-    "content": "수정된 내용입니다.",
-    "startDatetime": "2024-12-10T00:00:00",
-    "endDatetime": "2024-12-10T23:59:59"
-  }'
+  -F "title=수정된 점검 안내" \
+  -F "content=수정된 내용입니다." \
+  -F "startDatetime=2024-12-10T00:00:00" \
+  -F "endDatetime=2024-12-10T23:59:59" \
+  -F "image=@/path/to/new-image.jpg"
 ```
 
 ### 성공 응답 (200)
@@ -232,6 +235,7 @@ curl -X PUT "http://localhost:8080/api/notices/1" \
     "isPaused": false,
     "creatorId": 1,
     "creatorName": "관리자",
+    "imageUrl": "https://example.com/notice-photo/new-image.jpg",
     "createdAt": "2024-12-09T10:30:00",
     "updatedAt": "2024-12-09T16:20:00",
     "deletedAt": null
@@ -244,15 +248,19 @@ curl -X PUT "http://localhost:8080/api/notices/1" \
 - `content` (string, 필수): 공지사항 내용
 - `startDatetime` (datetime, 필수): 팝업 노출 시작 시각
 - `endDatetime` (datetime, 필수): 팝업 노출 종료 시각
+- `image` (file, 선택): 첨부 이미지 파일
 
 ### 실패 응답
 - **400**: 필수 필드 누락 또는 종료 시각이 시작 시각보다 이른 경우
 - **403**: 관리자 권한 없음
 - **404**: 존재하지 않는 공지사항
 
-### 참고사항
+### 이미지 수정 참고사항
 - **일시정지 상태(`isPaused`)는 수정되지 않습니다**
 - 일시정지 상태를 변경하려면 별도의 토글 API(`PATCH /api/notices/{noticeId}/toggle-pause`)를 사용하세요
+- 새 이미지를 업로드하면 기존 이미지는 S3에서 자동으로 삭제됩니다
+- `image` 필드를 생략하면 기존 이미지가 유지됩니다
+- 이미지를 완전히 제거할 수는 없으며, 새 이미지로만 교체 가능합니다
 
 ---
 
@@ -281,6 +289,7 @@ curl -X DELETE "http://localhost:8080/api/notices/1" \
 - **소프트 삭제**: `deletedAt` 필드에 삭제 시각 설정
 - 삭제된 공지사항은 모든 조회 API에서 제외됨
 - 팝업 노출에서도 자동으로 제외됨
+- **첨부 이미지도 S3에서 자동으로 삭제됩니다**
 
 ### 실패 응답
 - **403**: 관리자 권한 없음
@@ -313,7 +322,8 @@ curl -X PATCH "http://localhost:8080/api/notices/1/toggle-pause" \
     "content": "오늘 밤 12시부터 새벽 2시까지 시스템 점검이 있습니다.",
     "startDatetime": "2024-12-10T00:00:00",
     "endDatetime": "2024-12-10T23:59:59",
-    "isPaused": true
+    "isPaused": true,
+    "imageUrl": "https://example.com/notice-photo/image.jpg"
   }
 }
 ```
@@ -358,9 +368,17 @@ curl -X PATCH "http://localhost:8080/api/notices/1/toggle-pause" \
 - 종료 시각은 시작 시각보다 늦어야 함
 - 시각 정보는 `LocalDateTime` 형식으로 처리
 
+### 이미지 관리
+- **업로드**: S3의 `notice-photo` 폴더에 저장
+- **교체**: 새 이미지 업로드 후 기존 이미지 삭제
+- **삭제**: 공지사항 삭제 시 첨부 이미지도 함께 삭제
+- **롤백**: DB 저장 실패 시 업로드된 이미지 자동 삭제
+- **오류 처리**: 이미지 삭제 실패는 경고 로그로 기록 (서비스 중단하지 않음)
+
 ### 로깅 정책
 - 공지사항 생성, 수정, 삭제, 상태 변경 시 로그 기록
 - 제목은 50자로 제한하여 로깅 (민감정보 보호)
+- 이미지 처리 오류는 별도 경고 로그 생성
 
 ---
 
@@ -378,7 +396,7 @@ curl -X PATCH "http://localhost:8080/api/notices/1/toggle-pause" \
 ### HTTP 상태 코드
 - `200 OK`: 성공
 - `201 Created`: 생성 성공
-- `400 Bad Request`: 잘못된 요청 (필수 필드 누락, 시간 범위 오류)
+- `400 Bad Request`: 잘못된 요청 (필수 필드 누락, 시간 범위 오류, 이미지 업로드 실패)
 - `401 Unauthorized`: 인증 실패
 - `403 Forbidden`: 권한 부족 (관리자 아님)
 - `404 Not Found`: 리소스 없음 (공지사항 없음, 삭제된 공지사항)
@@ -398,6 +416,7 @@ curl -X PATCH "http://localhost:8080/api/notices/1/toggle-pause" \
 - `startDatetime` (LocalDateTime): 팝업 노출 시작 시각
 - `endDatetime` (LocalDateTime): 팝업 노출 종료 시각
 - `isPaused` (Boolean): 일시정지 여부
+- `imageUrl` (String): 첨부 이미지 URL (null 가능)
 
 **사용 API:**
 - `GET /api/notices/active` (현재 활성 공지사항 조회)
@@ -433,6 +452,7 @@ CREATE TABLE notice (
     start_datetime DATETIME NOT NULL,
     end_datetime DATETIME NOT NULL,
     is_paused BOOLEAN NOT NULL DEFAULT FALSE,
+    image_url VARCHAR(512) NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
     deleted_at DATETIME NULL,

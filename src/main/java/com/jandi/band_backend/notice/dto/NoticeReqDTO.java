@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 
@@ -35,4 +36,7 @@ public class NoticeReqDTO {
 
     @Schema(description = "일시정지 여부 (생성 시 생략하면 자동으로 false 설정)", example = "false", required = false)
     private Boolean isPaused = false;
+
+    @Schema(description = "첨부 이미지 파일", required = false)
+    private MultipartFile image;
 }

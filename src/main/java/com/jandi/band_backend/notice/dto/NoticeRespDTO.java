@@ -32,6 +32,9 @@ public class NoticeRespDTO {
     @Schema(description = "일시정지 여부", example = "false")
     private Boolean isPaused;
 
+    @Schema(description = "첨부 이미지 URL", example = "https://example.com/image.jpg")
+    private String imageUrl;
+
     public NoticeRespDTO(Notice notice) {
         this.id = notice.getId();
         this.title = notice.getTitle();
@@ -39,5 +42,6 @@ public class NoticeRespDTO {
         this.startDatetime = notice.getStartDatetime();
         this.endDatetime = notice.getEndDatetime();
         this.isPaused = notice.getIsPaused();
+        this.imageUrl = notice.getImageUrl();
     }
 }

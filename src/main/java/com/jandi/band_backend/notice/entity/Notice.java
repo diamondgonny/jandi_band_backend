@@ -39,6 +39,9 @@ public class Notice {
     @Column(name = "is_paused", nullable = false)
     private Boolean isPaused = false;
 
+    @Column(name = "image_url", length = 512)
+    private String imageUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

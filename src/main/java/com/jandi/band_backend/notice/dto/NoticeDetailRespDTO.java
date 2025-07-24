@@ -38,6 +38,9 @@ public class NoticeDetailRespDTO {
     @Schema(description = "작성자명", example = "관리자")
     private String creatorName;
 
+    @Schema(description = "첨부 이미지 URL", example = "https://example.com/image.jpg")
+    private String imageUrl;
+
     @Schema(description = "생성일시", example = "2024-12-09T10:30:00")
     private LocalDateTime createdAt;
 
@@ -54,6 +57,7 @@ public class NoticeDetailRespDTO {
         this.startDatetime = notice.getStartDatetime();
         this.endDatetime = notice.getEndDatetime();
         this.isPaused = notice.getIsPaused();
+        this.imageUrl = notice.getImageUrl();
         this.createdAt = notice.getCreatedAt();
         this.updatedAt = notice.getUpdatedAt();
         this.deletedAt = notice.getDeletedAt();

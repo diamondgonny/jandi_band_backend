@@ -60,7 +60,7 @@ public class NoticeController {
     @Operation(summary = "공지사항 생성 (관리자 전용)")
     @PostMapping
     public ResponseEntity<CommonRespDTO<NoticeDetailRespDTO>> createNotice(
-            @Valid @RequestBody NoticeReqDTO request,
+            @Valid @ModelAttribute NoticeReqDTO request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer creatorId = userDetails.getUserId();
         NoticeDetailRespDTO response = noticeService.createNotice(request, creatorId);
@@ -72,7 +72,7 @@ public class NoticeController {
     @PutMapping("/{noticeId}")
     public ResponseEntity<CommonRespDTO<NoticeDetailRespDTO>> updateNotice(
             @PathVariable Integer noticeId,
-            @Valid @RequestBody NoticeReqDTO request,
+            @Valid @ModelAttribute NoticeReqDTO request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Integer userId = userDetails.getUserId();
         NoticeDetailRespDTO response = noticeService.updateNotice(noticeId, request, userId);

@@ -423,10 +423,10 @@ curl -X PATCH "http://localhost:8080/api/notices/1/toggle-pause" \
 
 ## 데이터베이스 스키마
 
-### site_notice 테이블
+### notice 테이블
 ```sql
-CREATE TABLE site_notice (
-    site_notice_id INT PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE notice (
+    notice_id INT PRIMARY KEY AUTO_INCREMENT,
     creator_user_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,

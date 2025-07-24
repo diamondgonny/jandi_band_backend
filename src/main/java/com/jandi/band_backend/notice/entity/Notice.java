@@ -9,7 +9,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "site_notice")
+@Table(name = "notice")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,7 +17,7 @@ public class Notice {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "site_notice_id")
+    @Column(name = "notice_id")
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -48,7 +48,7 @@ public class PromoService {
 
     // 공연 홍보 목록 조회 (사용자별 좋아요 상태 포함)
     public Page<PromoRespDTO> getPromos(Integer userId, Pageable pageable) {
-        return promoRepository.findAllNotDeleted(pageable)
+        return promoRepository.findAllSortedByEventDatetime(pageable)
                 .map(promo -> {
                     Boolean isLikedByUser = userId != null ? 
                             promoLikeService.isLikedByUser(promo.getId(), userId) : null;

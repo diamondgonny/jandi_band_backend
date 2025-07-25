@@ -3,6 +3,7 @@ package com.jandi.band_backend.promo.repository;
 import com.jandi.band_backend.promo.entity.Promo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -20,7 +21,21 @@ public interface PromoRepository extends JpaRepository<Promo, Integer> {
     
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.club.id = :clubId")
     Page<Promo> findAllByClubId(@Param("clubId") Integer clubId, Pageable pageable);
-    
+
+    @EntityGraph(attributePaths = {"photos"})
+    @Query("""
+    SELECT p FROM Promo p
+    WHERE p.deletedAt IS NULL
+    ORDER BY
+        CASE
+            WHEN FUNCTION('DATE', p.eventDatetime) = CURRENT_DATE THEN 0
+            WHEN FUNCTION('DATE', p.eventDatetime) > CURRENT_DATE THEN 1
+            ELSE 2
+        END,
+        p.eventDatetime ASC
+    """)
+    Page<Promo> findAllSortedByEventDatetime(Pageable pageable);
+
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.eventDatetime >= :now ORDER BY p.eventDatetime ASC")
     Page<Promo> findUpcomingPromos(@Param("now") LocalDateTime now, Pageable pageable);
     

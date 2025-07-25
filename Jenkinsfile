@@ -1,11 +1,9 @@
-// Jenkinsfile
-
 pipeline {
     agent any
 
     environment {
         GHCR_OWNER = 'kyj0503'
-        EC2_HOST = 'rhythmeet-ssh.yeonjae.kr'
+        EC2_HOST = 'rhythmeet.yeonjae.kr'
         EC2_USER = 'ubuntu'
         IMAGE_NAME = 'rhythmeet-be'
     }

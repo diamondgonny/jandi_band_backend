@@ -5,7 +5,7 @@ pipeline {
 
     environment {
         GHCR_OWNER = 'kyj0503'
-        EC2_HOST = 'rhythmeet-be.yeonjae.kr'
+        EC2_HOST = 'rhythmeet-ssh.yeonjae.kr'
         EC2_USER = 'ubuntu'
         IMAGE_NAME = 'rhythmeet-be'
     }

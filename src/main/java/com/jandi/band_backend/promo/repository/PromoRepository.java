@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Repository
@@ -36,14 +37,14 @@ public interface PromoRepository extends JpaRepository<Promo, Integer> {
     """)
     Page<Promo> findAllSortedByEventDatetime(Pageable pageable);
 
-    @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.eventDatetime > :end ORDER BY p.eventDatetime ASC")
-    Page<Promo> findUpcomingPromos(@Param("end") LocalDateTime end, Pageable pageable);
+    @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND function('DATE', p.eventDatetime ) > :today ORDER BY p.eventDatetime ASC")
+    Page<Promo> findUpcomingPromos(@Param("today") LocalDate today, Pageable pageable);
     
-    @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.eventDatetime BETWEEN :start AND :end ORDER BY p.eventDatetime ASC")
-    Page<Promo> findOngoingPromos(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end, Pageable pageable);
-    
-    @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.eventDatetime < :start ORDER BY p.eventDatetime DESC")
-    Page<Promo> findEndedPromos(@Param("start") LocalDateTime start, Pageable pageable);
+    @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND function('DATE', p.eventDatetime ) = :today ORDER BY p.eventDatetime ASC")
+    Page<Promo> findOngoingPromos(@Param("today") LocalDate today, Pageable pageable);
+
+    @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND function('DATE', p.eventDatetime ) < :today ORDER BY p.eventDatetime DESC")
+    Page<Promo> findEndedPromos(@Param("today") LocalDate today, Pageable pageable);
     
     @Query("SELECT p FROM Promo p WHERE p.deletedAt IS NULL AND p.creator.id = :userId")
     Page<Promo> findAllByCreatorId(@Param("userId") Integer userId, Pageable pageable);

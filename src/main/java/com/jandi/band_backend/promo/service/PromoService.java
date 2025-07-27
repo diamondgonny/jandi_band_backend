@@ -299,26 +299,23 @@ public class PromoService {
 
     // 공연 상태별 필터링
     public Page<PromoRespDTO> filterPromosByStatus(String status, String keyword, String teamName, Integer userId, Pageable pageable) {
-        LocalDateTime startOfDay = LocalDateTime.now().toLocalDate().atStartOfDay();
-        LocalDateTime endOfDay = LocalDateTime.now().toLocalDate().atTime(LocalTime.MAX);
+        LocalDate today = LocalDateTime.now().toLocalDate();
 
         Page<Promo> promos;
-        log.info("start time: "+startOfDay);
-        log.info("end time: "+endOfDay);
 
         // 상태별 필터링
         switch (status.toLowerCase()) {
             case "ongoing":
                 // 진행 중인 공연: 오늘 날짜(오늘 0시~24시 사이)와 일치하는 공연
-                promos = promoRepository.findOngoingPromos(startOfDay, endOfDay, pageable);
+                promos = promoRepository.findOngoingPromos(today, pageable);
                 break;
             case "upcoming":
                 // 예정된 공연: 오늘 이후(오늘 24시 이후)의 공연
-                promos = promoRepository.findUpcomingPromos(endOfDay, pageable);
+                promos = promoRepository.findUpcomingPromos(today, pageable);
                 break;
             case "ended":
                 // 종료된 공연: 오늘 이전(오늘 0시 이전)의 공연
-                promos = promoRepository.findEndedPromos(startOfDay, pageable);
+                promos = promoRepository.findEndedPromos(today, pageable);
                 break;
             default:
                 return Page.empty(pageable);

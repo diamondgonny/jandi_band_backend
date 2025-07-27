@@ -15,6 +15,7 @@ import com.jandi.band_backend.global.util.PermissionValidationUtil;
 import com.jandi.band_backend.global.util.UserValidationUtil;
 import com.jandi.band_backend.global.util.S3FileManagementUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageImpl;
@@ -23,10 +24,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -42,7 +46,7 @@ public class PromoService {
 
     // 공연 홍보 목록 조회
     public Page<PromoRespDTO> getPromos(Pageable pageable) {
-        return promoRepository.findAllNotDeleted(pageable)
+        return promoRepository.findAllSortedByEventDatetime(pageable)
                 .map(PromoRespDTO::from);
     }
 
@@ -295,23 +299,26 @@ public class PromoService {
 
     // 공연 상태별 필터링
     public Page<PromoRespDTO> filterPromosByStatus(String status, String keyword, String teamName, Integer userId, Pageable pageable) {
-        LocalDateTime now = LocalDateTime.now();
-        
+        LocalDateTime startOfDay = LocalDateTime.now().toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = LocalDateTime.now().toLocalDate().atTime(LocalTime.MAX);
+
         Page<Promo> promos;
-        
+        log.info("start time: "+startOfDay);
+        log.info("end time: "+endOfDay);
+
         // 상태별 필터링
         switch (status.toLowerCase()) {
             case "ongoing":
-                // 진행 중인 공연: 오늘 날짜와 일치하는 공연
-                promos = promoRepository.findOngoingPromos(now, pageable);
+                // 진행 중인 공연: 오늘 날짜(오늘 0시~24시 사이)와 일치하는 공연
+                promos = promoRepository.findOngoingPromos(startOfDay, endOfDay, pageable);
                 break;
             case "upcoming":
-                // 예정된 공연: 오늘 이후의 공연
-                promos = promoRepository.findUpcomingPromos(now, pageable);
+                // 예정된 공연: 오늘 이후(오늘 24시 이후)의 공연
+                promos = promoRepository.findUpcomingPromos(endOfDay, pageable);
                 break;
             case "ended":
-                // 종료된 공연: 오늘 이전의 공연
-                promos = promoRepository.findEndedPromos(now, pageable);
+                // 종료된 공연: 오늘 이전(오늘 0시 이전)의 공연
+                promos = promoRepository.findEndedPromos(startOfDay, pageable);
                 break;
             default:
                 return Page.empty(pageable);

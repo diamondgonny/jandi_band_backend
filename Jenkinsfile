@@ -74,7 +74,7 @@ pipeline {
                 script {
                     def fullImageName = "ghcr.io/${env.GHCR_OWNER}/${env.DEV_IMAGE_NAME}:${env.BUILD_NUMBER}"
                     echo "Deploying to local on-premise server"
-                    sh "bash /home/kyj/spring-app-dev/deploy.sh ${fullImageName}"
+                    sh "bash /opt/spring-app-dev/deploy.sh ${fullImageName}"
                 }
             }
         }

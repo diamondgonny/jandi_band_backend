@@ -56,6 +56,7 @@ public class ClubPendingController {
 
     @Operation(summary = "가입 신청 승인/거부", description = "동아리장이 가입 신청을 승인하거나 거부합니다.")
     @PatchMapping("/pendings/{pendingId}")
+
     public ResponseEntity<CommonRespDTO<ClubPendingRespDTO>> processPending(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Integer pendingId,

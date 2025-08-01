@@ -102,23 +102,6 @@ public class ClubPendingService {
                 .build();
     }
 
-    public UserPendingListRespDTO getUserPendingList(Integer userId) {
-        Users user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
-        List<ClubPending> pendings = clubPendingRepository.findByUserId(userId);
-
-        List<ClubPendingRespDTO> pendingDTOs = pendings.stream()
-                .map(ClubPendingRespDTO::from)
-                .collect(Collectors.toList());
-
-        return UserPendingListRespDTO.builder()
-                .userId(user.getId())
-                .userNickname(user.getNickname())
-                .pendingApplications(pendingDTOs)
-                .totalCount(pendingDTOs.size())
-                .build();
-    }
 
     public ClubPendingRespDTO getMyPendingForClub(Integer clubId, Integer userId) {
         ClubPending pending = clubPendingRepository.findByClubIdAndUserId(clubId, userId)

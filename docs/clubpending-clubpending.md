@@ -41,14 +41,12 @@ curl -X POST "http://localhost:8080/api/clubs/1/pendings" \
 ### 실패 응답
 - **400**: 이미 가입한 동아리
 - **400**: 이미 신청한 동아리
-- **403**: 이미 승인된 신청
 - **403**: 강퇴된 사용자의 재가입 시도
 - **404**: 존재하지 않는 동아리
 
 ### 비즈니스 규칙
 - 가입 신청은 7일 후 자동 만료
 - 거부되거나 만료된 신청은 재신청 가능
-- 이미 승인된 신청은 재신청 불가
 - 강퇴된 회원은 재가입 불가
 
 ---
@@ -258,6 +256,12 @@ curl -X DELETE "http://localhost:8080/api/clubs/pendings/1" \
 ### 동시성 처리
 - 중복 신청 방지를 위한 유니크 제약조건 (club_id + user_id)
 - DataIntegrityViolationException 처리를 통한 동시성 제어
+
+### 재신청 처리
+- REJECTED 또는 EXPIRED 상태의 신청은 재신청 가능 (reapply 메서드 호출)
+- APPROVED 상태의 신청이 있어도 ClubMember 확인 후 처리
+  - 현재 활성 회원이면: "이미 가입한 동아리입니다" 오류
+  - 탈퇴한 상태면: 새로운 신청 생성 가능
 
 ---
 

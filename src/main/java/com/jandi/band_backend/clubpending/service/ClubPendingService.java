@@ -66,9 +66,6 @@ public class ClubPendingService {
             if (pending.getStatus() == PendingStatus.PENDING) {
                 throw new DuplicateApplicationException("이미 신청한 동아리입니다.");
             }
-            if (pending.getStatus() == PendingStatus.APPROVED) {
-                throw new InvalidAccessException("이미 승인된 신청입니다.");
-            }
             // 거부/만료된 경우 재신청 가능하도록 상태 업데이트
             if (pending.getStatus() == PendingStatus.REJECTED || pending.getStatus() == PendingStatus.EXPIRED) {
                 pending.reapply();

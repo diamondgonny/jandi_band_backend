@@ -42,12 +42,9 @@ jobs:
           
           # Direct prompt for automated review (no @claude mention needed)
           direct_prompt: |
-            Please review this pull request and provide feedback on:
-            - Code quality and best practices
-            - Potential bugs or issues
-            - Performance considerations
-            - Security concerns
-            - Test coverage
+            Please review this pull request and look for:
+            - Code quality and best practices (such as input validation, error handling and so on)
+            - Bugs and security issues (only report on bugs and potential vulnerabilities as long as you find them serious)
             
             Be concise. Write final response in Korean.
 

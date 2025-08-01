@@ -13,6 +13,7 @@ import com.jandi.band_backend.global.util.PermissionValidationUtil;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -63,6 +65,9 @@ public class ClubPendingService {
             ClubPending pending = existingPending.get();
             if (pending.getStatus() == PendingStatus.PENDING) {
                 throw new DuplicateApplicationException("이미 신청한 동아리입니다.");
+            }
+            if (pending.getStatus() == PendingStatus.APPROVED) {
+                throw new InvalidAccessException("이미 승인된 신청입니다.");
             }
             // 거부/만료된 경우 재신청 가능하도록 상태 업데이트
             if (pending.getStatus() == PendingStatus.REJECTED || pending.getStatus() == PendingStatus.EXPIRED) {
@@ -155,12 +160,16 @@ public class ClubPendingService {
     @Scheduled(cron = "0 0 0 * * ?") // 매일 자정 실행
     @Transactional
     public void expirePendingApplications() {
-        LocalDateTime now = LocalDateTime.now();
-        int expiredCount = clubPendingRepository.bulkExpirePendingApplications(now);
-        
-        if (expiredCount > 0) {
-            // 로깅을 위해 만료된 건수를 기록할 수 있습니다
-            // log.info("만료된 가입 신청 {} 건이 처리되었습니다.", expiredCount);
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            int expiredCount = clubPendingRepository.bulkExpirePendingApplications(now);
+
+            if (expiredCount > 0) {
+                log.info("만료된 가입 신청 {} 건이 처리되었습니다.", expiredCount);
+            }
+        } catch (Exception e) {
+            log.error("가입 신청 만료 처리 중 오류 발생", e);
+            // 스케줄러가 중단되지 않도록 예외를 catch하여 처리
         }
     }
 

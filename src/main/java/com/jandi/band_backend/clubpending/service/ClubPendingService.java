@@ -39,7 +39,7 @@ public class ClubPendingService {
                 .orElseThrow(UserNotFoundException::new);
 
         Club club = clubRepository.findById(clubId)
-                .orElseThrow(ClubNotFoundException::new);
+                .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
         boolean isMember = clubMemberRepository.findByClubIdAndUserId(club.getId(), userId)
                 .filter(member -> member.getDeletedAt() == null)
@@ -85,7 +85,7 @@ public class ClubPendingService {
         permissionValidationUtil.validateClubRepresentativeAccess(clubId, userId, "신청 목록 조회 권한이 없습니다.");
 
         Club club = clubRepository.findById(clubId)
-                .orElseThrow(ClubNotFoundException::new);
+                .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
         List<ClubPending> pendings = clubPendingRepository.findPendingsByClubId(clubId);
 

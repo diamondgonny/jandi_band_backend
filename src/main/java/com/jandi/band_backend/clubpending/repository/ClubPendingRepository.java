@@ -13,21 +13,21 @@ import java.util.Optional;
 
 @Repository
 public interface ClubPendingRepository extends JpaRepository<ClubPending, Integer> {
-    
+
     Optional<ClubPending> findByClubIdAndUserId(Integer clubId, Integer userId);
-    
+
     List<ClubPending> findByClubIdAndStatus(Integer clubId, PendingStatus status);
-    
+
     List<ClubPending> findByUserId(Integer userId);
-    
+
     List<ClubPending> findByUserIdAndStatus(Integer userId, PendingStatus status);
-    
+
     @Query("SELECT cp FROM ClubPending cp WHERE cp.status = 'PENDING' AND cp.expiresAt < :now")
     List<ClubPending> findExpiredPendings(@Param("now") LocalDateTime now);
-    
+
     @Query("SELECT COUNT(cp) FROM ClubPending cp WHERE cp.club.id = :clubId AND cp.status = 'PENDING'")
     Long countPendingByClubId(@Param("clubId") Integer clubId);
-    
+
     @Query("SELECT cp FROM ClubPending cp WHERE cp.club.id = :clubId AND cp.status = 'PENDING' ORDER BY cp.appliedAt DESC")
     List<ClubPending> findPendingsByClubId(@Param("clubId") Integer clubId);
 }

@@ -46,19 +46,18 @@ public class ClubPending {
     private LocalDateTime processedAt;
 
     @Column(name = "expires_at")
-    private LocalDateTime expiresAt; // 신청 만료일
+    private LocalDateTime expiresAt;
 
     public enum PendingStatus {
-        PENDING,    // 승인 대기
-        APPROVED,   // 승인됨
-        REJECTED,   // 거부됨
-        EXPIRED     // 만료됨
+        PENDING,
+        APPROVED,
+        REJECTED,
+        EXPIRED
     }
 
     @PrePersist
     protected void onCreate() {
         appliedAt = LocalDateTime.now();
-        // 7일 후 만료 (설정 가능)
         expiresAt = LocalDateTime.now().plusDays(7);
     }
 }

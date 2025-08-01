@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ClubPendingProcessReqDTO {
-    
+
     @NotNull(message = "승인 여부는 필수입니다.")
     private Boolean approve;  // true: 승인, false: 거부
 }

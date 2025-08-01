@@ -20,7 +20,7 @@ public class ClubPendingRespDTO {
     private LocalDateTime expiresAt;
     private Integer processedBy;
     private String processedByNickname;
-    
+
     public static ClubPendingRespDTO from(ClubPending pending) {
         return ClubPendingRespDTO.builder()
                 .pendingId(pending.getId())

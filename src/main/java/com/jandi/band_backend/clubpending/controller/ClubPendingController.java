@@ -1,6 +1,5 @@
 package com.jandi.band_backend.clubpending.controller;
 
-import com.jandi.band_backend.clubpending.dto.ClubPendingApplyReqDTO;
 import com.jandi.band_backend.clubpending.dto.ClubPendingListRespDTO;
 import com.jandi.band_backend.clubpending.dto.ClubPendingProcessReqDTO;
 import com.jandi.band_backend.clubpending.dto.ClubPendingRespDTO;
@@ -17,25 +16,25 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "ClubPending API", description = "동아리 가입 신청 관리 API")
 @RestController
-@RequestMapping("/api/clubs/pending")
+@RequestMapping("/api/clubs")
 @RequiredArgsConstructor
 public class ClubPendingController {
     
     private final ClubPendingService clubPendingService;
     
     @Operation(summary = "동아리 가입 신청", description = "사용자가 동아리에 가입 신청을 합니다.")
-    @PostMapping("/apply")
+    @PostMapping("/{clubId}/pendings")
     @ResponseStatus(HttpStatus.CREATED)
     public CommonRespDTO<ClubPendingRespDTO> applyToClub(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody ClubPendingApplyReqDTO reqDTO) {
+            @PathVariable Integer clubId) {
         
-        ClubPendingRespDTO respDTO = clubPendingService.applyToClub(userDetails.getUserId(), reqDTO);
+        ClubPendingRespDTO respDTO = clubPendingService.applyToClub(userDetails.getUserId(), clubId);
         return new CommonRespDTO<>(HttpStatus.CREATED.value(), "가입 신청이 완료되었습니다.", respDTO);
     }
     
     @Operation(summary = "동아리 대기 목록 조회", description = "동아리장이 대기중인 가입 신청 목록을 조회합니다.")
-    @GetMapping("/club/{clubId}")
+    @GetMapping("/{clubId}/pendings")
     public CommonRespDTO<ClubPendingListRespDTO> getPendingListByClub(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Integer clubId) {
@@ -45,7 +44,7 @@ public class ClubPendingController {
     }
     
     @Operation(summary = "특정 동아리에 대한 내 신청 조회", description = "사용자가 특정 동아리에 대한 본인의 가입 신청 상태를 조회합니다.")
-    @GetMapping("/club/{clubId}/my-pending")
+    @GetMapping("/{clubId}/pendings/my")
     public CommonRespDTO<ClubPendingRespDTO> getMyPendingForClub(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Integer clubId) {
@@ -55,7 +54,7 @@ public class ClubPendingController {
     }
     
     @Operation(summary = "가입 신청 승인/거부", description = "동아리장이 가입 신청을 승인하거나 거부합니다.")
-    @PatchMapping("/{pendingId}/process")
+    @PatchMapping("/pendings/{pendingId}")
     public CommonRespDTO<ClubPendingRespDTO> processPending(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Integer pendingId,
@@ -67,7 +66,7 @@ public class ClubPendingController {
     }
     
     @Operation(summary = "가입 신청 취소", description = "사용자가 본인의 가입 신청을 취소합니다.")
-    @DeleteMapping("/{pendingId}")
+    @DeleteMapping("/pendings/{pendingId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public CommonRespDTO<Void> cancelPending(
             @AuthenticationPrincipal CustomUserDetails userDetails,

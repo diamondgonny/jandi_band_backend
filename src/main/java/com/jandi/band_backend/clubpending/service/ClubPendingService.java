@@ -35,11 +35,11 @@ public class ClubPendingService {
     
     // 가입 신청
     @Transactional
-    public ClubPendingRespDTO applyToClub(Integer userId, ClubPendingApplyReqDTO reqDTO) {
+    public ClubPendingRespDTO applyToClub(Integer userId, Integer clubId) {
         Users user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
                 
-        Club club = clubRepository.findById(reqDTO.getClubId())
+        Club club = clubRepository.findById(clubId)
                 .orElseThrow(ClubNotFoundException::new);
         
         // 이미 회원인지 확인

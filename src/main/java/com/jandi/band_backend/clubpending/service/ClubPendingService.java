@@ -128,6 +128,14 @@ public class ClubPendingService {
                 .build();
     }
     
+    // 특정 동아리에 대한 내 신청 조회
+    public ClubPendingRespDTO getMyPendingForClub(Integer clubId, Integer userId) {
+        ClubPending pending = clubPendingRepository.findByClubIdAndUserId(clubId, userId)
+                .orElseThrow(() -> new PendingNotFoundException("해당 동아리에 대한 신청이 없습니다."));
+                
+        return ClubPendingRespDTO.from(pending);
+    }
+    
     // 신청 승인/거부 처리
     @Transactional
     public ClubPendingRespDTO processPending(Integer pendingId, Integer userId, ClubPendingProcessReqDTO reqDTO) {

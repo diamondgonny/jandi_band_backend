@@ -1,6 +1,9 @@
 package com.jandi.band_backend.clubpending.controller;
 
-import com.jandi.band_backend.clubpending.dto.*;
+import com.jandi.band_backend.clubpending.dto.ClubPendingApplyReqDTO;
+import com.jandi.band_backend.clubpending.dto.ClubPendingListRespDTO;
+import com.jandi.band_backend.clubpending.dto.ClubPendingProcessReqDTO;
+import com.jandi.band_backend.clubpending.dto.ClubPendingRespDTO;
 import com.jandi.band_backend.clubpending.service.ClubPendingService;
 import com.jandi.band_backend.global.dto.CommonRespDTO;
 import com.jandi.band_backend.security.CustomUserDetails;
@@ -41,13 +44,14 @@ public class ClubPendingController {
         return new CommonRespDTO<>(HttpStatus.OK.value(), "대기 목록 조회 성공", respDTO);
     }
     
-    @Operation(summary = "내 신청 목록 조회", description = "사용자가 본인의 가입 신청 목록을 조회합니다.")
-    @GetMapping("/my")
-    public CommonRespDTO<UserPendingListRespDTO> getMyPendingList(
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+    @Operation(summary = "특정 동아리에 대한 내 신청 조회", description = "사용자가 특정 동아리에 대한 본인의 가입 신청 상태를 조회합니다.")
+    @GetMapping("/club/{clubId}/my-pending")
+    public CommonRespDTO<ClubPendingRespDTO> getMyPendingForClub(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Integer clubId) {
         
-        UserPendingListRespDTO respDTO = clubPendingService.getUserPendingList(userDetails.getUserId());
-        return new CommonRespDTO<>(HttpStatus.OK.value(), "신청 목록 조회 성공", respDTO);
+        ClubPendingRespDTO respDTO = clubPendingService.getMyPendingForClub(clubId, userDetails.getUserId());
+        return new CommonRespDTO<>(HttpStatus.OK.value(), "신청 상태 조회 성공", respDTO);
     }
     
     @Operation(summary = "가입 신청 승인/거부", description = "동아리장이 가입 신청을 승인하거나 거부합니다.")

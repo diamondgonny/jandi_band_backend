@@ -39,7 +39,7 @@ public class ClubPending {
     @JoinColumn(name = "processed_by")
     private Users processedBy; // 승인/거부한 관리자
 
-    @Column(name = "applied_at", nullable = false, updatable = false)
+    @Column(name = "applied_at", nullable = false)
     private LocalDateTime appliedAt;
 
     @Column(name = "processed_at")
@@ -59,5 +59,16 @@ public class ClubPending {
     protected void onCreate() {
         appliedAt = LocalDateTime.now();
         expiresAt = LocalDateTime.now().plusDays(7);
+    }
+
+    /**
+     * 거부되거나 만료된 신청을 재신청 상태로 변경
+     */
+    public void reapply() {
+        this.status = PendingStatus.PENDING;
+        this.appliedAt = LocalDateTime.now();
+        this.expiresAt = LocalDateTime.now().plusDays(7);
+        this.processedAt = null;
+        this.processedBy = null;
     }
 }

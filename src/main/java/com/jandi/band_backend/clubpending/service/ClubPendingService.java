@@ -13,6 +13,7 @@ import com.jandi.band_backend.global.util.PermissionValidationUtil;
 import com.jandi.band_backend.user.entity.Users;
 import com.jandi.band_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,20 +66,21 @@ public class ClubPendingService {
             }
             // 거부/만료된 경우 재신청 가능하도록 상태 업데이트
             if (pending.getStatus() == PendingStatus.REJECTED || pending.getStatus() == PendingStatus.EXPIRED) {
-                pending.setStatus(PendingStatus.PENDING);
-                pending.setAppliedAt(LocalDateTime.now());
-                pending.setExpiresAt(LocalDateTime.now().plusDays(7));
-                pending.setProcessedAt(null);
-                pending.setProcessedBy(null);
+                pending.reapply();
                 return ClubPendingRespDTO.from(clubPendingRepository.save(pending));
             }
         }
 
-        ClubPending newPending = new ClubPending();
-        newPending.setClub(club);
-        newPending.setUser(user);
+        try {
+            ClubPending newPending = new ClubPending();
+            newPending.setClub(club);
+            newPending.setUser(user);
 
-        return ClubPendingRespDTO.from(clubPendingRepository.save(newPending));
+            return ClubPendingRespDTO.from(clubPendingRepository.save(newPending));
+        } catch (DataIntegrityViolationException e) {
+            // 동시성으로 인한 중복 신청이 발생한 경우
+            throw new DuplicateApplicationException("이미 신청한 동아리입니다.");
+        }
     }
 
     public ClubPendingListRespDTO getPendingListByClub(Integer clubId, Integer userId) {
@@ -154,15 +156,12 @@ public class ClubPendingService {
     @Transactional
     public void expirePendingApplications() {
         LocalDateTime now = LocalDateTime.now();
-        List<ClubPending> expiredPendings = clubPendingRepository.findExpiredPendings(now);
-
-        // 유효기간이 지난 신청 상태를 EXPIRED로 변경
-        expiredPendings.forEach(pending -> {
-            pending.setStatus(PendingStatus.EXPIRED);
-            pending.setProcessedAt(now);
-        });
-
-        clubPendingRepository.saveAll(expiredPendings);
+        int expiredCount = clubPendingRepository.bulkExpirePendingApplications(now);
+        
+        if (expiredCount > 0) {
+            // 로깅을 위해 만료된 건수를 기록할 수 있습니다
+            // log.info("만료된 가입 신청 {} 건이 처리되었습니다.", expiredCount);
+        }
     }
 
     private void validateProcessingAuthority(ClubPending pending, Integer userId) {

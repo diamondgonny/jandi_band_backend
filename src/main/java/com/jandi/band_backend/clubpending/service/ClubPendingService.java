@@ -44,19 +44,21 @@ public class ClubPendingService {
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(() -> new ClubNotFoundException("동아리를 찾을 수 없습니다."));
 
-        boolean isMember = clubMemberRepository.findByClubIdAndUserId(club.getId(), userId)
-                .filter(member -> member.getDeletedAt() == null)
-                .isPresent();
-
-        if (isMember) {
-            throw new InvalidAccessException("이미 가입한 동아리입니다.");
-        }
-
-        Optional<ClubMember> bannedMember = clubMemberRepository.findByClubIdAndUserId(club.getId(), userId)
-                .filter(member -> member.getRole() == ClubMember.MemberRole.BANNED);
-
-        if (bannedMember.isPresent()) {
-            throw new BannedMemberJoinAttemptException("강퇴된 사용자는 해당 동아리에 재가입할 수 없습니다.");
+        // 회원 상태를 한 번의 조회로 확인
+        Optional<ClubMember> memberOptional = clubMemberRepository.findByClubIdAndUserId(club.getId(), userId);
+        
+        if (memberOptional.isPresent()) {
+            ClubMember member = memberOptional.get();
+            
+            // 강퇴된 회원인지 확인
+            if (member.getRole() == ClubMember.MemberRole.BANNED) {
+                throw new BannedMemberJoinAttemptException("강퇴된 사용자는 해당 동아리에 재가입할 수 없습니다.");
+            }
+            
+            // 현재 활성 회원인지 확인
+            if (member.getDeletedAt() == null) {
+                throw new InvalidAccessException("이미 가입한 동아리입니다.");
+            }
         }
 
         // PENDING 상태의 신청이 있는지 확인

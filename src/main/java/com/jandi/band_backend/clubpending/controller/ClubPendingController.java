@@ -9,16 +9,19 @@ import com.jandi.band_backend.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "ClubPending API", description = "동아리 가입 신청 관리 API")
 @RestController
 @RequestMapping("/api/clubs")
 @RequiredArgsConstructor
+@Validated
 public class ClubPendingController {
 
     private final ClubPendingService clubPendingService;
@@ -27,7 +30,7 @@ public class ClubPendingController {
     @PostMapping("/{clubId}/pendings")
     public ResponseEntity<CommonRespDTO<ClubPendingRespDTO>> applyToClub(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Integer clubId) {
+            @PathVariable @Positive Integer clubId) {
 
         ClubPendingRespDTO respDTO = clubPendingService.applyToClub(userDetails.getUserId(), clubId);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -38,7 +41,7 @@ public class ClubPendingController {
     @GetMapping("/{clubId}/pendings")
     public ResponseEntity<CommonRespDTO<ClubPendingListRespDTO>> getPendingListByClub(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Integer clubId) {
+            @PathVariable @Positive Integer clubId) {
 
         ClubPendingListRespDTO respDTO = clubPendingService.getPendingListByClub(clubId, userDetails.getUserId());
         return ResponseEntity.ok(CommonRespDTO.success("대기 목록 조회 성공", respDTO));
@@ -48,7 +51,7 @@ public class ClubPendingController {
     @GetMapping("/{clubId}/pendings/my")
     public ResponseEntity<CommonRespDTO<ClubPendingRespDTO>> getMyPendingForClub(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Integer clubId) {
+            @PathVariable @Positive Integer clubId) {
 
         ClubPendingRespDTO respDTO = clubPendingService.getMyPendingForClub(clubId, userDetails.getUserId());
         String message = respDTO != null ? "신청 상태 조회 성공" : "대기중인 신청이 없습니다";
@@ -57,10 +60,9 @@ public class ClubPendingController {
 
     @Operation(summary = "가입 신청 승인/거부", description = "동아리장이 가입 신청을 승인하거나 거부합니다.")
     @PatchMapping("/pendings/{pendingId}")
-
     public ResponseEntity<CommonRespDTO<ClubPendingRespDTO>> processPending(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Integer pendingId,
+            @PathVariable @Positive Integer pendingId,
             @Valid @RequestBody ClubPendingProcessReqDTO reqDTO) {
 
         ClubPendingRespDTO respDTO = clubPendingService.processPending(pendingId, userDetails.getUserId(), reqDTO);
@@ -72,7 +74,7 @@ public class ClubPendingController {
     @DeleteMapping("/pendings/{pendingId}")
     public ResponseEntity<CommonRespDTO<Void>> cancelPending(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Integer pendingId) {
+            @PathVariable @Positive Integer pendingId) {
 
         clubPendingService.cancelPending(pendingId, userDetails.getUserId());
         return ResponseEntity.ok(CommonRespDTO.success("가입 신청이 취소되었습니다."));

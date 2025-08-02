@@ -44,14 +44,15 @@ public class ClubPendingController {
         return ResponseEntity.ok(CommonRespDTO.success("대기 목록 조회 성공", respDTO));
     }
 
-    @Operation(summary = "특정 동아리에 대한 내 신청 조회", description = "사용자가 특정 동아리에 대한 본인의 가입 신청 상태를 조회합니다.")
+    @Operation(summary = "특정 동아리에 대한 내 신청 조회", description = "사용자가 특정 동아리에 대한 본인의 가입 신청 상태를 조회합니다. 대기중인 신청이 없으면 null을 반환합니다.")
     @GetMapping("/{clubId}/pendings/my")
     public ResponseEntity<CommonRespDTO<ClubPendingRespDTO>> getMyPendingForClub(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Integer clubId) {
 
         ClubPendingRespDTO respDTO = clubPendingService.getMyPendingForClub(clubId, userDetails.getUserId());
-        return ResponseEntity.ok(CommonRespDTO.success("신청 상태 조회 성공", respDTO));
+        String message = respDTO != null ? "신청 상태 조회 성공" : "대기중인 신청이 없습니다";
+        return ResponseEntity.ok(CommonRespDTO.success(message, respDTO));
     }
 
     @Operation(summary = "가입 신청 승인/거부", description = "동아리장이 가입 신청을 승인하거나 거부합니다.")

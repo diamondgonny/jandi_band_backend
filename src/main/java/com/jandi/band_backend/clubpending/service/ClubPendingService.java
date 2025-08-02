@@ -103,10 +103,9 @@ public class ClubPendingService {
 
     public ClubPendingRespDTO getMyPendingForClub(Integer clubId, Integer userId) {
         // PENDING 상태의 신청만 조회 (현재 대기중인 신청)
-        ClubPending pending = clubPendingRepository.findPendingByClubIdAndUserId(clubId, userId)
-                .orElseThrow(() -> new PendingNotFoundException("해당 동아리에 대한 대기중인 신청이 없습니다."));
-
-        return ClubPendingRespDTO.from(pending);
+        Optional<ClubPending> pending = clubPendingRepository.findPendingByClubIdAndUserId(clubId, userId);
+        
+        return pending.map(ClubPendingRespDTO::from).orElse(null);
     }
 
     @Transactional

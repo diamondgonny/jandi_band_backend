@@ -3,6 +3,10 @@
 ## 동아리 가입 신청 관리
 모든 API는 JWT 인증 필요
 
+### 경로 매개변수 검증
+- 모든 `clubId`와 `pendingId`는 양수(1 이상)여야 함
+- 잘못된 값 입력 시 400 Bad Request 응답
+
 ---
 
 ## 1. 동아리 가입 신청
@@ -285,3 +289,15 @@ curl -X DELETE "http://localhost:8080/api/clubs/pendings/1" \
 ### 본인 확인이 필요한 API
 - 가입 신청 취소 (DELETE /api/clubs/pendings/{pendingId})
 - 내 신청 조회 (GET /api/clubs/{clubId}/pendings/my)
+
+---
+
+## 성능 최적화
+
+### 쿼리 최적화
+- 대기 목록 조회 시 JOIN FETCH를 사용하여 N+1 쿼리 문제 해결
+- 회원 상태 확인을 한 번의 쿼리로 통합하여 DB 조회 최소화
+
+### 보안 강화
+- 모든 경로 매개변수에 대한 입력 검증 추가
+- 양수 검증으로 잘못된 ID 값 방지

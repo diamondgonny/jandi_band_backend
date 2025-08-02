@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "club_pending", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"club_id", "user_id"})
+    @UniqueConstraint(columnNames = {"club_id", "user_id", "status"})
 })
 @Getter
 @Setter
@@ -59,16 +59,5 @@ public class ClubPending {
     protected void onCreate() {
         appliedAt = LocalDateTime.now();
         expiresAt = LocalDateTime.now().plusDays(7);
-    }
-
-    /**
-     * 거부되거나 만료된 신청을 재신청 상태로 변경
-     */
-    public void reapply() {
-        this.status = PendingStatus.PENDING;
-        this.appliedAt = LocalDateTime.now();
-        this.expiresAt = LocalDateTime.now().plusDays(7);
-        this.processedAt = null;
-        this.processedBy = null;
     }
 }

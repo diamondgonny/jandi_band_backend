@@ -14,7 +14,8 @@ import java.util.Optional;
 @Repository
 public interface ClubPendingRepository extends JpaRepository<ClubPending, Integer> {
 
-    Optional<ClubPending> findByClubIdAndUserId(Integer clubId, Integer userId);
+    @Query("SELECT cp FROM ClubPending cp WHERE cp.club.id = :clubId AND cp.user.id = :userId AND cp.status = 'PENDING'")
+    Optional<ClubPending> findPendingByClubIdAndUserId(@Param("clubId") Integer clubId, @Param("userId") Integer userId);
 
     @Query("SELECT cp FROM ClubPending cp WHERE cp.club.id = :clubId AND cp.status = 'PENDING' ORDER BY cp.appliedAt DESC")
     List<ClubPending> findPendingsByClubId(@Param("clubId") Integer clubId);

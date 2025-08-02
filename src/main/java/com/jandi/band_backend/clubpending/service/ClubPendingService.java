@@ -59,20 +59,14 @@ public class ClubPendingService {
             throw new BannedMemberJoinAttemptException("강퇴된 사용자는 해당 동아리에 재가입할 수 없습니다.");
         }
 
-        Optional<ClubPending> existingPending = clubPendingRepository.findByClubIdAndUserId(club.getId(), userId);
+        // PENDING 상태의 신청이 있는지 확인
+        Optional<ClubPending> pendingApplication = clubPendingRepository.findPendingByClubIdAndUserId(club.getId(), userId);
 
-        if (existingPending.isPresent()) {
-            ClubPending pending = existingPending.get();
-            if (pending.getStatus() == PendingStatus.PENDING) {
-                throw new DuplicateApplicationException("이미 신청한 동아리입니다.");
-            }
-            // 거부/만료된 경우 재신청 가능하도록 상태 업데이트
-            if (pending.getStatus() == PendingStatus.REJECTED || pending.getStatus() == PendingStatus.EXPIRED) {
-                pending.reapply();
-                return ClubPendingRespDTO.from(clubPendingRepository.save(pending));
-            }
+        if (pendingApplication.isPresent()) {
+            throw new DuplicateApplicationException("이미 신청한 동아리입니다.");
         }
 
+        // 새로운 신청 생성 (거부/만료된 신청이 있어도 새로 생성)
         try {
             ClubPending newPending = new ClubPending();
             newPending.setClub(club);
@@ -108,8 +102,9 @@ public class ClubPendingService {
 
 
     public ClubPendingRespDTO getMyPendingForClub(Integer clubId, Integer userId) {
-        ClubPending pending = clubPendingRepository.findByClubIdAndUserId(clubId, userId)
-                .orElseThrow(() -> new PendingNotFoundException("해당 동아리에 대한 신청이 없습니다."));
+        // PENDING 상태의 신청만 조회 (현재 대기중인 신청)
+        ClubPending pending = clubPendingRepository.findPendingByClubIdAndUserId(clubId, userId)
+                .orElseThrow(() -> new PendingNotFoundException("해당 동아리에 대한 대기중인 신청이 없습니다."));
 
         return ClubPendingRespDTO.from(pending);
     }

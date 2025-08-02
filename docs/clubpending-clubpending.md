@@ -46,8 +46,9 @@ curl -X POST "http://localhost:8080/api/clubs/1/pendings" \
 
 ### 비즈니스 규칙
 - 가입 신청은 7일 후 자동 만료
-- 거부되거나 만료된 신청은 재신청 가능
+- 거부되거나 만료된 신청이 있어도 새로운 신청 가능
 - 강퇴된 회원은 재가입 불가
+- 동시에 PENDING 상태의 신청은 하나만 가능
 
 ---
 
@@ -117,6 +118,8 @@ GET /api/clubs/{clubId}/pendings/my
 Authorization: Bearer {JWT_TOKEN}
 ```
 
+**참고**: 현재 대기중(PENDING)인 신청만 조회됩니다.
+
 ### 요청 예시
 ```bash
 curl "http://localhost:8080/api/clubs/1/pendings/my" \
@@ -124,6 +127,8 @@ curl "http://localhost:8080/api/clubs/1/pendings/my" \
 ```
 
 ### 성공 응답 (200)
+
+**대기중인 신청이 있는 경우:**
 ```json
 {
   "success": true,
@@ -144,8 +149,14 @@ curl "http://localhost:8080/api/clubs/1/pendings/my" \
 }
 ```
 
-### 실패 응답
-- **404**: 해당 동아리에 대한 신청이 없음
+**대기중인 신청이 없는 경우:**
+```json
+{
+  "success": true,
+  "message": "대기중인 신청이 없습니다",
+  "data": null
+}
+```
 
 ---
 
@@ -254,14 +265,14 @@ curl -X DELETE "http://localhost:8080/api/clubs/pendings/1" \
 - 만료 처리 건수에 대한 로깅 기능 포함
 
 ### 동시성 처리
-- 중복 신청 방지를 위한 유니크 제약조건 (club_id + user_id)
+- 중복 신청 방지를 위한 유니크 제약조건 (club_id + user_id + status)
 - DataIntegrityViolationException 처리를 통한 동시성 제어
 
 ### 재신청 처리
-- REJECTED 또는 EXPIRED 상태의 신청은 재신청 가능 (reapply 메서드 호출)
-- APPROVED 상태의 신청이 있어도 ClubMember 확인 후 처리
-  - 현재 활성 회원이면: "이미 가입한 동아리입니다" 오류
-  - 탈퇴한 상태면: 새로운 신청 생성 가능
+- REJECTED 또는 EXPIRED 상태의 신청이 있어도 새로운 신청 생성 가능
+- 각 신청은 독립적인 레코드로 관리되어 신청 이력 보존
+- PENDING 상태의 신청이 이미 있으면 중복 신청 불가
+- 승인 후 탈퇴한 회원도 새로운 신청 가능
 
 ---
 
